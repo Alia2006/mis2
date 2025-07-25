@@ -195,11 +195,6 @@ class Auth extends \ba\Auth
             return false;
         }
 
-        // 按需生成随机密码
-        if (!$password) {
-            $password = Random::build();
-        }
-
         // 用户昵称
         $nickname = preg_replace_callback('/1[3-9]\d{9}/', function ($matches) {
             // 对 username 中出现的所有手机号进行脱敏处理
@@ -228,7 +223,9 @@ class Auth extends \ba\Auth
             Token::set($this->token, self::TOKEN_TYPE, $this->model->id, $this->keepTime);
             Db::commit();
 
-            $this->model->resetPassword($this->model->id, $password);
+            if ($password) {
+                $this->model->resetPassword($this->model->id, $password);
+            }
 
             Event::trigger('userRegisterSuccess', $this->model);
         } catch (Throwable $e) {
