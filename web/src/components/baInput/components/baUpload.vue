@@ -40,7 +40,7 @@
                 <slot :name="name" v-bind="scopedData"></slot>
             </template>
         </el-upload>
-        <el-dialog v-model="state.preview.show" class="ba-upload-preview">
+        <el-dialog v-model="state.preview.show" :append-to-body="true" :destroy-on-close="true" class="ba-upload-preview">
             <div class="ba-upload-preview-scroll ba-scroll-style">
                 <img :src="state.preview.url" class="ba-upload-preview-img" alt="" />
             </div>
@@ -466,8 +466,13 @@ watch(
     height: auto;
 }
 .ba-upload-preview-scroll {
-    max-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    height: auto;
     overflow: auto;
+    max-height: 70vh;
 }
 .ba-upload-preview-img {
     max-width: 100%;
