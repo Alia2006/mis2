@@ -91,6 +91,27 @@ baTable.after.onSubmit = () => {
     getUserInfo(baTable.comSearch.form.user_id)
 }
 
+baTable.before.onTableAction = ({ event }) => {
+    // 公共搜索
+    if (event === 'com-search') {
+        baTable.table.filter!.search = baTable.getComSearchData()
+
+        for (const key in baTable.table.filter!.search) {
+            if (['money', 'before', 'after'].includes(baTable.table.filter!.search[key].field)) {
+                const val = (baTable.table.filter!.search[key].val as string).split(',')
+                const newVal: (string | number)[] = []
+                for (const k in val) {
+                    newVal.push(isNaN(parseFloat(val[k])) ? '' : parseFloat(val[k]) * 100)
+                }
+                baTable.table.filter!.search[key].val = newVal.join(',')
+            }
+        }
+
+        baTable.onTableHeaderAction('refresh', { event: 'com-search', data: baTable.table.filter!.search })
+        return false
+    }
+}
+
 baTable.mount()
 baTable.getData()
 
