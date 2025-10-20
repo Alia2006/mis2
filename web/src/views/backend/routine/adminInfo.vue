@@ -23,7 +23,7 @@
                     <div class="admin-info-base">
                         <div class="admin-nickname">{{ state.adminInfo.nickname }}</div>
                         <div class="admin-other">
-                            <div>{{ t('routine.adminInfo.Last logged in on') }} {{ state.adminInfo.last_login_time }}</div>
+                            <div>{{ t('routine.adminInfo.Last logged in on') }} {{ timeFormat(state.adminInfo.last_login_time) }}</div>
                         </div>
                     </div>
                     <div class="admin-info-form">

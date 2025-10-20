@@ -124,7 +124,7 @@
                     <el-avatar :size="70" :src="fullUrl(adminInfo.avatar)"></el-avatar>
                     <div class="admin-info-other">
                         <div class="admin-info-name">{{ adminInfo.nickname }}</div>
-                        <div class="admin-info-lasttime">{{ adminInfo.last_login_time }}</div>
+                        <div class="admin-info-lasttime">{{ timeFormat(adminInfo.last_login_time) }}</div>
                     </div>
                 </div>
                 <div class="admin-info-footer">
@@ -160,7 +160,7 @@ import { useConfig } from '/@/stores/config'
 import { ADMIN_INFO, BA_ACCOUNT } from '/@/stores/constant/cacheKey'
 import { useSiteConfig } from '/@/stores/siteConfig'
 import { useTerminal } from '/@/stores/terminal'
-import { fullUrl } from '/@/utils/common'
+import { fullUrl, timeFormat } from '/@/utils/common'
 import { routePush } from '/@/utils/router'
 import { Local, Session } from '/@/utils/storage'
 import { hotUpdateState, reloadServer } from '/@/utils/vite'
