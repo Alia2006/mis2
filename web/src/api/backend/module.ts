@@ -2,8 +2,8 @@ import { useBaAccount } from '/@/stores/baAccount'
 import { useSiteConfig } from '/@/stores/siteConfig'
 import createAxios from '/@/utils/axios'
 
+const storeUrl = '/api/v7.store/'
 const moduleControllerUrl = '/admin/module/'
-const storeUrl = '/api/v6.store/'
 
 export function index(params: anyObj = {}) {
     return createAxios({
