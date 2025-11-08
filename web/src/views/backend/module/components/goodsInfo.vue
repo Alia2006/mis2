@@ -415,6 +415,12 @@ const onUpdate = (uid: string, order: number) => {
             align-items: center;
             justify-content: center;
         }
+        :deep(.el-carousel__indicators) {
+            line-height: 10px;
+            .el-carousel__indicator {
+                padding: 0 var(--el-carousel-indicator-padding-horizontal);
+            }
+        }
     }
     .goods-basic {
         position: relative;
@@ -447,8 +453,7 @@ const onUpdate = (uid: string, order: number) => {
         }
         .basic-buttons {
             position: absolute;
-            bottom: 26px;
-            padding-top: 3px;
+            bottom: 15px;
         }
         .basic-button-demo {
             margin-right: 10px;
@@ -600,6 +605,7 @@ const onUpdate = (uid: string, order: number) => {
         }
         .goods-basic .basic-buttons {
             position: unset;
+            padding-top: 3px;
         }
     }
     .goods-detail {
