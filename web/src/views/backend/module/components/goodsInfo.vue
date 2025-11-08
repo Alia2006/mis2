@@ -44,14 +44,31 @@
                             <div class="basic-item-content">{{ state.goodsInfo.category ? state.goodsInfo.category.name : '-' }}</div>
                         </div>
                         <div class="basic-item">
+                            <div class="basic-item-title">{{ t('module.Module documentation') }}</div>
+                            <div class="basic-item-content">
+                                <el-link
+                                    type="primary"
+                                    class="basic-item-link"
+                                    v-if="state.goodsInfo.docs"
+                                    target="_blank"
+                                    :href="`https://doc.buildadmin.com/md/${state.goodsInfo.docs.name ? state.goodsInfo.docs.name : state.goodsInfo.docs.id}`"
+                                    rel="noopener noreferrer"
+                                >
+                                    {{ t('module.Click to access') }}
+                                </el-link>
+                                <span v-else>-</span>
+                            </div>
+                        </div>
+                        <div class="basic-item">
                             <div class="basic-item-title">{{ t('module.Developer Homepage') }}</div>
                             <div class="basic-item-content">
                                 <el-link
                                     type="primary"
-                                    class="developer-homepage"
+                                    class="basic-item-link"
                                     v-if="state.goodsInfo.author_url"
                                     target="_blank"
                                     :href="state.goodsInfo.author_url"
+                                    rel="noopener noreferrer"
                                 >
                                     {{ t('module.Click to access') }}
                                 </el-link>
@@ -410,7 +427,7 @@ const onUpdate = (uid: string, order: number) => {
         .basic-item {
             display: flex;
             align-items: center;
-            padding: 5px 0;
+            padding: 4px 0;
             .basic-item-title {
                 font-size: var(--el-font-size-base);
                 color: var(--el-text-color-secondary);
@@ -513,7 +530,7 @@ const onUpdate = (uid: string, order: number) => {
     .el-carousel__item:nth-child(2n) {
         background-color: #99a9bf;
     }
-    .developer-homepage {
+    .basic-item-link {
         font-size: var(--el-font-size-small);
     }
 }

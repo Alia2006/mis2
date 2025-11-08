@@ -74,6 +74,7 @@ export default {
     'Published on': 'Published on:',
     'amount of downloads': 'amount of downloads',
     'Module classification': 'Module classification',
+    'Module documentation': 'Module documentation',
     'Developer Homepage': 'Developer Homepage',
     'Click to access': 'Click to access',
     'Module status': 'Module status',

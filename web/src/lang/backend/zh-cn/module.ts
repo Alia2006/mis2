@@ -71,6 +71,7 @@ export default {
     'Published on': '发布时间',
     'amount of downloads': '下载次数',
     'Module classification': '模块分类',
+    'Module documentation': '模块文档',
     'Developer Homepage': '开发者主页',
     'Click to access': '点击访问',
     'Module status': '模块状态',
