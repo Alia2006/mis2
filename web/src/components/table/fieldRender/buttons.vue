@@ -9,7 +9,7 @@
                     @click="onButtonClick(btn)"
                     :class="btn.class"
                     size="small"
-                    class="ba-table-render-buttons-item ml-6"
+                    class="ba-table-render-buttons-item buttons-ml-6"
                     :type="btn.type"
                     :loading="btn.loading && btn.loading(row, field)"
                     :disabled="btn.disabled && btn.disabled(row, field)"
@@ -32,7 +32,7 @@
                         @click="onButtonClick(btn)"
                         :class="btn.class"
                         size="small"
-                        class="ba-table-render-buttons-item ml-6"
+                        class="ba-table-render-buttons-item buttons-ml-6"
                         :type="btn.type"
                         :loading="btn.loading && btn.loading(row, field)"
                         :disabled="btn.disabled && btn.disabled(row, field)"
@@ -51,7 +51,7 @@
                     @confirm="onButtonClick(btn)"
                 >
                     <template #reference>
-                        <div class="ml-6">
+                        <div class="buttons-popconfirm-reference-box buttons-ml-6">
                             <el-tooltip
                                 :disabled="btn.title ? false : true"
                                 :content="getTranslation(btn.title)"
@@ -87,7 +87,7 @@
                     <el-button
                         :class="btn.class"
                         size="small"
-                        class="ba-table-render-buttons-item move-button ml-6"
+                        class="ba-table-render-buttons-item move-button buttons-ml-6"
                         :type="btn.type"
                         :loading="btn.loading && btn.loading(row, field)"
                         :disabled="btn.disabled && btn.disabled(row, field)"
@@ -137,6 +137,9 @@ const getTranslation = (key?: string) => {
 <style scoped lang="scss">
 .ba-table-render-buttons-item {
     .text {
+        font-size: 14px;
+    }
+    .icon + .text {
         padding-left: 5px;
     }
     &.el-button--small {
@@ -147,11 +150,11 @@ const getTranslation = (key?: string) => {
 .ba-table-render-buttons-move {
     cursor: move;
 }
-.ml-6 {
+.buttons-popconfirm-reference-box {
     display: inline-flex;
     vertical-align: middle;
 }
-.ml-6 + .ml-6 {
+.buttons-ml-6 + .buttons-ml-6 {
     margin-left: 6px;
 }
 </style>

@@ -230,9 +230,6 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.ba-data-table :deep(.el-button + .el-button) {
-    margin-left: 6px;
-}
 .ba-data-table :deep(.table-header-cell) .cell {
     color: var(--el-text-color-primary);
     overflow: hidden;
