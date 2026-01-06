@@ -314,7 +314,7 @@ export const arrayFullUrl = (relativeUrls: string | string[], domain = '') => {
 
 /**
  * 格式化时间戳
- * @param dateTime 时间戳
+ * @param dateTime 时间戳，默认使用当前时间戳
  * @param fmt 格式化方式，默认：yyyy-mm-dd hh:MM:ss
  */
 export const timeFormat = (dateTime: string | number | null = null, fmt = 'yyyy-mm-dd hh:MM:ss') => {
@@ -325,15 +325,23 @@ export const timeFormat = (dateTime: string | number | null = null, fmt = 'yyyy-
     if (isNull(dateTime)) {
         dateTime = Number(new Date())
     }
-    if (dateTime.toString().length === 10) {
+
+    /**
+     * 1. 秒级时间戳（10位）需要转换为毫秒级，才能供 Date 对象直接使用
+     * 2. yyyy-mm-dd 也是10位，使用 isFinite 进行排除
+     */
+    if (String(dateTime).length === 10 && isFinite(Number(dateTime))) {
         dateTime = +dateTime * 1000
     }
 
     let date = new Date(dateTime)
-    // 检查日期是否有效，如果无效则尝试转换为数字后再创建
     if (isNaN(date.getTime())) {
         date = new Date(Number(dateTime))
+        if (isNaN(date.getTime())) {
+            return 'Invalid Date'
+        }
     }
+
     let ret
     const opt: anyObj = {
         'y+': date.getFullYear().toString(), // 年
