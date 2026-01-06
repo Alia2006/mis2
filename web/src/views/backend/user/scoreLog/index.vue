@@ -90,6 +90,12 @@ const baTable = new baTableClass(
 baTable.after.onSubmit = () => {
     getUserInfo(baTable.comSearch.form.user_id)
 }
+baTable.after.onTableHeaderAction = ({ event }) => {
+    // 刷新后
+    if (event == 'refresh') {
+        getUserInfo(baTable.comSearch.form.user_id)
+    }
+}
 
 baTable.mount()
 baTable.getData()
