@@ -125,7 +125,7 @@ const onButtonClick = (btn: OptButton) => {
         btn.click(props.row, props.field)
         return
     }
-    baTable.onTableAction(btn.name, props)
+    baTable.onTableAction(btn.name as BaTableActionEventName, props)
 }
 
 const getTranslation = (key?: string) => {

@@ -133,7 +133,7 @@ export default class baTable {
     postDel = (ids: string[]) => {
         if (this.runBefore('postDel', { ids }) === false) return
         this.api.del(ids).then((res) => {
-            this.onTableHeaderAction('refresh', {})
+            this.onTableHeaderAction('refresh', { event: 'delete', ids })
             this.runAfter('postDel', { res })
         })
     }
@@ -215,7 +215,7 @@ export default class baTable {
             this.api
                 .postData(operate, this.form.items!)
                 .then((res) => {
-                    this.onTableHeaderAction('refresh', {})
+                    this.onTableHeaderAction('refresh', { event: 'submit', operate, items: this.form.items })
                     this.form.operateIds?.shift()
                     if (this.form.operateIds!.length > 0) {
                         this.toggleForm('Edit', this.form.operateIds)
@@ -254,10 +254,10 @@ export default class baTable {
 
     /**
      * 表格内的事件统一响应
-     * @param event 事件:selection-change=选中项改变,page-size-change=每页数量改变,current-page-change=翻页,sort-change=排序,edit=编辑,delete=删除,field-change=单元格值改变,com-search=公共搜索
+     * @param event 事件名称，含义请参考其类型定义
      * @param data 携带数据
      */
-    onTableAction = (event: string, data: anyObj) => {
+    onTableAction = (event: BaTableActionEventName, data: anyObj) => {
         if (this.runBefore('onTableAction', { event, data }) === false) return
         const actionFun = new Map([
             [
@@ -337,10 +337,10 @@ export default class baTable {
 
     /**
      * 表格顶栏按钮事件统一响应
-     * @param event 事件:refresh=刷新,edit=编辑,delete=删除,quick-search=快速查询,unfold=折叠/展开,change-show-column=调整列显示状态
+     * @param event 事件名称，含义参考其类型定义
      * @param data 携带数据
      */
-    onTableHeaderAction = (event: string, data: anyObj) => {
+    onTableHeaderAction = (event: BaTableHeaderActionEventName, data: anyObj) => {
         if (this.runBefore('onTableHeaderAction', { event, data }) === false) return
         const actionFun = new Map([
             [
@@ -458,8 +458,15 @@ export default class baTable {
                 const moveRow = findIndexRow(this.table.data!, evt.oldIndex) as TableRow
                 const targetRow = findIndexRow(this.table.data!, evt.newIndex) as TableRow
 
+                const eventData = {
+                    move: moveRow[this.table.pk!],
+                    target: targetRow[this.table.pk!],
+                    order: this.table.filter?.order,
+                    direction: evt.newIndex > evt.oldIndex ? 'down' : 'up',
+                }
+
                 if (this.table.dragSortLimitField && moveRow[this.table.dragSortLimitField] != targetRow[this.table.dragSortLimitField]) {
-                    this.onTableHeaderAction('refresh', {})
+                    this.onTableHeaderAction('refresh', { event: 'sort', ...eventData })
                     ElNotification({
                         type: 'error',
                         message: i18n.global.t('utils.The moving position is beyond the movable range!'),
@@ -467,16 +474,9 @@ export default class baTable {
                     return
                 }
 
-                this.api
-                    .sortable({
-                        move: moveRow[this.table.pk!],
-                        target: targetRow[this.table.pk!],
-                        order: this.table.filter?.order,
-                        direction: evt.newIndex > evt.oldIndex ? 'down' : 'up',
-                    })
-                    .finally(() => {
-                        this.onTableHeaderAction('refresh', {})
-                    })
+                this.api.sortable(eventData).finally(() => {
+                    this.onTableHeaderAction('refresh', { event: 'sort', ...eventData })
+                })
             },
         })
     }

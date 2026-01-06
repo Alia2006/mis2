@@ -158,14 +158,14 @@ declare global {
          * @param object.event 事件名称
          * @param object.data 事件携带的数据
          */
-        onTableAction?: ({ event, data }: { event: string; data: anyObj }) => boolean | void
+        onTableAction?: ({ event, data }: { event: BaTableActionEventName; data: anyObj }) => boolean | void
 
         /**
          * 表格顶部菜单事件响应前钩子（返回 false 可取消原操作）
          * @param object.event 事件名称
          * @param object.data 事件携带的数据
          */
-        onTableHeaderAction?: ({ event, data }: { event: string; data: anyObj }) => boolean | void
+        onTableHeaderAction?: ({ event, data }: { event: BaTableHeaderActionEventName; data: anyObj }) => boolean | void
 
         /**
          * 表格初始化前钩子
@@ -230,14 +230,14 @@ declare global {
          * @param object.event 事件名称
          * @param object.data 事件携带的数据
          */
-        onTableAction?: ({ event, data }: { event: string; data: anyObj }) => void
+        onTableAction?: ({ event, data }: { event: BaTableActionEventName; data: anyObj }) => void
 
         /**
          * 表格顶部菜单事件响应后钩子
          * @param object.event 事件名称
          * @param object.data 事件携带的数据
          */
-        onTableHeaderAction?: ({ event, data }: { event: string; data: anyObj }) => void
+        onTableHeaderAction?: ({ event, data }: { event: BaTableHeaderActionEventName; data: anyObj }) => void
 
         /** getData 的别名 */
         getIndex?: ({ res }: { res: ApiResponse }) => void
@@ -247,6 +247,26 @@ declare global {
         // 可自定义其他钩子
         [key: string]: Function | undefined
     }
+
+    /**
+     * baTable 表格内事件名称
+     * selection-change=选中项改变,page-size-change=每页数量改变,current-page-change=翻页,sort-change=排序,edit=编辑,delete=删除,field-change=单元格值改变,com-search=公共搜索
+     */
+    type BaTableActionEventName =
+        | 'selection-change'
+        | 'page-size-change'
+        | 'current-page-change'
+        | 'sort-change'
+        | 'edit'
+        | 'delete'
+        | 'field-change'
+        | 'com-search'
+
+    /**
+     * baTable 表格头部事件名称
+     * refresh=刷新,add=添加,edit=编辑,delete=删除,quick-search=快速查询,unfold=折叠/展开,change-show-column=调整列显示状态
+     */
+    type BaTableHeaderActionEventName = 'refresh' | 'add' | 'edit' | 'delete' | 'quick-search' | 'unfold' | 'change-show-column'
 
     /**
      * 表格公共搜索数据
