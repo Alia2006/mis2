@@ -329,7 +329,11 @@ export const timeFormat = (dateTime: string | number | null = null, fmt = 'yyyy-
         dateTime = +dateTime * 1000
     }
 
-    const date = new Date(Number(dateTime))
+    let date = new Date(dateTime)
+    // 检查日期是否有效，如果无效则尝试转换为数字后再创建
+    if (isNaN(date.getTime())) {
+        date = new Date(Number(dateTime))
+    }
     let ret
     const opt: anyObj = {
         'y+': date.getFullYear().toString(), // 年
