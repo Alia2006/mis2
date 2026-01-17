@@ -34,7 +34,11 @@
                             </el-col>
 
                             <!-- 时间范围 -->
-                            <el-col v-else-if="item.render == 'datetime' && (item.operator == 'RANGE' || item.operator == 'NOT RANGE')" :xs="24" :sm="12">
+                            <el-col
+                                v-else-if="item.render == 'datetime' && (item.operator == 'RANGE' || item.operator == 'NOT RANGE')"
+                                :xs="24"
+                                :sm="12"
+                            >
                                 <div class="com-search-col" :class="item.prop">
                                     <div class="com-search-col-label w16" v-if="item.comSearchShowLabel !== false">{{ item.label }}</div>
                                     <div class="com-search-col-input-range w83">
@@ -92,7 +96,8 @@
                                             class="w100"
                                             :placeholder="getPlaceholder(item.operatorPlaceholder)"
                                             v-else-if="
-                                                (item.render == 'tag' || item.render == 'tags' || item.comSearchRender == 'select') && item.replaceValue
+                                                (item.render == 'tag' || item.render == 'tags' || item.comSearchRender == 'select') &&
+                                                item.replaceValue
                                             "
                                             v-model="baTable.comSearch.form[item.prop!]"
                                             :multiple="item.operator == 'IN' || item.operator == 'NOT IN'"
@@ -119,7 +124,12 @@
                                             class="w100"
                                         >
                                             <template v-if="!isEmpty(item.replaceValue)">
-                                                <el-option v-for="(opt, okey) in item.replaceValue" :key="item.prop! + okey" :label="opt" :value="okey" />
+                                                <el-option
+                                                    v-for="(opt, okey) in item.replaceValue"
+                                                    :key="item.prop! + okey"
+                                                    :label="opt"
+                                                    :value="okey"
+                                                />
                                             </template>
                                             <template v-else>
                                                 <el-option :label="$t('utils.open')" value="1" />
