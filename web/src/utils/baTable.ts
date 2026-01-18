@@ -647,6 +647,26 @@ export default class baTable {
         return comSearchData
     }
 
+    /**
+     * 设置 getData 请求时的过滤条件（搜索数据）
+     * @param search 新的搜索数据
+     * @param mode 模式:cover=覆盖到已有搜索数据,merge=合并到已有搜索数据
+     */
+    setFilterSearchData = (search: ComSearchData[], mode: 'cover' | 'merge' = 'merge') => {
+        if (mode == 'cover' || !this.table.filter?.search) {
+            this.table.filter!.search = search
+        } else {
+            const merged = this.table.filter!.search.concat(search)
+            const fieldMap = new Map<string, ComSearchData>()
+
+            merged.forEach((item) => {
+                fieldMap.set(item.field, item)
+            })
+
+            this.table.filter!.search = Array.from(fieldMap.values())
+        }
+    }
+
     // 方法别名
     getIndex = this.getData
     requestEdit = this.getEditData
