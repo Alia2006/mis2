@@ -1,7 +1,12 @@
 <template>
     <div class="table-com-search-wrapper">
         <div class="table-com-search">
-            <el-form @submit.prevent="" @keyup.enter="baTable.onTableAction('com-search', {})" label-position="top" :model="baTable.comSearch.form">
+            <el-form
+                @submit.prevent=""
+                @keyup.enter="baTable.onTableAction('com-search', { event: 'submit-com-search-form' })"
+                label-position="top"
+                :model="baTable.comSearch.form"
+            >
                 <el-row>
                     <template v-for="(item, idx) in baTable.table.column" :key="idx">
                         <template v-if="item.operator !== false">
@@ -152,7 +157,9 @@
                     </template>
                     <el-col :xs="24" :sm="6">
                         <div class="com-search-col pl-20">
-                            <el-button v-blur @click="baTable.onTableAction('com-search', {})" type="primary">{{ $t('Search') }}</el-button>
+                            <el-button v-blur @click="baTable.onTableAction('com-search', { event: 'submit-com-search-form' })" type="primary">
+                                {{ $t('Search') }}
+                            </el-button>
                             <el-button @click="onResetForm()">{{ $t('Reset') }}</el-button>
                         </div>
                     </el-col>
@@ -178,7 +185,7 @@ const onResetForm = () => {
     baTable.initComSearch()
 
     // 通知 baTable 发起公共搜索
-    baTable.onTableAction('com-search', {})
+    baTable.onTableAction('com-search', { event: 'reset-com-search-form' })
 }
 
 const getPlaceholder = (placeholder: string | string[] | undefined, key = 0, defaultValue = '') => {
