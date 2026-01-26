@@ -452,8 +452,7 @@ const onUpdate = (uid: string, order: number) => {
             padding-right: 6px;
         }
         .basic-buttons {
-            position: absolute;
-            bottom: 15px;
+            padding-top: 6px;
         }
         .basic-button-demo {
             margin-right: 10px;
@@ -602,10 +601,6 @@ const onUpdate = (uid: string, order: number) => {
         .goods-images {
             max-width: 100%;
             width: 100%;
-        }
-        .goods-basic .basic-buttons {
-            position: unset;
-            padding-top: 3px;
         }
     }
     .goods-detail {
