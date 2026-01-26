@@ -512,7 +512,7 @@ export const loginExpired = (res: ApiResponse) => {
 const modulesOnlyLocalHandle = (modules: anyObj) => {
     if (!state.table.onlyLocal) return modules
     return modules.filter((item: anyObj) => {
-        return item.state > moduleInstallState.UNINSTALLED
+        return item.installed
     })
 }
 
