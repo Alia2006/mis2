@@ -75,14 +75,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, nextTick, onActivated, onMounted, onBeforeMount, useTemplateRef } from 'vue'
-import { useUserInfo } from '/@/stores/userInfo'
-import { useRouter } from 'vue-router'
-import * as echarts from 'echarts'
-import { useI18n } from 'vue-i18n'
-import { fullUrl, getGreet, timeFormat } from '/@/utils/common'
-import { overview } from '/@/api/frontend/user/index'
 import { useEventListener } from '@vueuse/core'
+import * as echarts from 'echarts'
+import { nextTick, onActivated, onBeforeMount, onMounted, reactive, useTemplateRef } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import { overview } from '/@/api/frontend/user/index'
+import { useUserInfo } from '/@/stores/userInfo'
+import { fullUrl, getGreet, timeFormat } from '/@/utils/common'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -105,7 +105,7 @@ const initUserGrowthChart = () => {
     const userGrowthChart = echarts.init(accountGrowthChartRef.value!)
     const option = {
         grid: {
-            top: 10,
+            top: 40,
             right: 0,
             bottom: 20,
             left: 50,
@@ -116,6 +116,7 @@ const initUserGrowthChart = () => {
         yAxis: {},
         legend: {
             data: [t('Integral'), t('Balance')],
+            top: 0,
         },
         series: [
             {

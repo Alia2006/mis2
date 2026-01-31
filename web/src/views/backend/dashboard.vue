@@ -220,10 +220,10 @@ const initUserGrowthChart = () => {
     const userGrowthChart = echarts.init(chartRefs.value[0] as HTMLElement)
     const option = {
         grid: {
-            top: 0,
+            top: 40,
             right: 0,
             bottom: 20,
-            left: 0,
+            left: 40,
         },
         xAxis: {
             data: [
@@ -242,6 +242,7 @@ const initUserGrowthChart = () => {
             textStyle: {
                 color: '#73767a',
             },
+            top: 0,
         },
         series: [
             {
