@@ -1,5 +1,5 @@
 <template>
-    <div class="nav-menus" :class="configStore.layout.layoutMode">
+    <div class="nav-menus" :class="[configStore.layout.layoutMode, configStore.layout.shrink ? 'shrink' : '']">
         <!-- 需要重启 Vite 热更新服务警告 -->
         <el-popover
             ref="reloadHotServerPopover"
@@ -230,7 +230,7 @@ const onClearCache = (type: string) => {
 </script>
 
 <style scoped lang="scss">
-.nav-menus.Default {
+.nav-menus.Default:not(.shrink) {
     border-radius: var(--el-border-radius-base);
     box-shadow: var(--el-box-shadow-light);
 }

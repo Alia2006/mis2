@@ -1,6 +1,10 @@
 <template>
-    <div class="nav-bar">
-        <NavTabs ref="layoutNavTabsRef" />
+    <div class="nav-bar" :class="config.layout.shrink ? 'shrink' : ''">
+        <!-- 小屏设备下的展开菜单按钮 -->
+        <div v-if="config.layout.shrink && config.layout.menuCollapse" class="unfold">
+            <Icon @click="onMenuCollapse" name="fa fa-indent" :color="config.getColorVal('menuActiveColor')" size="18" />
+        </div>
+        <NavTabs v-if="!config.layout.shrink" ref="layoutNavTabsRef" />
         <NavMenus />
     </div>
 </template>
@@ -10,8 +14,16 @@ import { useConfig } from '/@/stores/config'
 import NavTabs from '/@/layouts/backend/components/navBar/tabs.vue'
 import NavMenus from '../navMenus.vue'
 import { layoutNavTabsRef } from '/@/stores/refs'
+import { showShade } from '/@/utils/pageShade'
 
 const config = useConfig()
+
+const onMenuCollapse = () => {
+    showShade('ba-aside-menu-shade', () => {
+        config.setLayout('menuCollapse', true)
+    })
+    config.setLayout('menuCollapse', false)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -58,6 +70,15 @@ const config = useConfig()
             transition: all 0.2s;
             -webkit-transition: all 0.2s;
         }
+    }
+}
+.nav-bar.shrink {
+    width: 100%;
+    background-color: v-bind('config.getColorVal("headerBarBackground")');
+    margin: 0;
+    .unfold {
+        align-self: center;
+        padding-left: var(--ba-main-space);
     }
 }
 </style>

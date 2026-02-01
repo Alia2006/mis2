@@ -1,5 +1,5 @@
 <template>
-    <el-aside v-if="!navTabs.state.tabFullScreen" :class="'layout-aside-' + config.layout.layoutMode + ' ' + (config.layout.shrink ? 'shrink' : '')">
+    <el-aside v-if="!navTabs.state.tabFullScreen" :class="['layout-aside-' + config.layout.layoutMode, config.layout.shrink ? 'shrink' : '']">
         <Logo v-if="config.layout.menuShowTopBar" />
         <MenuVerticalChildren v-if="config.layout.layoutMode == 'Double'" />
         <MenuVertical v-else />
@@ -26,7 +26,7 @@ const menuWidth = computed(() => config.menuWidth())
 </script>
 
 <style scoped lang="scss">
-.layout-aside-Default {
+.layout-aside-Default:not(.shrink) {
     background: var(--ba-bg-color-overlay);
     margin: 16px 0 16px 16px;
     height: calc(100vh - 32px);
@@ -36,6 +36,7 @@ const menuWidth = computed(() => config.menuWidth())
     transition: width 0.3s ease;
     width: v-bind(menuWidth);
 }
+.layout-aside-Default.shrink,
 .layout-aside-Classic,
 .layout-aside-Double {
     background: var(--ba-bg-color-overlay);

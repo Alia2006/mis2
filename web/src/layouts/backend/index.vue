@@ -89,7 +89,6 @@ const init = () => {
 
 const onAdaptiveLayout = () => {
     let defaultBeforeResizeLayout = {
-        layoutMode: config.layout.layoutMode,
         menuCollapse: config.layout.menuCollapse,
     }
     let beforeResizeLayout = Session.get(BEFORE_RESIZE_LAYOUT)
@@ -106,14 +105,12 @@ const onAdaptiveLayout = () => {
             config.setLayout('menuCollapse', true)
         }
         config.setLayout('shrink', true)
-        config.setLayoutMode('Classic')
     } else {
         state.autoMenuCollapseLock = false
         let beforeResizeLayoutTemp = beforeResizeLayout || defaultBeforeResizeLayout
 
         config.setLayout('menuCollapse', beforeResizeLayoutTemp.menuCollapse)
         config.setLayout('shrink', false)
-        config.setLayoutMode(beforeResizeLayoutTemp.layoutMode)
     }
 }
 </script>
