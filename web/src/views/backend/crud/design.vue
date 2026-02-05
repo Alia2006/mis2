@@ -1276,6 +1276,7 @@ interface SortableEvt extends SortableEvent {
  * 处理字段的属性
  */
 const handleFieldAttr = (field: FieldItem) => {
+    field = cloneDeep(field)
     const designTypeAttr = cloneDeep(designTypes[field.designType])
     for (const tKey in field.form) {
         if (designTypeAttr.form[tKey]) designTypeAttr.form[tKey].value = field.form[tKey]
@@ -1343,7 +1344,7 @@ const loadData = () => {
                 state.table.databaseConnection = res.data.table.databaseConnection ? res.data.table.databaseConnection : ''
                 const fields = res.data.fields
                 for (const key in fields) {
-                    const field = handleFieldAttr(cloneDeep(fields[key]))
+                    const field = handleFieldAttr(fields[key])
 
                     // 默认值和默认值类型分析
                     if (typeof field.defaultType == 'undefined') {
@@ -1430,7 +1431,7 @@ onMounted(() => {
             const name = evt.originalEvent?.dataTransfer?.getData('name')
             const field = fieldItem[name as keyof typeof fieldItem]
             if (field && field[evt.oldIndex!]) {
-                const data = handleFieldAttr(cloneDeep(field[evt.oldIndex!]))
+                const data = handleFieldAttr(field[evt.oldIndex!])
 
                 // 主键重复检测
                 if (data.primaryKey) {
