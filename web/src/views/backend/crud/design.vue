@@ -1741,16 +1741,19 @@ const logTableDesignChange = (data: TableDesignChange) => {
         state.table.designChange = state.table.designChange.filter((item) => {
             // 新增的字段被删除
             add = item.type == 'add-field' && item.newName == data.oldName
-            // 有改名记录的字段被删除
-            const name = item.type == 'change-field-name' && item.newName == data.oldName
             // 有属性修改记录的字段被删除
             const attr = item.type == 'change-field-attr' && item.oldName == data.oldName
             // 有排序记录的字段被删除
             const order = item.type == 'change-field-order' && item.oldName == data.oldName
 
-            if (name) data.oldName = item.oldName
+            return !add && !attr && !order
+        })
 
-            return !add && !name && !attr && !order
+        // 有改名记录的字段被删除（延后单独处理避免先改名再改属性的情况）
+        state.table.designChange = state.table.designChange.filter((item) => {
+            const name = item.type == 'change-field-name' && item.newName == data.oldName
+            if (name) data.oldName = item.oldName
+            return !name
         })
 
         // 添加的字段需要过滤掉记录同时不记录删除操作
