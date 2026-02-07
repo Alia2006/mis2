@@ -48,7 +48,7 @@
                             </el-select>
                         </el-form-item>
                         <div class="default-sort-field-box">
-                            <el-form-item :label-width="140" class="default-sort-field" :label="t('crud.crud.Table Default Sort Fields')">
+                            <el-form-item :label-width="140" class="default-sort-field mr-20" :label="t('crud.crud.Table Default Sort Fields')">
                                 <el-select :clearable="true" v-model="state.table.defaultSortField" placement="bottom">
                                     <el-option
                                         v-for="(item, idx) in state.fields"
@@ -895,8 +895,10 @@ const onFieldDesignTypeChange = (designType: string) => {
 
             if (fieldDesignData.primaryKey) {
                 // 设置为默认排序字段、快速搜索字段
-                state.table.defaultSortField = state.fields[state.activateField].uuid!
                 state.table.quickSearchField.push(state.fields[state.activateField].uuid!)
+                if (!state.table.defaultSortField) {
+                    state.table.defaultSortField = state.fields[state.activateField].uuid!
+                }
             }
 
             if (fieldDesignData.designType == 'weigh') {
@@ -1060,6 +1062,16 @@ const onDelField = (index: number) => {
         oldName: state.fields[index].name,
         newName: '',
     })
+
+    // 删除权重字段时，重设默认排序字段
+    if (state.fields[index].designType == 'weigh') {
+        const pkField = state.fields.find((item) => {
+            return ['pk', 'spk'].includes(item.designType)
+        })
+        if (pkField) {
+            state.table.defaultSortField = pkField.uuid!
+        }
+    }
 
     state.fields.splice(index, 1)
 }
@@ -1462,8 +1474,10 @@ onMounted(() => {
                 if (data.primaryKey) {
                     if (primaryKeyRepeatCheck(data)) {
                         // 设置为默认排序字段、快速搜索字段
-                        state.table.defaultSortField = data.uuid!
                         state.table.quickSearchField.push(data.uuid!)
+                        if (!state.table.defaultSortField) {
+                            state.table.defaultSortField = data.uuid!
+                        }
                     } else {
                         return evt.item.remove()
                     }
