@@ -1,4 +1,5 @@
 import { ElNotification } from 'element-plus'
+import { isArray } from 'lodash-es'
 import { state } from './store'
 import { moduleInstallState, type moduleState } from './types'
 import {
@@ -104,9 +105,16 @@ const getModules = () => {
                 const idx = state.installedModuleUids.indexOf(item.uid)
                 if (idx !== -1) {
                     item.state = state.installedModule[idx].state
+                    item.title = state.installedModule[idx].title
                     item.version = state.installedModule[idx].version
                     item.website = state.installedModule[idx].website
                     item.stateTag = moduleStatus(item.state)
+
+                    if (!isArray(item.tags)) item.tags = []
+                    item.tags.push({
+                        name: `${i18n.global.t('module.installed')} v${state.installedModule[idx].version}`,
+                        type: 'primary',
+                    })
                 } else {
                     item.state = 0
                 }
