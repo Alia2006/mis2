@@ -182,7 +182,6 @@ class ClickCaptcha
                 $content = '';
                 break;
         }
-        imagedestroy($image);
         return [
             'id'     => $id,
             'text'   => $text,
@@ -245,8 +244,6 @@ class ClickCaptcha
         imagecopy($trueColorImage, $bgImg, 0, 0, $iconImgData['x'], $iconImgData['y'], $iconImgData['width'], $iconImgData['height']);
         imagecopy($trueColorImage, $iconImage, 0, 0, 0, 0, $iconImgData['width'], $iconImgData['height']);
         imagecopymerge($bgImg, $trueColorImage, $iconImgData['x'], $iconImgData['y'], 0, 0, $iconImgData['width'], $iconImgData['height'], $this->config['alpha']);
-        imagedestroy($iconImage);
-        imagedestroy($trueColorImage);
     }
 
     /**

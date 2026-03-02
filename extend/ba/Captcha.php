@@ -278,7 +278,6 @@ class Captcha
         // 输出图像
         imagepng($this->image);
         $content = ob_get_clean();
-        imagedestroy($this->image);
 
         return response($content, 200, ['Content-Length' => strlen($content)])->contentType('image/png');
     }
@@ -403,7 +402,6 @@ class Captcha
         // Resample
         $bgImage = @imagecreatefromjpeg($gb);
         @imagecopyresampled($this->image, $bgImage, 0, 0, 0, 0, $this->imageW, $this->imageH, $width, $height);
-        @imagedestroy($bgImage);
     }
 
 
