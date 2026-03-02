@@ -50,7 +50,7 @@ class Install extends Api
      * 需要的依赖版本
      */
     static array $needDependentVersion = [
-        'php'  => '8.0.2',
+        'php'  => '8.2.0',
         'npm'  => '9.8.1',
         'cnpm' => '7.1.0',
         'node' => '20.14.0',
