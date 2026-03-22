@@ -125,6 +125,13 @@ class Manage
         // 解压
         Filesystem::unzip($zipFile);
 
+        // 读取ini（提前读取一次确保文件是存在的，避免异常导致zip未被删除）
+        $info = Server::getIni($this->modulesDir);
+        if (!empty($info)) {
+            $moduleMD5     = md5_file($zipFile);
+            $moduleComment = Server::getModulePackageComment($zipFile);
+        }
+
         // 删除下载的zip
         @unlink($zipFile);
 
@@ -136,6 +143,12 @@ class Manage
             'state' => self::WAIT_INSTALL,
         ]);
 
+        // 建立 .runtime
+        Server::createRuntime($this->modulesDir, [
+            'moduleMD5'     => $moduleMD5 ?? '',
+            'moduleComment' => $moduleComment ?? '',
+        ]);
+
         return $zipFile;
     }
 
@@ -145,7 +158,7 @@ class Manage
      * @return array 模块的基本信息
      * @throws Throwable
      */
-    public function upload(string $token, string $file): array
+    public function upload(string $file): array
     {
         $file = Filesystem::fsFit(root_path() . 'public' . $file);
         if (!is_file($file)) {
@@ -160,12 +173,18 @@ class Manage
         $copyToDir = Filesystem::unzip($copyTo);
         $copyToDir .= DIRECTORY_SEPARATOR;
 
+        // 读取ini
+        $info = Server::getIni($copyToDir);
+        if (!empty($info)) {
+            $moduleMD5     = md5_file($file);
+            $moduleComment = Server::getModulePackageComment($file);
+        }
+
         // 删除zip
         @unlink($file);
         @unlink($copyTo);
 
-        // 读取ini
-        $info = Server::getIni($copyToDir);
+        // uid 检查
         if (empty($info['uid'])) {
             Filesystem::delDir($copyToDir);
             // 基本配置不完整
@@ -204,23 +223,6 @@ class Manage
             }
         }
 
-        // 安装预检 - 系统版本号要求、已安装模块的互斥和依赖检测
-        try {
-            Server::installPreCheck([
-                'uid'           => $info['uid'],
-                'version'       => $info['version'],
-                'sysVersion'    => Config::get('buildadmin.version'),
-                'nuxtVersion'   => Server::getNuxtVersion(),
-                'moduleVersion' => $info['version'],
-                'ba-user-token' => $token,
-                'installed'     => Server::getInstalledIds($this->installDir),
-                'server'        => 1,
-            ]);
-        } catch (Throwable $e) {
-            Filesystem::delDir($copyToDir);
-            throw $e;
-        }
-
         $newInfo = ['state' => self::WAIT_INSTALL];
         if ($upgrade) {
             $info['update'] = 1;
@@ -238,6 +240,12 @@ class Manage
         // 设置为待安装状态
         $this->setInfo($newInfo);
 
+        // 建立 .runtime
+        Server::createRuntime($this->modulesDir, [
+            'moduleMD5'     => $moduleMD5 ?? '',
+            'moduleComment' => $moduleComment ?? '',
+        ]);
+
         return $info;
     }
 
@@ -246,7 +254,7 @@ class Manage
      * @return array 模块基本信息
      * @throws Throwable
      */
-    public function install(bool $update): array
+    public function install(string $token, bool $update): array
     {
         $state = $this->getInstallState();
 
@@ -272,11 +280,35 @@ class Manage
             }
         }
 
+        // 模块信息
+        $info    = $this->getInfo();
+        $runtime = Server::getRuntime($this->modulesDir);
+
+        // 安装预检 - 系统版本号要求、已安装模块的互斥和依赖检测等
+        try {
+            Server::installPreCheck([
+                'uid'           => $info['uid'],
+                'version'       => $info['version'],
+                'sysVersion'    => Config::get('buildadmin.version'),
+                'nuxtVersion'   => Server::getNuxtVersion(),
+                'moduleVersion' => $info['version'],
+                'ba-user-token' => $token,
+                'installed'     => Server::getInstalledIds($this->installDir),
+                'md5'           => $runtime['moduleMD5'] ?? '',
+                'comment'       => $runtime['moduleComment'] ?? '',
+                'server'        => 1,
+            ]);
+        } catch (Throwable $e) {
+            if (!$update) {
+                Filesystem::delDir($this->modulesDir);
+            }
+            throw $e;
+        }
+
         // 导入sql
         Server::importSql($this->modulesDir);
 
         // 如果是更新，先执行更新脚本
-        $info = $this->getInfo();
         if ($update) {
             $info['update'] = 1;
             Server::execEvent($this->uid, 'update');
@@ -358,9 +390,6 @@ class Manage
     {
         // 安装 WebBootstrap
         Server::installWebBootstrap($this->uid, $this->modulesDir);
-
-        // 建立 .runtime
-        Server::createRuntime($this->modulesDir);
 
         // 冲突检查
         $this->conflictHandle($trigger);

@@ -43,13 +43,14 @@ class Module extends Backend
     {
         AdminLog::instance()->setTitle(__('Install module'));
         $uid    = $this->request->param("uid/s", '');
+        $token  = $this->request->param("token/s", '');
         $update = $this->request->param("update/b", false);
-        if (!$uid) {
-            $this->error(__('Parameter error'));
-        }
+        if (!$uid) $this->error(__('Parameter error'));
+        if (!$token) $this->error(__('Please login to the official website account first'));
+
         $res = [];
         try {
-            $res = Manage::instance($uid)->install($update);
+            $res = Manage::instance($uid)->install($token, $update);
         } catch (Exception $e) {
             $this->error(__($e->getMessage()), $e->getData(), $e->getCode());
         } catch (Throwable $e) {
@@ -117,14 +118,12 @@ class Module extends Backend
     public function upload(): void
     {
         AdminLog::instance()->setTitle(__('Upload install module'));
-        $file  = $this->request->get("file/s", '');
-        $token = $this->request->get("token/s", '');
+        $file = $this->request->get("file/s", '');
         if (!$file) $this->error(__('Parameter error'));
-        if (!$token) $this->error(__('Please login to the official website account first'));
 
         $info = [];
         try {
-            $info = Manage::instance()->upload($token, $file);
+            $info = Manage::instance()->upload($file);
         } catch (Exception $e) {
             $this->error(__($e->getMessage()), $e->getData(), $e->getCode());
         } catch (Throwable $e) {
