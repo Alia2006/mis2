@@ -122,6 +122,12 @@
                                     :model-value="configStore.getColorVal('menuActiveColor')"
                                 />
                             </el-form-item>
+                            <el-form-item :label="t('layouts.Side menu hover background color')">
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'menuHoverBackground')"
+                                    :model-value="configStore.getColorVal('menuHoverBackground')"
+                                />
+                            </el-form-item>
                             <el-form-item :label="t('layouts.Show side menu top bar (logo bar)')">
                                 <el-switch
                                     @change="onCommitState($event, 'menuShowTopBar')"

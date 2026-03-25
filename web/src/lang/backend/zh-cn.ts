@@ -23,6 +23,7 @@ export default {
         'Side menu text color': '侧边菜单文字颜色',
         'Side menu active item background color': '侧边菜单激活项背景色',
         'Side menu active item text color': '侧边菜单激活项文字色',
+        'Side menu hover background color': '侧边菜单悬停时背景色',
         'Show side menu top bar (logo bar)': '显示侧边菜单顶栏(LOGO栏)',
         'Side menu top bar background color': '侧边菜单顶栏背景色',
         'Side menu width (when expanded)': '侧边菜单宽度(展开时)',

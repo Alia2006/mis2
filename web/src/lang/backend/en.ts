@@ -21,6 +21,7 @@ export default {
         'Side menu text color': 'Side menu text color',
         'Side menu active item background color': 'Background color of the side menu activation item',
         'Side menu active item text color': 'Side menu activation item text color',
+        'Side menu hover background color': 'Background color when hovering over the side menu',
         'Show side menu top bar (logo bar)': 'Display the top bar of the side menu (Logo Bar)',
         'Side menu top bar background color': 'Background color of the top bar of the side menu ',
         'Side menu width (when expanded)': 'Width of the side menu (Unfolding)',

@@ -33,6 +33,8 @@ export interface Layout {
     menuActiveBackground: string[]
     // 侧边菜单激活项文字色
     menuActiveColor: string[]
+    // 侧边菜单悬停时背景色
+    menuHoverBackground: string[]
     // 侧边菜单顶栏背景色
     menuTopBarBackground: string[]
     /* 侧边栏 - e */
