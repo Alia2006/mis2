@@ -72,13 +72,16 @@
 }
 /* dialog 滚动条样式优化结束 >>> */
 
-/* 小屏设备 el-radio-group 样式优化开始 <<< */
-.ba-input-item-radio {
-    margin-bottom: 10px;
-    .el-radio-group {
-        .el-radio {
-            margin-bottom: 8px;
+/* 小屏设备 el-radio 和 el-checkbox 样式优化开始 <<< */
+.ba-input-item-radio,
+.ba-input-item-checkbox {
+    .el-radio-group,
+    .el-checkbox-group {
+        margin-top: -8px;
+        .el-radio,
+        .el-checkbox {
+            margin-top: 8px;
         }
     }
 }
-/* 小屏设备 el-radio-group 样式优化结束 >>> */
+/* 小屏设备 el-radio 和 el-checkbox 样式优化结束 >>> */
