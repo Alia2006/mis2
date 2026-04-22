@@ -55,11 +55,11 @@ class Install extends Api
      */
     static array $needDependentVersion = [
         'php'  => '8.2.0',
-        'npm'  => '9.8.1',
-        'cnpm' => '7.1.0',
-        'node' => '20.14.0',
-        'yarn' => '1.2.0',
-        'pnpm' => '6.32.13',
+        'npm'  => '10.9.2',
+        'cnpm' => '9.4.0',
+        'node' => '22.13.0',
+        'yarn' => '1.22.22',
+        'pnpm' => '10.0.0',
     ];
 
     /**
