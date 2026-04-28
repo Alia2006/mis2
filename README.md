@@ -15,22 +15,22 @@
 <br />
 <p align="center">
     <a href="https://www.thinkphp.cn/" target="_blank">
-        <img src="https://img.shields.io/badge/ThinkPHP-%3E8.1-brightgreen?color=91aac3&labelColor=439EFD" alt="vue">
+        <img src="https://img.shields.io/badge/ThinkPHP-%3E 8.1-brightgreen?color=91aac3&labelColor=439EFD" alt="vue">
     </a>
     <a href="https://v3.vuejs.org/" target="_blank">
-        <img src="https://img.shields.io/badge/Vue-%3E3.5-brightgreen?color=91aac3&labelColor=439EFD" alt="vue">
+        <img src="https://img.shields.io/badge/Vue-%3E 3.5-brightgreen?color=91aac3&labelColor=439EFD" alt="vue">
+    </a>
+    <a href="https://cn.vitejs.dev/" target="_blank">
+        <img src="https://img.shields.io/badge/Vite-%3E 8.0-blue?color=91aac3&labelColor=439EFD" alt="vite">
     </a>
     <a href="https://element-plus.org/zh-CN/guide/changelog.html" target="_blank">
-        <img src="https://img.shields.io/badge/Element--Plus-%3E2.9-brightgreen?color=91aac3&labelColor=439EFD" alt="element plus">
+        <img src="https://img.shields.io/badge/Element--Plus-%3E 2.13-brightgreen?color=91aac3&labelColor=439EFD" alt="element plus">
     </a>
     <a href="https://www.tslang.cn/" target="_blank">
-        <img src="https://img.shields.io/badge/TypeScript-%3E5.7-blue?color=91aac3&labelColor=439EFD" alt="typescript">
-    </a>
-    <a href="https://vitejs.dev/" target="_blank">
-        <img src="https://img.shields.io/badge/Vite-%3E6.0-blue?color=91aac3&labelColor=439EFD" alt="vite">
+        <img src="https://img.shields.io/badge/TypeScript-%3E 6.0-blue?color=91aac3&labelColor=439EFD" alt="typescript">
     </a>
     <a href="https://pinia.vuejs.org/" target="_blank">
-        <img src="https://img.shields.io/badge/Pinia-%3E2.3-blue?color=91aac3&labelColor=439EFD" alt="vite">
+        <img src="https://img.shields.io/badge/Pinia-%3E 3.0-blue?color=91aac3&labelColor=439EFD" alt="vite">
     </a>
     <a href="https://gitee.com/wonderful-code/buildadmin/blob/master/LICENSE" target="_blank">
         <img src="https://img.shields.io/badge/Apache2.0-license-blue?color=91aac3&labelColor=439EFD" alt="license">
@@ -44,11 +44,7 @@
 <br>
 
 ### 介绍
-🌈 基于 Vue3.x + ThinkPHP8 + TypeScript + Vite + Pinia + Element Plus 等流行技术栈的后台管理系统，支持常驻内存运行、可视化 CRUD 代码生成、自带 WEB 终端、自适应多端、同时提供 Web、WebNuxt、Server 端，内置全局数据回收站和字段级数据修改保护、自动注册路由、无限子级权限管理等，无需授权即可免费商用，希望能帮助大家实现快速开发。
-
-✨ 关于 `Star` 的小小期待 ✨
-
-~~文档和演示站的「入场券」是点亮 Star~~ 哈哈哈，开个玩笑，实际上**您不需要任何「门槛」即可访问源码、文档和演示站**，在您丝滑体验文档与强大功能的同时，我们有个温暖的请求 —— 若 `BuildAdmin` 让您眼前一亮，请为我们点亮一颗 `Star`，这将是一次开发者间最浪漫的「确认过眼神」，亦可助我们向本应「自由开放」的开源界证明：优秀的项目我会发自内心的点亮 Star ~（而不是像某些同类产品哪样，将 Star 作为文档或演示站的「强制交换」条件）
+🌈 基于 Vue3 + ThinkPHP8 + TypeScript + Vite + Pinia + Element Plus 等流行技术栈的后台管理系统，支持常驻内存运行、可视化 CRUD 代码生成、自带 WEB 终端、自适应多端、同时提供 Web、WebNuxt、Server 端，内置全局数据回收站和字段级数据修改保护、自动注册路由、无限子级权限管理等，无需授权即可免费商用，希望能帮助大家实现快速开发。
 
 ### 主要特性
 **🚀 CRUD 代码生成：**
@@ -61,7 +57,7 @@
 除了基于 `ThinkPHP8` 前后端分离架构外，我们的 `Vue3` 使用了 `setup、useTemplateRef` 等，状态管理使用 `Pinia`，并使用了 `TypeScript、Vite` 等可以为你的知识面添砖加瓦的技术栈。使用流行技术栈自然代表本框架兼容相关（Vue3+TP8+PHP8.x）生态，生态系统内数不清的库、包、组件，能够使您的开发事半功倍。
 
 **🎨 模块市场：**
-一键安装数据导入导出、短信发送、支付、云存储、富文本编辑器，甚至 CMS、商城、社区、纯前端技术栈的学习案例项目等，随时随地为系统添砖加瓦，系统能够自动维护 `package.json` 和 `composer.json` 并通过内置终端自动完成模块所需依赖的安装。
+一键安装数据[导入](https://modules.buildadmin.com/dataimport)[导出](https://modules.buildadmin.com/dataexport)、[短信发送](https://modules.buildadmin.com/sms)、[支付](https://modules.buildadmin.com/pay)、[云存储](https://modules.buildadmin.com/?keywords=%E4%BA%91%E5%AD%98%E5%82%A8)、[富文本编辑器](https://modules.buildadmin.com/?keywords=%E5%AF%8C%E6%96%87%E6%9C%AC)，甚至 [CMS](https://modules.buildadmin.com/cms)、[多商户商城](https://modules.buildadmin.com/shop)、[社区](https://modules.buildadmin.com/ask)、纯前端技术栈的学习案例项目等，随时随地为系统添砖加瓦，系统能够自动维护 `package.json` 和 `composer.json` 并通过内置终端自动完成模块所需依赖的安装。
 
 **🔀 前后端分离：**
 项目的 `web` 文件夹内包含： `干净`（不含后端代码）、`完整`（所有前端代码文件均在此内）的前端代码文件，代码和部署均可前后分离，对前端开发者友好，作为纯前端开发者，您可以将 BAdmin 当做学习与资源的社群，本系统可为您准备好案例和模板等所需要的环境，而您只需专注于学习或工作，不需要会任何后端代码！（邀您：[和我们一起](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=paVQA1dlpsVNHTla-ZAts6e4pPK4va9R&authKey=Eto0dq9DOuYldJPl6URFAXXHlG2AFQtPUBxNHEByEiuSg9OraxMniXIaWFt46OKi&noverify=0&group_code=1039646575) ）
