@@ -58,6 +58,7 @@ export default [
             'no-case-declarations': 'off',
             'no-console': 'off',
             'no-control-regex': 'off',
+            'no-useless-assignment': 'off',
 
             'vue/v-on-event-hyphenation': 'off',
             'vue/custom-event-name-casing': 'off',
@@ -77,6 +78,7 @@ export default [
             'vue/multi-word-component-names': 'off',
             'vue/require-prop-types': 'off',
             'vue/html-indent': 'off',
+            'vue/no-required-prop-with-default': 'off',
 
             '@typescript-eslint/no-unsafe-function-type': 'off',
             '@typescript-eslint/no-empty-function': 'off',

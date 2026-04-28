@@ -98,16 +98,6 @@ const onRollback = (id: string) => {
 :deep(.color-red) {
     color: var(--el-color-danger) !important;
 }
-.table-el-tree {
-    :deep(.el-tree-node) {
-        white-space: unset;
-    }
-    :deep(.el-tree-node__content) {
-        display: block;
-        align-items: unset;
-        height: unset;
-    }
-}
 .info-content {
     word-wrap: break-word;
     word-break: break-all;

@@ -80,14 +80,4 @@ const onRestore = (id: string) => {
 :deep(.color-red) {
     color: var(--el-color-danger) !important;
 }
-.table-el-tree {
-    :deep(.el-tree-node) {
-        white-space: unset;
-    }
-    :deep(.el-tree-node__content) {
-        display: block;
-        align-items: unset;
-        height: unset;
-    }
-}
 </style>

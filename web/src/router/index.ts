@@ -15,7 +15,7 @@ const router = createRouter({
     routes: staticRoutes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
     NProgress.configure({ showSpinner: false })
     NProgress.start()
     if (!window.existLoading) {
@@ -66,8 +66,6 @@ router.beforeEach((to, from, next) => {
         }
     }
     // 动态加载语言包-end
-
-    next()
 })
 
 // 路由加载后

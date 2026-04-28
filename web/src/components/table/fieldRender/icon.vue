@@ -10,6 +10,7 @@
 
 <script setup lang="ts">
 import { TableColumnCtx } from 'element-plus'
+import Icon from '/@/components/icon/index.vue'
 import { getCellValue, invokeTableContextDataFun } from '/@/components/table/index'
 
 interface Props {

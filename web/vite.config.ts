@@ -2,8 +2,8 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import type { ConfigEnv, UserConfig } from 'vite'
 import { loadEnv } from 'vite'
-import { svgBuilder } from '/@/components/icon/svg/index'
-import { customHotUpdate, isProd } from '/@/utils/vite'
+import { svgBuilder } from './src/components/icon/svg/index'
+import { customHotUpdate, isProd } from './src/utils/vite'
 
 const pathResolve = (dir: string): any => {
     return resolve(__dirname, '.', dir)
@@ -34,15 +34,6 @@ const viteConfig = ({ mode }: ConfigEnv): UserConfig => {
             outDir: VITE_OUT_DIR,
             emptyOutDir: true,
             chunkSizeWarningLimit: 1500,
-            rollupOptions: {
-                output: {
-                    manualChunks: {
-                        // 分包配置，配置完成自动按需加载
-                        vue: ['vue', 'vue-router', 'pinia', 'vue-i18n', 'element-plus'],
-                        echarts: ['echarts'],
-                    },
-                },
-            },
         },
     }
 }
