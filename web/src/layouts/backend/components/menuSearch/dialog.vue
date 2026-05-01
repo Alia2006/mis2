@@ -15,7 +15,7 @@
                     size="large"
                     ref="menuSearchInputRef"
                     class="menu-search-input"
-                    placeholder="搜索其实很简单"
+                    :placeholder="t('layouts.Search is actually very simple')"
                     filterable
                     automatic-dropdown
                     @change="onMenuSearchChange"
