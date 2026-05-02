@@ -1,7 +1,6 @@
 <template>
     <div>
         <el-dialog
-            width="600"
             :show-close="false"
             @close="onMenuSearchClosed"
             @opened="onMenuSearchOpened"
@@ -9,6 +8,7 @@
             class="menu-search-dialog"
             header-class="menu-search-dialog-header"
             :destroy-on-close="true"
+            :width="config.layout.shrink ? '80%' : 600"
         >
             <div>
                 <el-select
@@ -20,6 +20,7 @@
                     automatic-dropdown
                     @change="onMenuSearchChange"
                     @visible-change="onMenuSearchVisibleChange"
+                    :popper-style="{ zIndex: SYSTEM_ZINDEX }"
                 >
                     <SelectOption :menus="navTabs.state.tabsViewRoutes" />
                 </el-select>
@@ -33,10 +34,13 @@ import { ElNotification } from 'element-plus'
 import { useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SelectOption from '/@/layouts/backend/components/menuSearch/selectOption.vue'
+import { useConfig } from '/@/stores/config'
+import { SYSTEM_ZINDEX } from '/@/stores/constant/common'
 import { useNavTabs } from '/@/stores/navTabs'
 import { onClickMenu } from '/@/utils/router'
 
 const { t } = useI18n()
+const config = useConfig()
 const navTabs = useNavTabs()
 const model = defineModel<boolean>({ default: false })
 const menuSearchInputRef = useTemplateRef('menuSearchInputRef')
