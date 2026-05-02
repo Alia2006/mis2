@@ -28,7 +28,7 @@ const siteConfig = useSiteConfig()
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    padding: 10px;
+    padding: 10px 20px;
     background: v-bind('config.layout.layoutMode != "Streamline" ?  config.getColorVal("menuTopBarBackground"):"transparent"');
 }
 .layout-title-bar-center {
@@ -36,14 +36,13 @@ const siteConfig = useSiteConfig()
 }
 .logo-img {
     width: 28px;
-    margin-right: -6px;
     &.collapse {
         margin: 0 auto;
     }
 }
 .website-name {
     display: block;
-    padding-left: 12px;
+    padding: 0 2px;
     font-size: var(--el-font-size-extra-large);
     font-weight: 600;
     overflow: hidden;

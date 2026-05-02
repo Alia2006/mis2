@@ -5,8 +5,11 @@
         <MenuVerticalChildren v-if="config.layout.layoutMode == 'Double'" />
         <MenuVertical v-else />
 
-        <div class="aside-footer-toolbar-wrap" :class="config.layout.menuToolBarAutoHide ? 'auto-hide' : ''">
-            <div class="aside-footer-toolbar" :class="config.layout.menuCollapse ? 'collapse' : ''">
+        <div
+            class="aside-footer-toolbar-wrap"
+            :class="[config.layout.menuCollapse ? 'collapse' : '', config.layout.menuToolBarAutoHide ? 'auto-hide' : '']"
+        >
+            <div class="aside-footer-toolbar">
                 <Icon
                     @click="onMenuCollapse"
                     :name="config.layout.menuCollapse ? 'fa fa-indent' : 'fa fa-dedent'"
@@ -98,10 +101,18 @@ const onMenuCollapse = function () {
             }
         }
     }
-    .aside-footer-toolbar.collapse {
-        flex-direction: column-reverse;
-        padding: 10px 0;
+    &.collapse {
         height: 100px;
+        .aside-footer-toolbar {
+            flex-direction: column-reverse;
+            padding: 10px 0;
+            height: 100px;
+        }
+    }
+    &.auto-hide.collapse {
+        .aside-footer-toolbar {
+            top: 100px;
+        }
     }
     &.auto-hide {
         cursor: pointer;
