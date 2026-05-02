@@ -347,12 +347,13 @@ class Crud extends Backend
         }
 
         // 数据表是否有数据
-        $connection = TableManager::getConnection($info['table']['databaseConnection'] ?? '');
-        $tableName  = TableManager::tableName($info['table']['name'], false, $connection);
-        $adapter    = TableManager::phinxAdapter(true, $connection);
+        $connection      = TableManager::getConnection($info['table']['databaseConnection'] ?? '');
+        $tableName       = TableManager::tableName($info['table']['name'], false, $connection);
+        $tableFullName   = TableManager::tableName($info['table']['name'], true, $connection);
+        $adapter         = TableManager::phinxAdapter(true, $connection);
         if ($adapter->hasTable($tableName)) {
             $info['table']['empty'] = Db::connect($connection)
-                ->name($tableName)
+                ->table($tableFullName)
                 ->limit(1)
                 ->select()
                 ->isEmpty();
