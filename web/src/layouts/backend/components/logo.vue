@@ -1,7 +1,13 @@
 <template>
-    <div class="layout-logo">
-        <img v-if="config.layout.menuCollapse" class="logo-img" src="~assets/logo.png" alt="logo" />
-        <div v-if="!config.layout.menuCollapse" :style="{ color: config.getColorVal('menuActiveColor') }" class="website-name">
+    <div class="layout-title-bar" :class="config.layout.menuTopBarCenter ? 'layout-title-bar-center' : ''">
+        <img
+            v-if="config.layout.menuCollapse || config.layout.menuTopBarLogo"
+            :class="config.layout.menuCollapse ? 'collapse' : ''"
+            src="~assets/logo.png"
+            class="logo-img"
+            alt="logo"
+        />
+        <div v-if="!config.layout.menuCollapse" class="website-name">
             {{ siteConfig.siteName }}
         </div>
     </div>
@@ -16,7 +22,7 @@ const siteConfig = useSiteConfig()
 </script>
 
 <style scoped lang="scss">
-.layout-logo {
+.layout-title-bar {
     width: 100%;
     height: 50px;
     display: flex;
@@ -25,9 +31,15 @@ const siteConfig = useSiteConfig()
     padding: 10px;
     background: v-bind('config.layout.layoutMode != "Streamline" ?  config.getColorVal("menuTopBarBackground"):"transparent"');
 }
+.layout-title-bar-center {
+    justify-content: center;
+}
 .logo-img {
     width: 28px;
-    margin: 0 auto;
+    margin-right: -6px;
+    &.collapse {
+        margin: 0 auto;
+    }
 }
 .website-name {
     display: block;
@@ -37,5 +49,6 @@ const siteConfig = useSiteConfig()
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: v-bind('config.getColorVal("menuTopBarColor")');
 }
 </style>

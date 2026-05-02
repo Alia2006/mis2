@@ -5,16 +5,24 @@
         <MenuVerticalChildren v-if="config.layout.layoutMode == 'Double'" />
         <MenuVertical v-else />
 
-        <div class="aside-footer-toolbar" :class="config.layout.menuCollapse ? 'collapse' : ''">
-            <Icon
-                @click="onMenuCollapse"
-                :name="config.layout.menuCollapse ? 'fa fa-indent' : 'fa fa-dedent'"
-                :class="config.layout.menuCollapse ? 'unfold' : ''"
-                :color="config.getColorVal('menuColor')"
-                size="14"
-                class="footer-toolbar-item"
-            />
-            <Icon @click="onMenuSearch" name="fa fa-search" :color="config.getColorVal('menuColor')" size="16" class="footer-toolbar-item" />
+        <div class="aside-footer-toolbar-wrap" :class="config.layout.menuToolBarAutoHide ? 'auto-hide' : ''">
+            <div class="aside-footer-toolbar" :class="config.layout.menuCollapse ? 'collapse' : ''">
+                <Icon
+                    @click="onMenuCollapse"
+                    :name="config.layout.menuCollapse ? 'fa fa-indent' : 'fa fa-dedent'"
+                    :class="config.layout.menuCollapse ? 'unfold' : ''"
+                    :color="config.getColorVal('menuToolBarColor')"
+                    size="14"
+                    class="footer-toolbar-item"
+                />
+                <Icon
+                    @click="onMenuSearch"
+                    name="fa fa-search"
+                    :color="config.getColorVal('menuToolBarColor')"
+                    size="16"
+                    class="footer-toolbar-item"
+                />
+            </div>
         </div>
 
         <MenuSearchDialog v-model="menuSearchDialogVisible" />
@@ -68,26 +76,44 @@ const onMenuCollapse = function () {
 </script>
 
 <style scoped lang="scss">
-.aside-footer-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.aside-footer-toolbar-wrap {
+    position: relative;
     height: 50px;
-    padding: 0 20px;
-    .footer-toolbar-item {
-        padding: 10px;
-        border-radius: 50%;
-        cursor: pointer;
-        &:hover {
-            color: var(--el-menu-active-color) !important;
-            background-color: var(--el-menu-hover-bg-color);
+    .aside-footer-toolbar {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 50px;
+        width: 100%;
+        padding: 0 20px;
+        transition: all 0.2s ease;
+        .footer-toolbar-item {
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            &:hover {
+                color: var(--el-menu-active-color) !important;
+                background-color: var(--el-menu-hover-bg-color);
+            }
         }
     }
-}
-.aside-footer-toolbar.collapse {
-    flex-direction: column-reverse;
-    padding: 10px 0;
-    height: 100px;
+    .aside-footer-toolbar.collapse {
+        flex-direction: column-reverse;
+        padding: 10px 0;
+        height: 100px;
+    }
+    &.auto-hide {
+        cursor: pointer;
+        .aside-footer-toolbar {
+            top: 50px;
+        }
+        &:hover {
+            .aside-footer-toolbar {
+                top: 0;
+            }
+        }
+    }
 }
 .layout-aside-Default:not(.shrink) {
     background: var(--ba-bg-color-overlay);
