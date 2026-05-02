@@ -38,6 +38,11 @@ export const useConfig = defineStore(
             headerBarTabActiveColor: ['#000000', '#409EFF'],
             headerBarBackground: ['#ffffff', '#1d1e1f'],
             headerBarHoverBackground: ['#f5f5f5', '#18222c'],
+
+            // tour
+            // 布局漫游式引导
+            layoutTour: false,
+            layoutTourUnfinished: true,
         })
 
         const lang: Lang = reactive({

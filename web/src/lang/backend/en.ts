@@ -54,6 +54,12 @@ export default {
         'The top bar of the side menu displays the LOGO': 'The top bar of the side menu displays the LOGO',
         'The toolbar at the bottom of the side menu automatically hides': 'The toolbar at the bottom of the side menu automatically hides',
         'Color of the toolbar icons at the bottom of the side menu': 'Color of the toolbar icons at the bottom of the side menu',
+        'Context menu': 'Context menu',
+        'Menu Search': 'Menu Search',
+        'Context menu tips': 'Right-clicking on any tab will bring up the menu related to that tab',
+        'Menu Search tips': 'Can quickly search and switch menus',
+        'Layout configuration tips':
+            'Click to open the layout configuration. Here you can switch the overall layout mode of the background and other settings.',
         Login: 'Login',
         Password: 'Password',
         Username: 'Username',

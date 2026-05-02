@@ -135,7 +135,7 @@
         </el-popover>
 
         <!-- 配置 -->
-        <div @click="configStore.setLayout('showDrawer', true)" class="nav-menu-item">
+        <div @click="configStore.setLayout('showDrawer', true)" class="nav-menu-item ba-layout-config-btn">
             <Icon :color="configStore.getColorVal('headerBarTabColor')" class="nav-menu-icon" name="fa fa-cogs" size="18" />
         </div>
 

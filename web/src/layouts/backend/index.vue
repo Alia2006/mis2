@@ -3,27 +3,26 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { useConfig } from '/@/stores/config'
-import { useNavTabs } from '/@/stores/navTabs'
-import { useTerminal } from '/@/stores/terminal'
-import { useSiteConfig } from '/@/stores/siteConfig'
-import { useAdminInfo } from '/@/stores/adminInfo'
+import { useEventListener } from '@vueuse/core'
+import { isEmpty } from 'lodash-es'
+import { onBeforeMount, onMounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
-import Default from '/@/layouts/backend/container/default.vue'
-import Classic from '/@/layouts/backend/container/classic.vue'
-import Streamline from '/@/layouts/backend/container/streamline.vue'
-import Double from '/@/layouts/backend/container/double.vue'
-import { onMounted, onBeforeMount } from 'vue'
-import { Session } from '/@/utils/storage'
 import { index } from '/@/api/backend'
-import { handleAdminRoute, getFirstRoute, routePush } from '/@/utils/router'
+import Classic from '/@/layouts/backend/container/classic.vue'
+import Default from '/@/layouts/backend/container/default.vue'
+import Double from '/@/layouts/backend/container/double.vue'
+import Streamline from '/@/layouts/backend/container/streamline.vue'
 import router from '/@/router/index'
 import { adminBaseRoutePath } from '/@/router/static/adminBase'
-import { useEventListener } from '@vueuse/core'
+import { useAdminInfo } from '/@/stores/adminInfo'
+import { useConfig } from '/@/stores/config'
 import { BEFORE_RESIZE_LAYOUT } from '/@/stores/constant/cacheKey'
-import { isEmpty } from 'lodash-es'
+import { useNavTabs } from '/@/stores/navTabs'
+import { useSiteConfig } from '/@/stores/siteConfig'
+import { useTerminal } from '/@/stores/terminal'
 import { setNavTabsWidth } from '/@/utils/layout'
+import { getFirstRoute, handleAdminRoute, routePush } from '/@/utils/router'
+import { Session } from '/@/utils/storage'
 
 defineOptions({
     components: { Default, Classic, Streamline, Double },
@@ -69,6 +68,13 @@ const init = () => {
 
         if (res.data.menus) {
             handleAdminRoute(res.data.menus)
+
+            // 显示布局引导
+            if (config.layout.layoutTourUnfinished) {
+                setTimeout(() => {
+                    config.setLayout('layoutTour', true)
+                }, 1000)
+            }
 
             // 预跳转到上次路径
             if (route.params.to) {

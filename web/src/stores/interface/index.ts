@@ -61,6 +61,13 @@ export interface Layout {
     // 顶栏激活项文字色
     headerBarTabActiveColor: string[]
     /* 顶栏 - e */
+
+    /* tour - s */
+    // 布局漫游式引导显示状态
+    layoutTour: boolean
+    // 布局漫游式引导未完成标记
+    layoutTourUnfinished: boolean
+    /* tour - e */
 }
 
 export interface Lang {
