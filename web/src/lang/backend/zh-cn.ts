@@ -14,7 +14,7 @@ export default {
         default: '默认',
         classic: '经典',
         'Single column': '单栏',
-        'Double column': '双栏',
+        'Double column': '顶侧双栏',
         'overall situation': '全局',
         'Background page switching animation': '后台页面切换动画',
         'Please select an animation name': '请选择动画名称',

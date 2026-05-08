@@ -1,6 +1,6 @@
 <template>
     <div class="layout-config-drawer">
-        <el-drawer :model-value="configStore.layout.showDrawer" :title="t('layouts.Layout configuration')" size="310px" @close="onCloseDrawer">
+        <el-drawer :model-value="configStore.layout.showDrawer" :title="t('layouts.Layout configuration')" size="410px" @close="onCloseDrawer">
             <el-scrollbar class="layout-mode-style-scrollbar">
                 <el-form :model="configStore.layout">
                     <div class="layout-mode-styles-box">
@@ -17,10 +17,11 @@
                                             <div class="layout-mode-style-aside"></div>
                                             <div class="layout-mode-style-container-box">
                                                 <div class="layout-mode-style-header"></div>
-                                                <div class="layout-mode-style-container"></div>
+                                                <div class="layout-mode-style-container">
+                                                    <div class="layout-mode-style-name">{{ t('layouts.default') }}</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="layout-mode-style-name">{{ t('layouts.default') }}</div>
                                     </div>
                                 </el-col>
                                 <el-col :span="12">
@@ -33,10 +34,11 @@
                                             <div class="layout-mode-style-aside"></div>
                                             <div class="layout-mode-style-container-box">
                                                 <div class="layout-mode-style-header"></div>
-                                                <div class="layout-mode-style-container"></div>
+                                                <div class="layout-mode-style-container">
+                                                    <div class="layout-mode-style-name">{{ t('layouts.classic') }}</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="layout-mode-style-name">{{ t('layouts.classic') }}</div>
                                     </div>
                                 </el-col>
                             </el-row>
@@ -50,10 +52,11 @@
                                         <div class="layout-mode-style-box">
                                             <div class="layout-mode-style-container-box">
                                                 <div class="layout-mode-style-header"></div>
-                                                <div class="layout-mode-style-container"></div>
+                                                <div class="layout-mode-style-container">
+                                                    <div class="layout-mode-style-name">{{ t('layouts.Single column') }}</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="layout-mode-style-name">{{ t('layouts.Single column') }}</div>
                                     </div>
                                 </el-col>
                                 <el-col :span="12">
@@ -66,10 +69,11 @@
                                             <div class="layout-mode-style-aside"></div>
                                             <div class="layout-mode-style-container-box">
                                                 <div class="layout-mode-style-header"></div>
-                                                <div class="layout-mode-style-container"></div>
+                                                <div class="layout-mode-style-container">
+                                                    <div class="layout-mode-style-name">{{ t('layouts.Double column') }}</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="layout-mode-style-name">{{ t('layouts.Double column') }}</div>
                                     </div>
                                 </el-col>
                             </el-row>
@@ -343,15 +347,14 @@ const restoreDefault = () => {
         border: 1px solid var(--el-color-primary);
     }
     .layout-mode-style-name {
-        position: absolute;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--el-color-primary-light-5);
-        border-radius: 50%;
+        border-radius: var(--el-border-radius-base);
         height: 50px;
-        width: 50px;
-        border: 1px solid var(--el-color-primary-light-3);
+        width: 100px;
+        border: 1px solid var(--el-color-primary-light-7);
     }
     .layout-mode-style-box {
         display: flex;
@@ -361,9 +364,6 @@ const restoreDefault = () => {
         height: 100%;
     }
     &.default {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         .layout-mode-style-aside {
             width: 18%;
             height: 90%;
@@ -379,6 +379,9 @@ const restoreDefault = () => {
                 background-color: var(--el-border-color-lighter);
             }
             .layout-mode-style-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 100%;
                 height: 85%;
                 background-color: var(--el-border-color-extra-light);
@@ -387,9 +390,6 @@ const restoreDefault = () => {
         }
     }
     &.classic {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         .layout-mode-style-aside {
             width: 18%;
             height: 100%;
@@ -404,6 +404,9 @@ const restoreDefault = () => {
                 background-color: var(--el-border-color);
             }
             .layout-mode-style-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 100%;
                 height: 90%;
                 background-color: var(--el-border-color-extra-light);
@@ -411,9 +414,6 @@ const restoreDefault = () => {
         }
     }
     &.streamline {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         .layout-mode-style-container-box {
             width: 100%;
             height: 100%;
@@ -423,6 +423,9 @@ const restoreDefault = () => {
                 background-color: var(--el-border-color);
             }
             .layout-mode-style-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 100%;
                 height: 90%;
                 background-color: var(--el-border-color-extra-light);
@@ -430,9 +433,6 @@ const restoreDefault = () => {
         }
     }
     &.double {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         .layout-mode-style-aside {
             width: 18%;
             height: 100%;
@@ -447,6 +447,9 @@ const restoreDefault = () => {
                 background-color: var(--el-border-color);
             }
             .layout-mode-style-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 100%;
                 height: 90%;
                 background-color: var(--el-border-color-extra-light);
