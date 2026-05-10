@@ -36,7 +36,7 @@ const state: {
 })
 
 const verticalMenusScrollbarHeight = computed(() => {
-    const menuTopBarHeight = config.layout.menuShowTopBar ? 50 : 0
+    const menuTopBarHeight = config.layout.menuShowTopBar ? 60 : 0
     const asideFooterToolbarHeight = config.layout.menuCollapse ? 100 : 50
     return 'calc(100% - ' + (menuTopBarHeight + asideFooterToolbarHeight) + 'px)'
 })

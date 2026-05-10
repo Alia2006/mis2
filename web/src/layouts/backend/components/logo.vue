@@ -24,12 +24,12 @@ const siteConfig = useSiteConfig()
 <style scoped lang="scss">
 .layout-title-bar {
     width: 100%;
-    height: 50px;
     display: flex;
     align-items: center;
     box-sizing: border-box;
     padding: 10px 20px;
-    background: v-bind('config.layout.layoutMode != "Streamline" ?  config.getColorVal("menuTopBarBackground"):"transparent"');
+    height: v-bind('config.layout.layoutMode == "Double" ?  "60px":"50px"');
+    background: v-bind('config.layout.layoutMode == "Streamline" ?  "transparent":config.getColorVal("menuTopBarBackground")');
 }
 .layout-title-bar-center {
     justify-content: center;
