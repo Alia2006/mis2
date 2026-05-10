@@ -13,6 +13,7 @@ export default {
         'Layout mode': '布局方式',
         default: '默认',
         classic: '经典',
+        'Left split': '左分双栏',
         'Single column': '单栏',
         'Double column': '顶侧双栏',
         'overall situation': '全局',

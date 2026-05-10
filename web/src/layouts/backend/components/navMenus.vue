@@ -230,7 +230,8 @@ const onClearCache = (type: string) => {
 </script>
 
 <style scoped lang="scss">
-.nav-menus.Default:not(.shrink) {
+.nav-menus.Default:not(.shrink),
+.nav-menus.LeftSplit:not(.shrink) {
     border-radius: var(--el-border-radius-base);
     box-shadow: var(--el-box-shadow-light);
 }

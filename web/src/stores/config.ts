@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { reactive } from 'vue'
 import { STORE_CONFIG } from '/@/stores/constant/cacheKey'
 import type { Crud, Lang, Layout } from '/@/stores/interface'
+import { useNavTabs } from '/@/stores/navTabs'
 
 export const useConfig = defineStore(
     'config',
@@ -21,6 +22,7 @@ export const useConfig = defineStore(
             menuActiveColor: ['#409eff', '#3375b9'],
             menuHoverBackground: ['#ecf5ff', '#18222c'],
             menuWidth: 260,
+            menuWidthLeftSplit: 180,
             menuDefaultIcon: 'fa fa-circle-o',
             menuCollapse: false,
             menuUniqueOpened: false,
@@ -61,11 +63,40 @@ export const useConfig = defineStore(
         })
 
         function menuWidth() {
-            if (layout.shrink) {
-                return layout.menuCollapse ? '0px' : layout.menuWidth + 'px'
+            // 菜单折叠时基本宽度
+            const menuCollapseBaseWidth = 64
+
+            // 左分布局特有
+            if (layout.layoutMode == 'LeftSplit') {
+                const navTabs = useNavTabs()
+
+                // 本布局带来的额外菜单宽度，主菜单宽度 80 + 次级菜单的左右内边距 16
+                const modeMenuWidth = 96
+                // 最终菜单宽度
+                let leftSplitMenuWidth = layout.menuCollapse
+                    ? menuCollapseBaseWidth + modeMenuWidth
+                    : parseInt(layout.menuWidthLeftSplit.toString()) + modeMenuWidth
+
+                // 无次级菜单，固定宽度
+                if (!navTabs.state.childrenMenus.length) {
+                    leftSplitMenuWidth = 80
+                }
+
+                // 小屏模式
+                if (layout.shrink) {
+                    return layout.menuCollapse ? 0 : `${leftSplitMenuWidth}px`
+                }
+
+                return `${leftSplitMenuWidth}px`
             }
+
+            // 小屏模式
+            if (layout.shrink) {
+                return layout.menuCollapse ? 0 : `${layout.menuWidth}px`
+            }
+
             // 菜单是否折叠
-            return layout.menuCollapse ? '64px' : layout.menuWidth + 'px'
+            return layout.menuCollapse ? `${menuCollapseBaseWidth}px` : `${layout.menuWidth}px`
         }
 
         function setLang(val: string) {
@@ -82,7 +113,7 @@ export const useConfig = defineStore(
             ) {
                 layout.headerBarTabActiveBackground[tempValue.idx] = tempValue.newColor
             } else if (
-                data == 'Default' &&
+                ['Default', 'LeftSplit'].includes(data) &&
                 layout.headerBarBackground[tempValue.idx] == tempValue.color &&
                 layout.headerBarTabActiveBackground[tempValue.idx] == tempValue.newColor
             ) {

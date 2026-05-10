@@ -42,18 +42,21 @@
                                     </div>
                                 </el-col>
                             </el-row>
-                            <el-row :gutter="10">
+                            <el-row class="layout-mode-box-style-row" :gutter="10">
                                 <el-col :span="12">
                                     <div
-                                        @click="setLayoutMode('Streamline')"
-                                        class="layout-mode-style streamline"
-                                        :class="configStore.layout.layoutMode == 'Streamline' ? 'active' : ''"
+                                        @click="setLayoutMode('LeftSplit')"
+                                        class="layout-mode-style left-split"
+                                        :class="configStore.layout.layoutMode == 'LeftSplit' ? 'active' : ''"
                                     >
                                         <div class="layout-mode-style-box">
+                                            <div class="layout-mode-style-aside">
+                                                <div class="left-split-aside"></div>
+                                            </div>
                                             <div class="layout-mode-style-container-box">
                                                 <div class="layout-mode-style-header"></div>
                                                 <div class="layout-mode-style-container">
-                                                    <div class="layout-mode-style-name">{{ t('layouts.Single column') }}</div>
+                                                    <div class="layout-mode-style-name">{{ t('layouts.Left split') }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -77,7 +80,26 @@
                                     </div>
                                 </el-col>
                             </el-row>
+                            <el-row :gutter="10">
+                                <el-col :span="12">
+                                    <div
+                                        @click="setLayoutMode('Streamline')"
+                                        class="layout-mode-style streamline"
+                                        :class="configStore.layout.layoutMode == 'Streamline' ? 'active' : ''"
+                                    >
+                                        <div class="layout-mode-style-box">
+                                            <div class="layout-mode-style-container-box">
+                                                <div class="layout-mode-style-header"></div>
+                                                <div class="layout-mode-style-container">
+                                                    <div class="layout-mode-style-name">{{ t('layouts.Single column') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </el-col>
+                            </el-row>
                         </div>
+
                         <el-divider content-position="left" border-style="dashed">{{ t('layouts.overall situation') }}</el-divider>
                         <div class="layout-config-global">
                             <el-form-item size="large" :label="t('layouts.Dark mode')">
@@ -132,7 +154,18 @@
                                     :model-value="configStore.getColorVal('menuHoverBackground')"
                                 />
                             </el-form-item>
-                            <el-form-item :label="t('layouts.Side menu width (when expanded)')">
+
+                            <el-form-item v-if="configStore.layout.layoutMode == 'LeftSplit'" :label="t('layouts.Side menu width (when expanded)')">
+                                <el-input
+                                    @input="onCommitState($event, 'menuWidthLeftSplit')"
+                                    type="number"
+                                    :step="10"
+                                    :model-value="configStore.layout.menuWidthLeftSplit"
+                                >
+                                    <template #append>px</template>
+                                </el-input>
+                            </el-form-item>
+                            <el-form-item v-else :label="t('layouts.Side menu width (when expanded)')">
                                 <el-input
                                     @input="onCommitState($event, 'menuWidth')"
                                     type="number"
@@ -142,6 +175,7 @@
                                     <template #append>px</template>
                                 </el-input>
                             </el-form-item>
+
                             <el-form-item :label="t('layouts.Side menu default icon')">
                                 <IconSelector
                                     @change="onCommitMenuDefaultIcon($event, 'menuDefaultIcon')"
@@ -161,12 +195,18 @@
                             <el-divider content-position="left" border-style="dashed">
                                 {{ t('layouts.The top and bottom of the sidebar') }}
                             </el-divider>
-                            <el-form-item :label="t('layouts.Show side menu top bar (title bar)')">
+
+                            <!-- 左分布局没有标题栏，只有 LOGO -->
+                            <el-form-item
+                                v-if="configStore.layout.layoutMode != 'LeftSplit'"
+                                :label="t('layouts.Show side menu top bar (title bar)')"
+                            >
                                 <el-switch
                                     @change="onCommitState($event, 'menuShowTopBar')"
                                     :model-value="configStore.layout.menuShowTopBar"
                                 ></el-switch>
                             </el-form-item>
+
                             <el-form-item :label="t('layouts.Side menu top bar background color')">
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'menuTopBarBackground')"
@@ -335,7 +375,7 @@ const restoreDefault = () => {
     padding: 20px;
 }
 .layout-mode-box-style-row {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 .layout-mode-style {
     position: relative;
@@ -413,9 +453,46 @@ const restoreDefault = () => {
             }
         }
     }
-    &.streamline {
+    &.left-split {
+        .layout-mode-style-aside {
+            width: 18%;
+            height: 90%;
+            background-color: var(--el-border-color-lighter);
+            .left-split-aside {
+                width: 2px;
+                height: 100%;
+                margin-left: 30%;
+                background-color: var(--el-bg-color);
+            }
+        }
         .layout-mode-style-container-box {
-            width: 100%;
+            width: 68%;
+            height: 90%;
+            margin-left: 4%;
+            .layout-mode-style-header {
+                width: 100%;
+                height: 10%;
+                background-color: var(--el-border-color-lighter);
+            }
+            .layout-mode-style-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 85%;
+                background-color: var(--el-border-color-extra-light);
+                margin-top: 5%;
+            }
+        }
+    }
+    &.double {
+        .layout-mode-style-aside {
+            width: 18%;
+            height: 100%;
+            background-color: var(--el-border-color);
+        }
+        .layout-mode-style-container-box {
+            width: 82%;
             height: 100%;
             .layout-mode-style-header {
                 width: 100%;
@@ -432,14 +509,9 @@ const restoreDefault = () => {
             }
         }
     }
-    &.double {
-        .layout-mode-style-aside {
-            width: 18%;
-            height: 100%;
-            background-color: var(--el-border-color);
-        }
+    &.streamline {
         .layout-mode-style-container-box {
-            width: 82%;
+            width: 100%;
             height: 100%;
             .layout-mode-style-header {
                 width: 100%;

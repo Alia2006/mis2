@@ -12,6 +12,7 @@ export default {
         'Layout mode': 'Layout mode',
         default: 'Default',
         classic: 'Classic',
+        'Left split': 'Left split',
         'Single column': 'Single column',
         'Double column': 'Top-side',
         'overall situation': 'Global',

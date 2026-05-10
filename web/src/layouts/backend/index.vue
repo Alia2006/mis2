@@ -12,6 +12,7 @@ import Classic from '/@/layouts/backend/container/classic.vue'
 import Default from '/@/layouts/backend/container/default.vue'
 import Double from '/@/layouts/backend/container/double.vue'
 import Streamline from '/@/layouts/backend/container/streamline.vue'
+import LeftSplit from '/@/layouts/backend/container/leftSplit.vue'
 import router from '/@/router/index'
 import { adminBaseRoutePath } from '/@/router/static/adminBase'
 import { useAdminInfo } from '/@/stores/adminInfo'
@@ -25,7 +26,7 @@ import { getFirstRoute, handleAdminRoute, routePush } from '/@/utils/router'
 import { Session } from '/@/utils/storage'
 
 defineOptions({
-    components: { Default, Classic, Streamline, Double },
+    components: { Default, Classic, Streamline, Double, LeftSplit },
 })
 
 const terminal = useTerminal()

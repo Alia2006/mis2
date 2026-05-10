@@ -1,50 +1,25 @@
 <template>
     <el-aside v-if="!navTabs.state.tabFullScreen" :class="['layout-aside-' + config.layout.layoutMode, config.layout.shrink ? 'shrink' : '']">
-        <Logo v-if="config.layout.menuShowTopBar" />
+        <Logo v-if="config.layout.menuShowTopBar && config.layout.layoutMode != 'LeftSplit'" />
 
         <MenuVerticalChildren v-if="config.layout.layoutMode == 'Double'" />
+        <MenuLeftSplit v-else-if="config.layout.layoutMode == 'LeftSplit'" />
         <MenuVertical v-else />
 
-        <div
-            class="aside-footer-toolbar-wrap"
-            :class="[config.layout.menuCollapse ? 'collapse' : '', config.layout.menuToolBarAutoHide ? 'auto-hide' : '']"
-        >
-            <div class="aside-footer-toolbar">
-                <Icon
-                    @click="onMenuCollapse"
-                    :name="config.layout.menuCollapse ? 'fa fa-indent' : 'fa fa-dedent'"
-                    :class="config.layout.menuCollapse ? 'unfold' : ''"
-                    :color="config.getColorVal('menuToolBarColor')"
-                    size="14"
-                    class="footer-toolbar-item"
-                />
-                <Icon
-                    @click="onMenuSearch"
-                    name="fa fa-search"
-                    :color="config.getColorVal('menuToolBarColor')"
-                    size="16"
-                    class="footer-toolbar-item"
-                />
-            </div>
-        </div>
-
-        <MenuSearchDialog v-model="menuSearchDialogVisible" />
+        <AsideFooterToolbar v-if="['Default', 'Classic', 'Double'].includes(config.layout.layoutMode)" />
     </el-aside>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import AsideFooterToolbar from '/@/layouts/backend/components/asideToolbar/footer.vue'
 import Logo from '/@/layouts/backend/components/logo.vue'
+import MenuLeftSplit from '/@/layouts/backend/components/menus/menuLeftSplit.vue'
 import MenuVertical from '/@/layouts/backend/components/menus/menuVertical.vue'
 import MenuVerticalChildren from '/@/layouts/backend/components/menus/menuVerticalChildren.vue'
-import MenuSearchDialog from '/@/layouts/backend/components/menuSearch/dialog.vue'
 import { useConfig } from '/@/stores/config'
-import { BEFORE_RESIZE_LAYOUT } from '/@/stores/constant/cacheKey'
 import { SYSTEM_ZINDEX } from '/@/stores/constant/common'
 import { useNavTabs } from '/@/stores/navTabs'
-import { setNavTabsWidth } from '/@/utils/layout'
-import { closeShade } from '/@/utils/pageShade'
-import { Session } from '/@/utils/storage'
 
 defineOptions({
     name: 'layout/aside',
@@ -53,80 +28,17 @@ defineOptions({
 const config = useConfig()
 const navTabs = useNavTabs()
 const menuWidth = computed(() => config.menuWidth())
-const menuSearchDialogVisible = ref(false)
-
-const onMenuSearch = function () {
-    menuSearchDialogVisible.value = true
-}
-
-const onMenuCollapse = function () {
-    if (config.layout.shrink && !config.layout.menuCollapse) {
-        closeShade()
-    }
-
-    config.setLayout('menuCollapse', !config.layout.menuCollapse)
-
-    Session.set(BEFORE_RESIZE_LAYOUT, {
-        layoutMode: config.layout.layoutMode,
-        menuCollapse: config.layout.menuCollapse,
-    })
-
-    // 等待侧边栏动画结束后重新计算导航栏宽度
-    setTimeout(() => {
-        setNavTabsWidth()
-    }, 350)
-}
 </script>
 
 <style scoped lang="scss">
-.aside-footer-toolbar-wrap {
-    position: relative;
-    height: 50px;
-    .aside-footer-toolbar {
-        position: absolute;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 50px;
-        width: 100%;
-        padding: 0 20px;
-        transition: all 0.2s ease;
-        .footer-toolbar-item {
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            &:hover {
-                color: var(--el-menu-active-color) !important;
-                background-color: var(--el-menu-hover-bg-color);
-            }
-        }
-    }
-    &.collapse {
-        height: 100px;
-        .aside-footer-toolbar {
-            flex-direction: column-reverse;
-            padding: 10px 0;
-            height: 100px;
-        }
-    }
-    &.auto-hide.collapse {
-        .aside-footer-toolbar {
-            top: 100px;
-        }
-    }
-    &.auto-hide {
-        cursor: pointer;
-        .aside-footer-toolbar {
-            top: 50px;
-        }
-        &:hover {
-            .aside-footer-toolbar {
-                top: 0;
-            }
-        }
-    }
+.layout-aside-Default,
+.layout-aside-LeftSplit,
+.layout-aside-Classic,
+.layout-aside-Double {
+    width: v-bind(menuWidth);
 }
-.layout-aside-Default:not(.shrink) {
+.layout-aside-Default:not(.shrink),
+.layout-aside-LeftSplit:not(.shrink) {
     background: var(--ba-bg-color-overlay);
     margin: 16px 0 16px 16px;
     height: calc(100% - 32px);
@@ -134,9 +46,9 @@ const onMenuCollapse = function () {
     border-radius: var(--el-border-radius-base);
     overflow: hidden;
     transition: width 0.3s ease;
-    width: v-bind(menuWidth);
 }
 .layout-aside-Default.shrink,
+.layout-aside-LeftSplit.shrink,
 .layout-aside-Classic,
 .layout-aside-Double {
     background: var(--ba-bg-color-overlay);
@@ -144,7 +56,6 @@ const onMenuCollapse = function () {
     height: 100%;
     overflow: hidden;
     transition: width 0.3s ease;
-    width: v-bind(menuWidth);
 }
 .shrink {
     position: fixed;

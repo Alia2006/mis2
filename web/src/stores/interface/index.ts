@@ -6,7 +6,7 @@ export interface Layout {
     showDrawer: boolean
     // 是否收缩布局（小屏设备）
     shrink: boolean
-    // 后台布局方式，可选值<Default|Classic|Streamline|Double>
+    // 后台布局方式，可选值<Default|Classic|Streamline|Double|LeftSplit>
     layoutMode: string
     // 后台主页面切换动画，可选值<slide-right|slide-left|el-fade-in-linear|el-fade-in|el-zoom-in-center|el-zoom-in-top|el-zoom-in-bottom>
     mainAnimation: string
@@ -17,6 +17,8 @@ export interface Layout {
     /* 侧边栏 - s */
     // 侧边菜单宽度（展开时），单位px
     menuWidth: number
+    // 侧边菜单宽度，左分双栏专用（展开时），单位px
+    menuWidthLeftSplit: number
     // 侧边菜单项默认图标
     menuDefaultIcon: string
     // 是否水平折叠收起菜单
@@ -99,6 +101,8 @@ export interface NavTabs {
     tabFullScreen: boolean
     // 从后台加载到的菜单路由列表
     tabsViewRoutes: RouteRecordRaw[]
+    // 次级菜单数据（一些布局模式会有两个菜单栏，可在此记录次级菜单栏的数据）
+    childrenMenus: RouteRecordRaw[]
     // 权限节点
     authNode: Map<string, string[]>
 }

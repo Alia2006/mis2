@@ -86,7 +86,8 @@ onBeforeRouteUpdate((to) => {
     currentRouteActive(to)
 })
 </script>
-<style>
+
+<style scoped lang="scss">
 .children-vertical-menus-scrollbar {
     height: v-bind(verticalMenusScrollbarHeight);
     background-color: v-bind('config.getColorVal("menuBackground")');
