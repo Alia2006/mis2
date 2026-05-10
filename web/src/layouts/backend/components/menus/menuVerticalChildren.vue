@@ -8,14 +8,14 @@
             :collapse="config.layout.menuCollapse"
             ref="layoutMenuRef"
         >
-            <MenuTree v-if="state.routeChildren.length > 0" :menus="state.routeChildren" />
+            <MenuTree v-if="navTabs.state.childrenMenus.length > 0" :menus="navTabs.state.childrenMenus" />
         </el-menu>
     </el-scrollbar>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, useTemplateRef } from 'vue'
-import type { RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import MenuTree from '/@/layouts/backend/components/menus/menuTree.vue'
 import { useConfig } from '/@/stores/config'
@@ -31,10 +31,8 @@ const layoutMenuScrollbarRef = useTemplateRef('layoutMenuScrollbarRef')
 
 const state: {
     defaultActive: string
-    routeChildren: RouteRecordRaw[]
 } = reactive({
     defaultActive: '',
-    routeChildren: [],
 })
 
 const verticalMenusScrollbarHeight = computed(() => {
@@ -56,12 +54,12 @@ const currentRouteActive = (currentRoute: RouteLocationNormalizedLoaded) => {
     let routeChildren = navTabs.getTabsViewDataByRoute(currentRoute, 'above')
     if (routeChildren) {
         if (routeChildren.children && routeChildren.children.length > 0) {
-            state.routeChildren = routeChildren.children
+            navTabs.setChildrenMenus(routeChildren.children)
         } else {
-            state.routeChildren = [routeChildren]
+            navTabs.setChildrenMenus([routeChildren])
         }
-    } else if (!state.routeChildren) {
-        state.routeChildren = navTabs.state.tabsViewRoutes
+    } else {
+        navTabs.setChildrenMenus([])
     }
 }
 
