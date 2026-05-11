@@ -56,6 +56,9 @@ export default {
         'The top bar of the side menu displays the LOGO': 'The top bar of the side menu displays the LOGO',
         'The toolbar at the bottom of the side menu automatically hides': 'The toolbar at the bottom of the side menu automatically hides',
         'Color of the toolbar icons at the bottom of the side menu': 'Color of the toolbar icons at the bottom of the side menu',
+        'Icon color of the bottom toolbar in the side menu when hovered over': 'Icon color of the bottom toolbar in the side menu when hovered over',
+        'Background color of the bottom toolbar in the side menu when hovered over':
+            'Background color of the bottom toolbar in the side menu when hovered over',
         'Context menu': 'Context menu',
         'Menu Search': 'Menu Search',
         'Context menu tips': 'Right-clicking on any tab will bring up the menu related to that tab',

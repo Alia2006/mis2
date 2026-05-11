@@ -243,6 +243,18 @@
                                     :model-value="configStore.getColorVal('menuToolBarColor')"
                                 />
                             </el-form-item>
+                            <el-form-item :label="t('layouts.Icon color of the bottom toolbar in the side menu when hovered over')">
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'menuToolBarHoverColor')"
+                                    :model-value="configStore.getColorVal('menuToolBarHoverColor')"
+                                />
+                            </el-form-item>
+                            <el-form-item :label="t('layouts.Background color of the bottom toolbar in the side menu when hovered over')">
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'menuToolBarHoverBackground')"
+                                    :model-value="configStore.getColorVal('menuToolBarHoverBackground')"
+                                />
+                            </el-form-item>
                         </div>
 
                         <el-divider content-position="left" border-style="dashed">{{ t('layouts.Top bar') }}</el-divider>

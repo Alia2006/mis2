@@ -49,6 +49,10 @@ export interface Layout {
     menuToolBarAutoHide: boolean
     // 侧边菜单底部工具栏图标颜色
     menuToolBarColor: string[]
+    // 侧边菜单底部工具栏悬停时图标色
+    menuToolBarHoverColor: string[]
+    // 侧边菜单底部工具栏悬停时背景色
+    menuToolBarHoverBackground: string[]
     /* 侧边栏 - e */
 
     /* 顶栏 - s */

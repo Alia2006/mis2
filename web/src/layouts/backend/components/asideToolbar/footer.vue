@@ -80,8 +80,8 @@ const onMenuCollapse = function () {
             border-radius: 50%;
             cursor: pointer;
             &:hover {
-                color: var(--el-menu-active-color) !important;
-                background-color: var(--el-menu-hover-bg-color);
+                color: v-bind('config.getColorVal("menuToolBarHoverColor")') !important;
+                background-color: v-bind('config.getColorVal("menuToolBarHoverBackground")');
             }
         }
     }

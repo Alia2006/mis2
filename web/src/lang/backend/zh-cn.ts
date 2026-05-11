@@ -56,6 +56,8 @@ export default {
         'The top bar of the side menu displays the LOGO': '侧边菜单顶栏显示LOGO',
         'The toolbar at the bottom of the side menu automatically hides': '侧边菜单底部工具栏自动隐藏',
         'Color of the toolbar icons at the bottom of the side menu': '侧边菜单底部工具栏图标颜色',
+        'Icon color of the bottom toolbar in the side menu when hovered over': '侧边菜单底部工具栏悬停时图标色',
+        'Background color of the bottom toolbar in the side menu when hovered over': '侧边菜单底部工具栏悬停时背景色',
         'Context menu': '右键菜单',
         'Menu Search': '菜单搜索',
         'Context menu tips': '鼠标右击标签可唤出标签页相关的菜单，如 刷新、全屏、关闭其他 等',

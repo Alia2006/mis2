@@ -33,6 +33,8 @@ export const useConfig = defineStore(
             menuTopBarLogo: false,
             menuToolBarAutoHide: false,
             menuToolBarColor: ['#303133', '#CFD3DC'],
+            menuToolBarHoverColor: ['#409eff', '#3375b9'],
+            menuToolBarHoverBackground: ['#ecf5ff', '#18222c'],
 
             // 顶栏
             headerBarTabColor: ['#000000', '#CFD3DC'],
