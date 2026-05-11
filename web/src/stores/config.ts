@@ -15,14 +15,13 @@ export const useConfig = defineStore(
             mainAnimation: 'slide-right',
             isDark: false,
 
-            // 侧边栏
+            // 菜单栏
             menuBackground: ['#ffffff', '#1d1e1f'],
             menuColor: ['#303133', '#CFD3DC'],
             menuActiveBackground: ['#ffffff', '#1d1e1f'],
             menuActiveColor: ['#409eff', '#3375b9'],
             menuHoverBackground: ['#ecf5ff', '#18222c'],
             menuWidth: 260,
-            menuWidthLeftSplit: 180,
             menuDefaultIcon: 'fa fa-circle-o',
             menuCollapse: false,
             menuUniqueOpened: false,
@@ -33,8 +32,16 @@ export const useConfig = defineStore(
             menuTopBarLogo: false,
             menuToolBarAutoHide: false,
             menuToolBarColor: ['#303133', '#CFD3DC'],
-            menuToolBarHoverColor: ['#409eff', '#3375b9'],
+            menuToolBarHoverColor: ['#409eff', '#CFD3DC'],
             menuToolBarHoverBackground: ['#ecf5ff', '#18222c'],
+
+            // 主菜单栏额外配置项（一些布局存在主次两个菜单栏）
+            menuBackgroundPrimary: ['#f5f5f5', '#18222c'],
+            menuActiveBackgroundPrimary: ['#c6e2ff', '#1d1e1f'],
+
+            // 左分布局独有菜单栏配置
+            menuWidthLeftSplit: 180,
+            menuHoverBackgroundLeftSplit: ['#ebebeb', '#18222c'],
 
             // 顶栏
             headerBarTabColor: ['#000000', '#CFD3DC'],

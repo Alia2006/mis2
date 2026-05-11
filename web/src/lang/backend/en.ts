@@ -61,6 +61,9 @@ export default {
             'Background color of the bottom toolbar in the side menu when hovered over',
         'Context menu': 'Context menu',
         'Menu Search': 'Menu Search',
+        'Main Menu': '(Main Menu)',
+        Submenu: '(Submenu)',
+        'Main and secondary menus': '(Main and secondary menus)',
         'Context menu tips': 'Right-clicking on any tab will bring up the menu related to that tab',
         'Menu Search tips': 'Can quickly search and switch menus',
         'Layout configuration tips':

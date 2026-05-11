@@ -156,7 +156,7 @@ onBeforeRouteUpdate((to) => {
 }
 .left-split-primary-menus-scrollbar-wrap {
     width: 80px;
-    background-color: #f5f5f5;
+    background-color: v-bind('config.getColorVal("menuBackgroundPrimary")');
     .left-split-primary-menus-scrollbar {
         width: 100%;
         height: v-bind(verticalPrimaryMenusScrollbarHeight);
@@ -176,10 +176,10 @@ onBeforeRouteUpdate((to) => {
 }
 .primary-menus {
     margin: 0 8px;
-    --el-menu-bg-color: #f5f5f5;
-    --el-menu-text-color: #303133;
-    --el-menu-active-color: #409eff;
-    --el-menu-hover-bg-color: #ebebeb;
+    --el-menu-bg-color: v-bind('config.getColorVal("menuBackgroundPrimary")');
+    --el-menu-text-color: v-bind('config.getColorVal("menuColor")');
+    --el-menu-active-color: v-bind('config.getColorVal("menuActiveColor")');
+    --el-menu-hover-bg-color: v-bind('config.getColorVal("menuHoverBackgroundLeftSplit")');
     .el-menu-item {
         margin: 8px 0;
         border-radius: var(--el-border-radius-base);
@@ -190,7 +190,7 @@ onBeforeRouteUpdate((to) => {
             flex-shrink: 0;
         }
         &.is-active {
-            background-color: var(--el-color-primary-light-7);
+            background-color: v-bind('config.getColorVal("menuActiveBackgroundPrimary")');
         }
         &.is-active > .icon {
             color: var(--el-menu-active-color) !important;
@@ -198,9 +198,9 @@ onBeforeRouteUpdate((to) => {
     }
 }
 .secondary-menus {
-    --el-menu-bg-color: #ffffff;
-    --el-menu-text-color: #303133;
-    --el-menu-active-color: #409eff;
-    --el-menu-hover-bg-color: #ebebeb;
+    --el-menu-bg-color: v-bind('config.getColorVal("menuBackground")');
+    --el-menu-text-color: v-bind('config.getColorVal("menuColor")');
+    --el-menu-active-color: v-bind('config.getColorVal("menuActiveColor")');
+    --el-menu-hover-bg-color: v-bind('config.getColorVal("menuHoverBackgroundLeftSplit")');
 }
 </style>

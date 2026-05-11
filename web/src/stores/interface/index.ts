@@ -17,8 +17,6 @@ export interface Layout {
     /* 侧边栏 - s */
     // 侧边菜单宽度（展开时），单位px
     menuWidth: number
-    // 侧边菜单宽度，左分双栏专用（展开时），单位px
-    menuWidthLeftSplit: number
     // 侧边菜单项默认图标
     menuDefaultIcon: string
     // 是否水平折叠收起菜单
@@ -53,6 +51,16 @@ export interface Layout {
     menuToolBarHoverColor: string[]
     // 侧边菜单底部工具栏悬停时背景色
     menuToolBarHoverBackground: string[]
+
+    // 侧边菜单背景色（一些布局存在主次两个菜单栏，此处单独配置主菜单栏的背景色）
+    menuBackgroundPrimary: string[]
+    // 侧边菜单激活项背景色（一些布局存在主次两个菜单栏，此处单独配置主菜单栏的激活项背景色）
+    menuActiveBackgroundPrimary: string[]
+
+    // 侧边菜单宽度，左分双栏专用（展开时），单位px
+    menuWidthLeftSplit: number
+    // 侧边菜单悬停时背景色，左分双栏专用
+    menuHoverBackgroundLeftSplit: string[]
     /* 侧边栏 - e */
 
     /* 顶栏 - s */

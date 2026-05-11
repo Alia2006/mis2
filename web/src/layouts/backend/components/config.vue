@@ -124,38 +124,70 @@
 
                         <el-divider content-position="left" border-style="dashed">{{ t('layouts.sidebar') }}</el-divider>
                         <div class="layout-config-aside">
-                            <el-form-item :label="t('layouts.Side menu bar background color')">
+                            <!-- 侧边菜单栏背景色（左分布局的主菜单） -->
+                            <el-form-item v-if="configStore.layout.layoutMode == 'LeftSplit'" :label="getLabel('menuBackgroundPrimary')">
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'menuBackgroundPrimary')"
+                                    :model-value="configStore.getColorVal('menuBackgroundPrimary')"
+                                />
+                            </el-form-item>
+
+                            <!-- 侧边菜单激活项背景色（左分布局的主菜单） -->
+                            <el-form-item v-if="configStore.layout.layoutMode == 'LeftSplit'" :label="getLabel('menuActiveBackgroundPrimary')">
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'menuActiveBackgroundPrimary')"
+                                    :model-value="configStore.getColorVal('menuActiveBackgroundPrimary')"
+                                />
+                            </el-form-item>
+
+                            <!-- 侧边菜单栏背景色（左分布局的次级菜单，其余布局的主菜单） -->
+                            <el-form-item :label="getLabel('menuBackground')">
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'menuBackground')"
                                     :model-value="configStore.getColorVal('menuBackground')"
                                 />
                             </el-form-item>
-                            <el-form-item :label="t('layouts.Side menu text color')">
-                                <el-color-picker
-                                    @change="onCommitColorState($event, 'menuColor')"
-                                    :model-value="configStore.getColorVal('menuColor')"
-                                />
-                            </el-form-item>
-                            <el-form-item :label="t('layouts.Side menu active item background color')">
+
+                            <!-- 侧边菜单激活项背景色（左分布局的次级菜单，其余布局的主菜单） -->
+                            <el-form-item :label="getLabel('menuActiveBackground')">
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'menuActiveBackground')"
                                     :model-value="configStore.getColorVal('menuActiveBackground')"
                                 />
                             </el-form-item>
-                            <el-form-item :label="t('layouts.Side menu active item text color')">
+
+                            <!-- 侧边菜单激活项文字色（主次菜单通用） -->
+                            <el-form-item :label="getLabel('menuActiveColor')">
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'menuActiveColor')"
                                     :model-value="configStore.getColorVal('menuActiveColor')"
                                 />
                             </el-form-item>
-                            <el-form-item :label="t('layouts.Side menu hover background color')">
+
+                            <!-- 侧边菜单文字颜色（主次菜单通用） -->
+                            <el-form-item :label="getLabel('menuColor')">
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'menuColor')"
+                                    :model-value="configStore.getColorVal('menuColor')"
+                                />
+                            </el-form-item>
+
+                            <!-- 侧边菜单悬停时背景色（主次菜单通用） -->
+                            <el-form-item v-if="configStore.layout.layoutMode == 'LeftSplit'" :label="getLabel('menuHoverBackground')">
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'menuHoverBackgroundLeftSplit')"
+                                    :model-value="configStore.getColorVal('menuHoverBackgroundLeftSplit')"
+                                />
+                            </el-form-item>
+                            <el-form-item v-else :label="getLabel('menuHoverBackground')">
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'menuHoverBackground')"
                                     :model-value="configStore.getColorVal('menuHoverBackground')"
                                 />
                             </el-form-item>
 
-                            <el-form-item v-if="configStore.layout.layoutMode == 'LeftSplit'" :label="t('layouts.Side menu width (when expanded)')">
+                            <!-- 侧边菜单宽度（展开时宽度，左分布局的次级菜单，其余布局的主菜单） -->
+                            <el-form-item v-if="configStore.layout.layoutMode == 'LeftSplit'" :label="getLabel('menuWidth')">
                                 <el-input
                                     @input="onCommitState($event, 'menuWidthLeftSplit')"
                                     type="number"
@@ -165,7 +197,7 @@
                                     <template #append>px</template>
                                 </el-input>
                             </el-form-item>
-                            <el-form-item v-else :label="t('layouts.Side menu width (when expanded)')">
+                            <el-form-item v-else :label="getLabel('menuWidth')">
                                 <el-input
                                     @input="onCommitState($event, 'menuWidth')"
                                     type="number"
@@ -196,7 +228,7 @@
                                 {{ t('layouts.The top and bottom of the sidebar') }}
                             </el-divider>
 
-                            <!-- 左分布局没有标题栏，只有 LOGO -->
+                            <!-- 显示侧边菜单顶栏（站点标题栏），左分布局没有标题栏，只有 LOGO -->
                             <el-form-item
                                 v-if="configStore.layout.layoutMode != 'LeftSplit'"
                                 :label="t('layouts.Show side menu top bar (title bar)')"
@@ -207,30 +239,48 @@
                                 ></el-switch>
                             </el-form-item>
 
-                            <el-form-item :label="t('layouts.Side menu top bar background color')">
+                            <!-- 侧边菜单顶栏背景色 -->
+                            <el-form-item
+                                v-if="configStore.layout.layoutMode != 'LeftSplit'"
+                                :label="t('layouts.Side menu top bar background color')"
+                            >
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'menuTopBarBackground')"
                                     :model-value="configStore.getColorVal('menuTopBarBackground')"
                                 />
                             </el-form-item>
-                            <el-form-item :label="t('layouts.Text color of the top bar of the side menu')">
+
+                            <!-- 侧边菜单顶栏文字色 -->
+                            <el-form-item
+                                v-if="configStore.layout.layoutMode != 'LeftSplit'"
+                                :label="t('layouts.Text color of the top bar of the side menu')"
+                            >
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'menuTopBarColor')"
                                     :model-value="configStore.getColorVal('menuTopBarColor')"
                                 />
                             </el-form-item>
-                            <el-form-item :label="t('layouts.Center the content of the top bar of the side menu')">
+
+                            <!-- 侧边菜单顶栏内容居中 -->
+                            <el-form-item
+                                v-if="configStore.layout.layoutMode != 'LeftSplit'"
+                                :label="t('layouts.Center the content of the top bar of the side menu')"
+                            >
                                 <el-switch
                                     @change="onCommitState($event, 'menuTopBarCenter')"
                                     :model-value="configStore.layout.menuTopBarCenter"
                                 ></el-switch>
                             </el-form-item>
+
+                            <!-- 侧边菜单顶栏显示LOGO -->
                             <el-form-item :label="t('layouts.The top bar of the side menu displays the LOGO')">
                                 <el-switch
                                     @change="onCommitState($event, 'menuTopBarLogo')"
                                     :model-value="configStore.layout.menuTopBarLogo"
                                 ></el-switch>
                             </el-form-item>
+
+                            <!-- 侧边菜单底部工具栏 -->
                             <el-form-item :label="t('layouts.The toolbar at the bottom of the side menu automatically hides')">
                                 <el-switch
                                     @change="onCommitState($event, 'menuToolBarAutoHide')"
@@ -324,6 +374,42 @@ const { t } = useI18n()
 const configStore = useConfig()
 const navTabs = useNavTabs()
 const router = useRouter()
+
+/**
+ * 布局不同时，label 可能不同，特用函数规范化
+ */
+const getLabel = (name: string) => {
+    const labelTranslationKey = new Map<string, string[]>([
+        // 侧边菜单栏背景色（左分布局的主菜单）
+        ['menuBackgroundPrimary', ['Side menu bar background color', 'Main Menu']],
+        // 侧边菜单激活项背景色（左分布局的主菜单）
+        ['menuActiveBackgroundPrimary', ['Side menu active item background color', 'Main Menu']],
+        // 侧边菜单栏背景色（左分布局的次级菜单，其余布局的主菜单）
+        ['menuBackground', ['Side menu bar background color', 'Submenu']],
+        // 侧边菜单激活项背景色（左分布局的次级菜单，其余布局的主菜单）
+        ['menuActiveBackground', ['Side menu active item background color', 'Submenu']],
+        // 侧边菜单激活项文字色（主次菜单通用）
+        ['menuActiveColor', ['Side menu active item text color', 'Main and secondary menus']],
+        // 侧边菜单文字颜色（主次菜单通用）
+        ['menuColor', ['Side menu text color', 'Main and secondary menus']],
+        // 侧边菜单悬停时背景色（主次菜单通用）
+        ['menuHoverBackground', ['Side menu hover background color', 'Main and secondary menus']],
+        // 侧边菜单宽度（展开时宽度，左分布局的次级菜单，其余布局的主菜单）
+        ['menuWidth', ['Side menu width (when expanded)', 'Submenu']],
+    ])
+
+    if (labelTranslationKey.has(name)) {
+        const label = labelTranslationKey.get(name) as string[]
+
+        // 左分布局下，label 可能带有后缀
+        if (configStore.layout.layoutMode == 'LeftSplit') {
+            return t(`layouts.${label[0]}`) + t(`layouts.${label[1]}`)
+        }
+
+        return t(`layouts.${label[0]}`)
+    }
+    return name
+}
 
 const onCommitState = (value: any, name: any) => {
     configStore.setLayout(name, value)
