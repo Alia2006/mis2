@@ -66,6 +66,7 @@ const onMenuCollapse = function () {
 .aside-footer-toolbar-wrap {
     position: relative;
     height: 50px;
+    background-color: v-bind('config.getColorVal("menuBackground")');
     .aside-footer-toolbar {
         position: absolute;
         display: flex;

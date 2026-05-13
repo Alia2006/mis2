@@ -81,7 +81,7 @@ const onClickSubMenu = (menu: RouteRecordRaw) => {
         flex-shrink: 0;
     }
     &.is-active {
-        background-color: v-bind('config.getColorVal("menuActiveBackground")');
+        background-color: var(--el-menu-active-bg-color);
     }
     &.is-active > .icon {
         color: var(--el-menu-active-color) !important;

@@ -180,6 +180,7 @@ onBeforeRouteUpdate((to) => {
     --el-menu-text-color: v-bind('config.getColorVal("menuColor")');
     --el-menu-active-color: v-bind('config.getColorVal("menuActiveColor")');
     --el-menu-hover-bg-color: v-bind('config.getColorVal("menuHoverBackgroundLeftSplit")');
+    --el-menu-active-bg-color: v-bind('config.getColorVal("menuActiveBackgroundPrimary")');
     .el-menu-item {
         margin: 8px 0;
         border-radius: var(--el-border-radius-base);
@@ -190,7 +191,7 @@ onBeforeRouteUpdate((to) => {
             flex-shrink: 0;
         }
         &.is-active {
-            background-color: v-bind('config.getColorVal("menuActiveBackgroundPrimary")');
+            background-color: var(--el-menu-active-bg-color);
         }
         &.is-active > .icon {
             color: var(--el-menu-active-color) !important;
@@ -202,5 +203,6 @@ onBeforeRouteUpdate((to) => {
     --el-menu-text-color: v-bind('config.getColorVal("menuColor")');
     --el-menu-active-color: v-bind('config.getColorVal("menuActiveColor")');
     --el-menu-hover-bg-color: v-bind('config.getColorVal("menuHoverBackgroundLeftSplit")');
+    --el-menu-active-bg-color: v-bind('config.getColorVal("menuActiveBackground")');
 }
 </style>

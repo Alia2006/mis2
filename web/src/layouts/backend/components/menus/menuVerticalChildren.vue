@@ -96,5 +96,6 @@ onBeforeRouteUpdate((to) => {
     --el-menu-text-color: v-bind('config.getColorVal("menuColor")');
     --el-menu-active-color: v-bind('config.getColorVal("menuActiveColor")');
     --el-menu-hover-bg-color: v-bind('config.getColorVal("menuHoverBackground")');
+    --el-menu-active-bg-color: v-bind('config.getColorVal("menuActiveBackground")');
 }
 </style>

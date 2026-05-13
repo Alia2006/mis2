@@ -122,8 +122,10 @@
                             </el-form-item>
                         </div>
 
-                        <el-divider content-position="left" border-style="dashed">{{ t('layouts.sidebar') }}</el-divider>
-                        <div class="layout-config-aside">
+                        <el-divider v-if="configStore.layout.layoutMode != 'Streamline'" content-position="left" border-style="dashed">
+                            {{ t('layouts.sidebar') }}
+                        </el-divider>
+                        <div v-if="configStore.layout.layoutMode != 'Streamline'" class="layout-config-aside">
                             <!-- 侧边菜单栏背景色（左分布局的主菜单） -->
                             <el-form-item v-if="configStore.layout.layoutMode == 'LeftSplit'" :label="getLabel('menuBackgroundPrimary')">
                                 <el-color-picker
@@ -223,14 +225,15 @@
                                     :model-value="configStore.layout.menuUniqueOpened"
                                 ></el-switch>
                             </el-form-item>
+                        </div>
 
-                            <el-divider content-position="left" border-style="dashed">
-                                {{ t('layouts.The top and bottom of the sidebar') }}
-                            </el-divider>
-
+                        <el-divider content-position="left" border-style="dashed">
+                            {{ t('layouts.The top and bottom of the sidebar') }}
+                        </el-divider>
+                        <div class="layout-config-aside">
                             <!-- 显示侧边菜单顶栏（站点标题栏），左分布局没有标题栏，只有 LOGO -->
                             <el-form-item
-                                v-if="configStore.layout.layoutMode != 'LeftSplit'"
+                                v-if="!['LeftSplit', 'Streamline'].includes(configStore.layout.layoutMode)"
                                 :label="t('layouts.Show side menu top bar (title bar)')"
                             >
                                 <el-switch
@@ -241,7 +244,7 @@
 
                             <!-- 侧边菜单顶栏背景色 -->
                             <el-form-item
-                                v-if="configStore.layout.layoutMode != 'LeftSplit'"
+                                v-if="!['LeftSplit', 'Streamline'].includes(configStore.layout.layoutMode)"
                                 :label="t('layouts.Side menu top bar background color')"
                             >
                                 <el-color-picker
@@ -281,30 +284,32 @@
                             </el-form-item>
 
                             <!-- 侧边菜单底部工具栏 -->
-                            <el-form-item :label="t('layouts.The toolbar at the bottom of the side menu automatically hides')">
-                                <el-switch
-                                    @change="onCommitState($event, 'menuToolBarAutoHide')"
-                                    :model-value="configStore.layout.menuToolBarAutoHide"
-                                ></el-switch>
-                            </el-form-item>
-                            <el-form-item :label="t('layouts.Color of the toolbar icons at the bottom of the side menu')">
-                                <el-color-picker
-                                    @change="onCommitColorState($event, 'menuToolBarColor')"
-                                    :model-value="configStore.getColorVal('menuToolBarColor')"
-                                />
-                            </el-form-item>
-                            <el-form-item :label="t('layouts.Icon color of the bottom toolbar in the side menu when hovered over')">
-                                <el-color-picker
-                                    @change="onCommitColorState($event, 'menuToolBarHoverColor')"
-                                    :model-value="configStore.getColorVal('menuToolBarHoverColor')"
-                                />
-                            </el-form-item>
-                            <el-form-item :label="t('layouts.Background color of the bottom toolbar in the side menu when hovered over')">
-                                <el-color-picker
-                                    @change="onCommitColorState($event, 'menuToolBarHoverBackground')"
-                                    :model-value="configStore.getColorVal('menuToolBarHoverBackground')"
-                                />
-                            </el-form-item>
+                            <template v-if="configStore.layout.layoutMode != 'Streamline'">
+                                <el-form-item :label="t('layouts.The toolbar at the bottom of the side menu automatically hides')">
+                                    <el-switch
+                                        @change="onCommitState($event, 'menuToolBarAutoHide')"
+                                        :model-value="configStore.layout.menuToolBarAutoHide"
+                                    ></el-switch>
+                                </el-form-item>
+                                <el-form-item :label="t('layouts.Color of the toolbar icons at the bottom of the side menu')">
+                                    <el-color-picker
+                                        @change="onCommitColorState($event, 'menuToolBarColor')"
+                                        :model-value="configStore.getColorVal('menuToolBarColor')"
+                                    />
+                                </el-form-item>
+                                <el-form-item :label="t('layouts.Icon color of the bottom toolbar in the side menu when hovered over')">
+                                    <el-color-picker
+                                        @change="onCommitColorState($event, 'menuToolBarHoverColor')"
+                                        :model-value="configStore.getColorVal('menuToolBarHoverColor')"
+                                    />
+                                </el-form-item>
+                                <el-form-item :label="t('layouts.Background color of the bottom toolbar in the side menu when hovered over')">
+                                    <el-color-picker
+                                        @change="onCommitColorState($event, 'menuToolBarHoverBackground')"
+                                        :model-value="configStore.getColorVal('menuToolBarHoverBackground')"
+                                    />
+                                </el-form-item>
+                            </template>
                         </div>
 
                         <el-divider content-position="left" border-style="dashed">{{ t('layouts.Top bar') }}</el-divider>
@@ -327,12 +332,24 @@
                                     :model-value="configStore.getColorVal('headerBarHoverBackground')"
                                 />
                             </el-form-item>
-                            <el-form-item :label="t('layouts.Top bar menu active item background color')">
+
+                            <!-- 顶栏激活项背景色 -->
+                            <el-form-item
+                                v-if="['Default', 'LeftSplit'].includes(configStore.layout.layoutMode)"
+                                :label="t('layouts.Top bar menu active item background color')"
+                            >
+                                <el-color-picker
+                                    @change="onCommitColorState($event, 'headerBarTabActiveBackgroundFloating')"
+                                    :model-value="configStore.getColorVal('headerBarTabActiveBackgroundFloating')"
+                                />
+                            </el-form-item>
+                            <el-form-item v-else :label="t('layouts.Top bar menu active item background color')">
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'headerBarTabActiveBackground')"
                                     :model-value="configStore.getColorVal('headerBarTabActiveBackground')"
                                 />
                             </el-form-item>
+
                             <el-form-item :label="t('layouts.Top bar menu active item text color')">
                                 <el-color-picker
                                     @change="onCommitColorState($event, 'headerBarTabActiveColor')"

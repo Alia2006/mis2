@@ -41,14 +41,15 @@ export const useConfig = defineStore(
 
             // 左分布局独有菜单栏配置
             menuWidthLeftSplit: 180,
-            menuHoverBackgroundLeftSplit: ['#ebebeb', '#18222c'],
+            menuHoverBackgroundLeftSplit: ['#ebebeb', '#213d5b'],
 
             // 顶栏
             headerBarTabColor: ['#000000', '#CFD3DC'],
-            headerBarTabActiveBackground: ['#ffffff', '#1d1e1f'],
             headerBarTabActiveColor: ['#000000', '#409EFF'],
             headerBarBackground: ['#ffffff', '#1d1e1f'],
             headerBarHoverBackground: ['#f5f5f5', '#18222c'],
+            headerBarTabActiveBackground: ['#f5f5f5', '#141414'],
+            headerBarTabActiveBackgroundFloating: ['#ffffff', '#1d1e1f'],
 
             // tour
             // 布局漫游式引导
@@ -112,27 +113,8 @@ export const useConfig = defineStore(
             lang.defaultLang = val
         }
 
-        function onSetLayoutColor(data = layout.layoutMode) {
-            // 切换布局时，如果是为默认配色方案，对菜单激活背景色重新赋值
-            const tempValue = layout.isDark ? { idx: 1, color: '#1d1e1f', newColor: '#141414' } : { idx: 0, color: '#ffffff', newColor: '#f5f5f5' }
-            if (
-                data == 'Classic' &&
-                layout.headerBarBackground[tempValue.idx] == tempValue.color &&
-                layout.headerBarTabActiveBackground[tempValue.idx] == tempValue.color
-            ) {
-                layout.headerBarTabActiveBackground[tempValue.idx] = tempValue.newColor
-            } else if (
-                ['Default', 'LeftSplit'].includes(data) &&
-                layout.headerBarBackground[tempValue.idx] == tempValue.color &&
-                layout.headerBarTabActiveBackground[tempValue.idx] == tempValue.newColor
-            ) {
-                layout.headerBarTabActiveBackground[tempValue.idx] = tempValue.color
-            }
-        }
-
         function setLayoutMode(data: string) {
             layout.layoutMode = data
-            onSetLayoutColor(data)
         }
 
         const setLayout = (name: keyof Layout, value: any) => {
@@ -152,7 +134,7 @@ export const useConfig = defineStore(
             ;(crud[name] as any) = value
         }
 
-        return { layout, lang, crud, menuWidth, setLang, setLayoutMode, setLayout, getColorVal, onSetLayoutColor, setCrud }
+        return { layout, lang, crud, menuWidth, setLang, setLayoutMode, setLayout, getColorVal, setCrud }
     },
     {
         persist: {

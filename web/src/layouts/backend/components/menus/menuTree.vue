@@ -3,7 +3,7 @@
         <template v-if="menu.children && menu.children.length > 0">
             <el-sub-menu @click="onClickSubMenu(menu)" :index="getMenuKey(menu)" :key="getMenuKey(menu)">
                 <template #title>
-                    <Icon :color="config.getColorVal('menuColor')" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
+                    <Icon color="var(--el-menu-text-color)" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
                     <span>{{ menu.meta?.title ? menu.meta?.title : $t('noTitle') }}</span>
                 </template>
                 <MenuTree :extends="{ ...props.extends, level: props.extends.level + 1 }" :menus="menu.children" />
@@ -11,7 +11,7 @@
         </template>
         <template v-else>
             <el-menu-item @click="onClickMenu(menu)" :index="getMenuKey(menu)" :key="getMenuKey(menu)">
-                <Icon :color="config.getColorVal('menuColor')" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
+                <Icon color="var(--el-menu-text-color)" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
                 <span>{{ menu.meta?.title ? menu.meta?.title : $t('noTitle') }}</span>
             </el-menu-item>
         </template>
@@ -67,18 +67,20 @@ const onClickSubMenu = (menu: RouteRecordRaw) => {
 </script>
 
 <style scoped lang="scss">
-.el-sub-menu .icon,
-.el-menu-item .icon {
-    vertical-align: middle;
-    margin-right: 5px;
-    width: 24px;
-    text-align: center;
-    flex-shrink: 0;
-}
-.is-active > .icon {
-    color: var(--el-menu-active-color) !important;
-}
-.el-menu-item.is-active {
-    background-color: v-bind('config.getColorVal("menuActiveBackground")');
+.el-sub-menu,
+.el-menu-item {
+    .icon {
+        vertical-align: middle;
+        margin-right: 5px;
+        width: 24px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    &.is-active {
+        background-color: var(--el-menu-active-bg-color);
+    }
+    &.is-active > .icon {
+        color: var(--el-menu-active-color) !important;
+    }
 }
 </style>

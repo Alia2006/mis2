@@ -65,7 +65,7 @@ const onMenuCollapse = () => {
             position: absolute;
             height: 40px;
             border-radius: var(--el-border-radius-base);
-            background-color: v-bind('config.getColorVal("headerBarTabActiveBackground")');
+            background-color: v-bind('config.getColorVal("headerBarTabActiveBackgroundFloating")');
             box-shadow: var(--el-box-shadow-light);
             transition: all 0.2s;
             -webkit-transition: all 0.2s;

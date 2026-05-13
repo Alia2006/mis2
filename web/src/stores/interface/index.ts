@@ -74,6 +74,8 @@ export interface Layout {
     headerBarTabActiveBackground: string[]
     // 顶栏激活项文字色
     headerBarTabActiveColor: string[]
+    // 顶栏激活项背景色（悬浮顶栏专用，即默认布局和左分双栏布局）
+    headerBarTabActiveBackgroundFloating: string[]
     /* 顶栏 - e */
 
     /* tour - s */
