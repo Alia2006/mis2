@@ -65,7 +65,7 @@ class Ajax extends Backend
         $suffix     = $this->request->param('suffix', 'file');
         $background = $this->request->param('background');
         $content    = build_suffix_svg((string)$suffix, (string)$background);
-        return response($content, 200, ['Content-Length' => strlen($content)])->contentType('image/svg+xml');
+        return response($content)->contentType('image/svg+xml');
     }
 
     /**

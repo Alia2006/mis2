@@ -279,7 +279,7 @@ class Captcha
         imagepng($this->image);
         $content = ob_get_clean();
 
-        return response($content, 200, ['Content-Length' => strlen($content)])->contentType('image/png');
+        return response($content)->contentType('image/png');
     }
 
     /**
