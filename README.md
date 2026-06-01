@@ -10,7 +10,8 @@
     <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=paVQA1dlpsVNHTla-ZAts6e4pPK4va9R&authKey=Eto0dq9DOuYldJPl6URFAXXHlG2AFQtPUBxNHEByEiuSg9OraxMniXIaWFt46OKi&noverify=0&group_code=1039646575" target="_blank">加群</a> |
     <a href="https://doc.buildadmin.com/guide/" target="_blank">视频介绍</a> |
     <a href="https://gitee.com/wonderful-code/buildadmin" target="_blank">Gitee仓库</a> |
-    <a href="https://github.com/build-admin/BuildAdmin" target="_blank">GitHub仓库</a>
+    <a href="https://github.com/build-admin/BuildAdmin" target="_blank">GitHub仓库</a> |
+    <a href="https://atomgit.com/BuildAdmin/BuildAdmin" target="_blank">AtomGit仓库</a>
 </div>
 <br />
 <p align="center">
@@ -141,4 +142,4 @@
 本项目包含的第三方源码和二进制文件之版权信息另行标注。
 
 ### 支持项目
-💕 无需捐赠，如果觉得项目不错，或者已经在使用了，希望你可以去 [Github](https://github.com/build-admin/BuildAdmin) 或者 [Gitee](https://gitee.com/wonderful-code/buildadmin) 帮我们点个 ⭐ Star，这将是对我们极大的鼓励与支持。
+💕 无需捐赠，如果觉得项目不错，或者已经在使用了，希望您可以去 [Github](https://github.com/build-admin/BuildAdmin) | [Gitee](https://gitee.com/wonderful-code/buildadmin) | [AtomGit](https://atomgit.com/BuildAdmin/BuildAdmin) 帮我们点个 ⭐ Star，这将是对我们极大的鼓励与支持。
