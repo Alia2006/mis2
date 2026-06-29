@@ -17,6 +17,7 @@ export const useNavTabs = defineStore(
             tabsView: [],
             tabFullScreen: false,
             tabsViewRoutes: [],
+            childrenMenus: [],
             authNode: new Map(),
         })
 
@@ -135,6 +136,13 @@ export const useNavTabs = defineStore(
         }
 
         /**
+         * 设置次级菜单数据
+         */
+        const setChildrenMenus = (data: RouteRecordRaw[]): void => {
+            state.childrenMenus = data
+        }
+
+        /**
          * 以key设置权限节点
          */
         const setAuthNode = (key: string, data: string[]) => {
@@ -161,12 +169,19 @@ export const useNavTabs = defineStore(
          * @param route 路由
          * @param returnType 返回值要求:normal=返回被搜索的路径对应的菜单数据,above=返回被搜索的路径对应的上一级菜单数组
          */
-        const getTabsViewDataByRoute = (route: RouteLocationNormalized, returnType: 'normal' | 'above' = 'normal'): RouteRecordRaw | false => {
-            // 以完整路径寻找
-            let found = getTabsViewDataByPath(route.fullPath, state.tabsViewRoutes, returnType)
-            if (found) {
-                found.meta!.matched = route.fullPath
-                return found
+        const getTabsViewDataByRoute = (
+            route: RouteLocationNormalized | RouteRecordRaw,
+            returnType: 'normal' | 'above' = 'normal'
+        ): RouteRecordRaw | false => {
+            let found: RouteRecordRaw | false = false
+            const fullPath = (route as RouteLocationNormalized).fullPath
+            if (fullPath) {
+                // 以完整路径寻找
+                found = getTabsViewDataByPath(fullPath, state.tabsViewRoutes, returnType)
+                if (found) {
+                    found.meta!.matched = fullPath
+                    return found
+                }
             }
 
             // 以路径寻找
@@ -208,6 +223,7 @@ export const useNavTabs = defineStore(
             closeTabByPath,
             updateTabTitle,
             setTabsViewRoutes,
+            setChildrenMenus,
             setAuthNode,
             fillAuthNode,
             setFullScreen,

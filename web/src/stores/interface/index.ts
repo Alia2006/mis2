@@ -6,7 +6,7 @@ export interface Layout {
     showDrawer: boolean
     // 是否收缩布局（小屏设备）
     shrink: boolean
-    // 后台布局方式，可选值<Default|Classic|Streamline|Double>
+    // 后台布局方式，可选值<Default|Classic|Streamline|Double|LeftSplit>
     layoutMode: string
     // 后台主页面切换动画，可选值<slide-right|slide-left|el-fade-in-linear|el-fade-in|el-zoom-in-center|el-zoom-in-top|el-zoom-in-bottom>
     mainAnimation: string
@@ -23,8 +23,6 @@ export interface Layout {
     menuCollapse: boolean
     // 是否只保持一个子菜单的展开（手风琴）
     menuUniqueOpened: boolean
-    // 显示菜单栏顶栏（LOGO）
-    menuShowTopBar: boolean
     // 侧边菜单背景色
     menuBackground: string[]
     // 侧边菜单文字颜色
@@ -35,8 +33,34 @@ export interface Layout {
     menuActiveColor: string[]
     // 侧边菜单悬停时背景色
     menuHoverBackground: string[]
+    // 显示菜单栏顶栏（站点标题栏）
+    menuShowTopBar: boolean
     // 侧边菜单顶栏背景色
     menuTopBarBackground: string[]
+    // 侧边菜单顶栏文字颜色
+    menuTopBarColor: string[]
+    // 侧边菜单顶栏内容居中
+    menuTopBarCenter: boolean
+    // 侧边菜单顶栏显示LOGO
+    menuTopBarLogo: boolean
+    // 侧边菜单底部工具栏自动隐藏
+    menuToolBarAutoHide: boolean
+    // 侧边菜单底部工具栏图标颜色
+    menuToolBarColor: string[]
+    // 侧边菜单底部工具栏悬停时图标色
+    menuToolBarHoverColor: string[]
+    // 侧边菜单底部工具栏悬停时背景色
+    menuToolBarHoverBackground: string[]
+
+    // 侧边菜单背景色（一些布局存在主次两个菜单栏，此处单独配置主菜单栏的背景色）
+    menuBackgroundPrimary: string[]
+    // 侧边菜单激活项背景色（一些布局存在主次两个菜单栏，此处单独配置主菜单栏的激活项背景色）
+    menuActiveBackgroundPrimary: string[]
+
+    // 侧边菜单宽度，左分双栏专用（展开时），单位px
+    menuWidthLeftSplit: number
+    // 侧边菜单悬停时背景色，左分双栏专用
+    menuHoverBackgroundLeftSplit: string[]
     /* 侧边栏 - e */
 
     /* 顶栏 - s */
@@ -50,7 +74,16 @@ export interface Layout {
     headerBarTabActiveBackground: string[]
     // 顶栏激活项文字色
     headerBarTabActiveColor: string[]
+    // 顶栏激活项背景色（悬浮顶栏专用，即默认布局和左分双栏布局）
+    headerBarTabActiveBackgroundFloating: string[]
     /* 顶栏 - e */
+
+    /* tour - s */
+    // 布局漫游式引导显示状态
+    layoutTour: boolean
+    // 布局漫游式引导未完成标记
+    layoutTourUnfinished: boolean
+    /* tour - e */
 }
 
 export interface Lang {
@@ -82,6 +115,8 @@ export interface NavTabs {
     tabFullScreen: boolean
     // 从后台加载到的菜单路由列表
     tabsViewRoutes: RouteRecordRaw[]
+    // 次级菜单数据（一些布局模式会有两个菜单栏，可在此记录次级菜单栏的数据）
+    childrenMenus: RouteRecordRaw[]
     // 权限节点
     authNode: Map<string, string[]>
 }

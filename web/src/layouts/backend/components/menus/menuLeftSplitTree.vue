@@ -3,15 +3,15 @@
         <template v-if="menu.children && menu.children.length > 0">
             <el-sub-menu @click="onClickSubMenu(menu)" :index="getMenuKey(menu)" :key="getMenuKey(menu)">
                 <template #title>
-                    <Icon color="var(--el-menu-text-color)" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
+                    <Icon :color="config.getColorVal('menuColor')" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
                     <span>{{ menu.meta?.title ? menu.meta?.title : $t('noTitle') }}</span>
                 </template>
-                <MenuTree :extends="{ ...props.extends, level: props.extends.level + 1 }" :menus="menu.children" />
+                <MenuLeftSplitTree :extends="{ ...props.extends, level: props.extends.level + 1 }" :menus="menu.children" />
             </el-sub-menu>
         </template>
         <template v-else>
             <el-menu-item @click="onClickMenu(menu)" :index="getMenuKey(menu)" :key="getMenuKey(menu)">
-                <Icon color="var(--el-menu-text-color)" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
+                <Icon :color="config.getColorVal('menuColor')" :name="menu.meta?.icon ? menu.meta?.icon : config.layout.menuDefaultIcon" />
                 <span>{{ menu.meta?.title ? menu.meta?.title : $t('noTitle') }}</span>
             </el-menu-item>
         </template>
@@ -69,6 +69,10 @@ const onClickSubMenu = (menu: RouteRecordRaw) => {
 <style scoped lang="scss">
 .el-sub-menu,
 .el-menu-item {
+    border-radius: var(--el-border-radius-base);
+    :deep(.el-sub-menu__title) {
+        border-radius: var(--el-border-radius-base);
+    }
     .icon {
         vertical-align: middle;
         margin-right: 5px;

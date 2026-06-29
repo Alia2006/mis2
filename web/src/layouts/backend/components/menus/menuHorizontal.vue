@@ -4,7 +4,21 @@
             <Logo />
         </div>
         <el-scrollbar ref="layoutMenuScrollbarRef" class="horizontal-menus-scrollbar">
-            <el-menu ref="layoutMenuRef" class="menu-horizontal" mode="horizontal" :default-active="state.defaultActive">
+            <el-menu
+                :popper-style="{
+                    '--el-menu-bg-color': config.getColorVal('headerBarBackground'),
+                    '--el-menu-text-color': config.getColorVal('headerBarTabColor'),
+                    '--el-menu-active-color': config.getColorVal('headerBarTabActiveColor'),
+                    '--el-menu-hover-bg-color': config.getColorVal('headerBarHoverBackground'),
+                    '--el-menu-active-bg-color': config.getColorVal('headerBarTabActiveBackground'),
+                    '--el-menu-hover-text-color': config.getColorVal('headerBarTabColor'),
+                }"
+                popper-class="menu-horizontal-streamline-popper"
+                ref="layoutMenuRef"
+                class="menu-horizontal"
+                mode="horizontal"
+                :default-active="state.defaultActive"
+            >
                 <MenuTree :extends="{ position: 'horizontal', level: 1 }" :menus="navTabs.state.tabsViewRoutes" />
             </el-menu>
         </el-scrollbar>
@@ -67,20 +81,35 @@ onBeforeRouteUpdate((to) => {
 })
 </script>
 
+<style lang="scss">
+.menu-horizontal-streamline-popper {
+    .el-menu--horizontal {
+        .el-menu-item:not(.is-disabled):hover,
+        .el-menu-item:not(.is-disabled):focus {
+            color: var(--el-menu-text-color);
+        }
+        .el-menu-item.is-active,
+        .el-menu-item.is-active:hover,
+        .el-sub-menu.is-active > .el-sub-menu__title,
+        .el-sub-menu.is-active > .el-sub-menu__title:hover {
+            color: var(--el-menu-active-color);
+        }
+    }
+}
+</style>
+
 <style scoped lang="scss">
 .layouts-menu-horizontal {
     display: flex;
     align-items: center;
     width: 100vw;
     height: var(--el-header-height);
-    background-color: var(--ba-bg-color-overlay);
+    background-color: v-bind('config.getColorVal("headerBarBackground")');
     border-bottom: 1px solid var(--el-color-info-light-8);
 }
 .menu-horizontal-logo {
     width: 180px;
-    &:hover {
-        background-color: v-bind('config.getColorVal("headerBarHoverBackground")');
-    }
+    background-color: v-bind('config.getColorVal("headerBarBackground")');
 }
 .horizontal-menus-scrollbar {
     flex: 1;
@@ -88,24 +117,47 @@ onBeforeRouteUpdate((to) => {
 }
 .menu-horizontal {
     border: none;
-    --el-menu-bg-color: v-bind('config.getColorVal("menuBackground")');
-    --el-menu-text-color: v-bind('config.getColorVal("menuColor")');
-    --el-menu-active-color: v-bind('config.getColorVal("menuActiveColor")');
-    --el-menu-hover-bg-color: v-bind('config.getColorVal("menuHoverBackground")');
+    --el-menu-bg-color: v-bind('config.getColorVal("headerBarBackground")');
+    --el-menu-text-color: v-bind('config.getColorVal("headerBarTabColor")');
+    --el-menu-active-color: v-bind('config.getColorVal("headerBarTabActiveColor")');
+    --el-menu-hover-bg-color: v-bind('config.getColorVal("headerBarHoverBackground")');
+    --el-menu-active-bg-color: v-bind('config.getColorVal("headerBarTabActiveBackground")');
+    --el-menu-hover-text-color: v-bind('config.getColorVal("headerBarTabColor")');
 }
 
-.el-sub-menu .icon,
-.el-menu-item .icon {
-    vertical-align: middle;
-    margin-right: 5px;
-    width: 24px;
-    text-align: center;
-    flex-shrink: 0;
-}
-.is-active .icon {
-    color: var(--el-menu-active-color) !important;
-}
-.el-menu-item.is-active {
-    background-color: v-bind('config.getColorVal("menuActiveBackground")');
+:deep(.el-sub-menu),
+:deep(.el-menu-item) {
+    .icon {
+        vertical-align: middle;
+        margin-right: 5px;
+        width: 24px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    .el-sub-menu__title {
+        background-color: var(--el-menu-bg-color);
+        &:hover {
+            background-color: var(--el-menu-hover-bg-color);
+        }
+    }
+    &:hover {
+        color: var(--el-menu-hover-text-color) !important;
+        background-color: var(--el-menu-hover-bg-color);
+    }
+    &.is-active {
+        background-color: var(--el-menu-active-bg-color);
+        .el-sub-menu__title {
+            background-color: var(--el-menu-active-bg-color);
+            .icon {
+                color: var(--el-menu-active-color) !important;
+            }
+        }
+        &:hover {
+            color: var(--el-menu-active-color) !important;
+        }
+    }
+    &.is-active > .icon {
+        color: var(--el-menu-active-color) !important;
+    }
 }
 </style>

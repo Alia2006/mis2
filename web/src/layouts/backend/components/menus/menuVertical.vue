@@ -32,7 +32,8 @@ const state = reactive({
 
 const verticalMenusScrollbarHeight = computed(() => {
     const menuTopBarHeight = config.layout.menuShowTopBar ? 50 : 0
-    return 'calc(100% - ' + menuTopBarHeight + 'px)'
+    const asideFooterToolbarHeight = config.layout.menuCollapse ? 100 : 50
+    return 'calc(100% - ' + (menuTopBarHeight + asideFooterToolbarHeight) + 'px)'
 })
 
 /**
@@ -67,7 +68,8 @@ onBeforeRouteUpdate((to) => {
     currentRouteActive(to)
 })
 </script>
-<style>
+
+<style scoped lang="scss">
 .vertical-menus-scrollbar {
     height: v-bind(verticalMenusScrollbarHeight);
     background-color: v-bind('config.getColorVal("menuBackground")');
@@ -78,5 +80,6 @@ onBeforeRouteUpdate((to) => {
     --el-menu-text-color: v-bind('config.getColorVal("menuColor")');
     --el-menu-active-color: v-bind('config.getColorVal("menuActiveColor")');
     --el-menu-hover-bg-color: v-bind('config.getColorVal("menuHoverBackground")');
+    --el-menu-active-bg-color: v-bind('config.getColorVal("menuActiveBackground")');
 }
 </style>

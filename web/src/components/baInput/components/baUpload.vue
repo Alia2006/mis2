@@ -1,5 +1,11 @@
 <template>
-    <div class="w100">
+    <div
+        ref="wrapper"
+        class="w100 ba-upload-wrapper"
+        :class="{ 'is-drag-over': state.isDragOver, 'is-disabled': state.attrs.disabled }"
+        tabindex="0"
+        @paste="onPaste"
+    >
         <el-upload
             ref="upload"
             class="ba-upload"
@@ -19,20 +25,53 @@
         >
             <template v-if="!$slots.default" #default>
                 <template v-if="type == 'image' || type == 'images'">
-                    <div v-if="!hideSelectFile" @click.stop="showSelectFile()" class="ba-upload-select-image">
-                        {{ $t('utils.choice') }}
-                    </div>
-                    <Icon class="ba-upload-icon" name="el-icon-Plus" size="30" color="#c0c4cc" />
+                    <el-tooltip :content="pasteUploadTip" placement="top" :disabled="!!state.attrs.disabled || state.isDragOver">
+                        <div
+                            class="ba-upload-trigger"
+                            @mouseenter="onTriggerFocus"
+                            @dragenter.prevent="onDragEnter"
+                            @dragover.prevent="onDragOver"
+                            @dragleave.prevent="onDragLeave"
+                            @drop.prevent="onDrop"
+                        >
+                            <div v-if="!hideSelectFile" @click.stop="showSelectFile()" class="ba-upload-select-image">
+                                {{ $t('utils.choice') }}
+                            </div>
+                            <Icon class="ba-upload-icon" name="el-icon-Plus" size="30" color="#c0c4cc" />
+                            <div @click.stop="onPasteUpload()" class="ba-upload-paste-image">
+                                {{ $t('utils.Screenshot upload') }}
+                            </div>
+                            <div v-if="state.isDragOver && !state.attrs.disabled" class="ba-upload-drag-mask">
+                                <Icon name="el-icon-UploadFilled" size="40" color="var(--el-color-primary)" />
+                                <span>{{ dragDropTip }}</span>
+                            </div>
+                        </div>
+                    </el-tooltip>
                 </template>
                 <template v-else>
-                    <el-button v-blur type="primary">
-                        <Icon name="el-icon-Plus" color="#ffffff" />
-                        <span>{{ $t('Upload') }}</span>
-                    </el-button>
-                    <el-button v-blur v-if="!hideSelectFile" @click.stop="showSelectFile()" type="success">
-                        <Icon name="fa fa-th-list" size="14px" color="#ffffff" />
-                        <span class="ml-6">{{ $t('utils.choice') }}</span>
-                    </el-button>
+                    <el-tooltip :content="pasteUploadTip" placement="top" :disabled="!!state.attrs.disabled || state.isDragOver">
+                        <div
+                            class="ba-upload-trigger ba-upload-trigger-file"
+                            @mouseenter="onTriggerFocus"
+                            @dragenter.prevent="onDragEnter"
+                            @dragover.prevent="onDragOver"
+                            @dragleave.prevent="onDragLeave"
+                            @drop.prevent="onDrop"
+                        >
+                            <el-button v-blur type="primary">
+                                <Icon name="el-icon-Plus" color="#ffffff" />
+                                <span>{{ $t('Upload') }}</span>
+                            </el-button>
+                            <el-button v-blur v-if="!hideSelectFile" @click.stop="showSelectFile()" type="success">
+                                <Icon name="fa fa-th-list" size="14px" color="#ffffff" />
+                                <span class="ml-6">{{ $t('utils.choice') }}</span>
+                            </el-button>
+                            <div v-if="state.isDragOver && !state.attrs.disabled" class="ba-upload-drag-mask">
+                                <Icon name="el-icon-UploadFilled" size="40" color="var(--el-color-primary)" />
+                                <span>{{ dragDropTip }}</span>
+                            </div>
+                        </div>
+                    </el-tooltip>
                 </template>
             </template>
 
@@ -50,8 +89,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted, watch, useAttrs, nextTick, useTemplateRef } from 'vue'
-import { genFileId } from 'element-plus'
+import { reactive, onMounted, watch, useAttrs, nextTick, useTemplateRef, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { genFileId, ElMessage } from 'element-plus'
 import type { UploadUserFile, UploadProps, UploadRawFile, UploadFiles } from 'element-plus'
 import { stringToArray } from '/@/components/baInput/helper'
 import { fullUrl, arrayFullUrl, getFileNameFromPath, getArrayKey } from '/@/utils/common'
@@ -109,8 +149,139 @@ const emits = defineEmits<{
     (e: 'update:modelValue', value: string | string[]): void
 }>()
 
+const { t } = useI18n()
 const attrs = useAttrs()
 const upload = useTemplateRef('upload')
+const wrapper = useTemplateRef('wrapper')
+
+const isImageType = () => props.type == 'image' || props.type == 'images'
+
+const dragDropTip = computed(() => {
+    return isImageType() ? t('utils.Drop image here to upload') : t('utils.Drop file here to upload')
+})
+
+const pasteUploadTip = computed(() => t('utils.Copy paste upload tip'))
+
+/**
+ * 将文件加入 el-upload 并开始上传
+ */
+const startUploadFile = (rawFile: UploadRawFile) => {
+    rawFile.uid = genFileId()
+    if (state.attrs.limit && state.fileList.length >= state.attrs.limit) {
+        onElExceed([rawFile])
+    } else {
+        upload.value!.handleStart(rawFile)
+    }
+}
+
+/**
+ * 从拖拽数据中收集可上传的文件
+ */
+const collectDropFiles = (fileList: FileList | File[]) => {
+    const files = Array.from(fileList)
+    if (!files.length) return []
+
+    if (isImageType()) {
+        return files.filter((file) => file.type.startsWith('image/'))
+    }
+    return files
+}
+
+/**
+ * 批量上传文件
+ */
+const uploadFiles = (validFiles: File[]) => {
+    if (!validFiles.length) return false
+
+    const limit = state.attrs.limit
+    let remaining = limit ? Math.max(limit - state.fileList.length, 0) : validFiles.length
+
+    for (const file of validFiles) {
+        if (limit && remaining <= 0) {
+            if (limit === 1) {
+                startUploadFile(file as UploadRawFile)
+            }
+            break
+        }
+        startUploadFile(file as UploadRawFile)
+        if (limit) remaining--
+    }
+    return true
+}
+
+/**
+ * 从粘贴板事件中收集可上传的文件
+ */
+const collectPasteFiles = (event: ClipboardEvent) => {
+    const files: File[] = []
+    const clipboardData = event.clipboardData
+    if (!clipboardData) return []
+
+    if (clipboardData.files.length) {
+        files.push(...Array.from(clipboardData.files))
+    } else {
+        Array.from(clipboardData.items).forEach((item) => {
+            if (item.kind === 'file') {
+                const file = item.getAsFile()
+                if (file) files.push(file)
+            }
+        })
+    }
+    return collectDropFiles(files)
+}
+
+const onTriggerFocus = () => {
+    if (state.attrs.disabled) return
+    wrapper.value?.focus({ preventScroll: true })
+}
+
+const onPaste = (event: ClipboardEvent) => {
+    if (state.attrs.disabled) return
+
+    const validFiles = collectPasteFiles(event)
+    if (!validFiles.length) {
+        ElMessage.warning(isImageType() ? t('utils.No image in clipboard') : t('utils.No valid file in paste'))
+        return
+    }
+
+    event.preventDefault()
+    uploadFiles(validFiles)
+}
+
+const resetDragState = () => {
+    state.isDragOver = false
+    state.dragCounter = 0
+}
+
+const onDragEnter = () => {
+    if (state.attrs.disabled) return
+    state.dragCounter++
+    state.isDragOver = true
+}
+
+const onDragOver = () => {
+    if (state.attrs.disabled) return
+    state.isDragOver = true
+}
+
+const onDragLeave = () => {
+    if (state.attrs.disabled) return
+    state.dragCounter--
+    if (state.dragCounter <= 0) {
+        resetDragState()
+    }
+}
+
+const onDrop = (event: DragEvent) => {
+    resetDragState()
+    if (state.attrs.disabled) return
+
+    const validFiles = collectDropFiles(event.dataTransfer?.files || [])
+    if (!uploadFiles(validFiles)) {
+        ElMessage.warning(isImageType() ? t('utils.No valid image in drop') : t('utils.No valid file in drop'))
+    }
+}
+
 const state: {
     key: string
     // 返回值类型，通过v-model类型动态计算
@@ -134,6 +305,8 @@ const state: {
         returnFullUrl: boolean
     }
     events: anyObj
+    isDragOver: boolean
+    dragCounter: number
 } = reactive({
     key: uuid(),
     defaultReturnType: 'string',
@@ -150,6 +323,8 @@ const state: {
         returnFullUrl: props.returnFullUrl,
     },
     events: {},
+    isDragOver: false,
+    dragCounter: 0,
 })
 
 /**
@@ -412,6 +587,44 @@ const showSelectFile = () => {
     state.selectFile.show = true
 }
 
+/**
+ * 从粘贴板读取图片并上传
+ */
+const onPasteUpload = async () => {
+    if (state.attrs.disabled) return
+
+    if (!navigator.clipboard?.read) {
+        ElMessage.warning(t('utils.Clipboard read is not supported'))
+        return
+    }
+
+    try {
+        const clipboardItems = await navigator.clipboard.read()
+        let imageBlob: Blob | null = null
+        let mimeType = ''
+
+        for (const item of clipboardItems) {
+            const imageType = item.types.find((type) => type.startsWith('image/'))
+            if (imageType) {
+                imageBlob = await item.getType(imageType)
+                mimeType = imageType
+                break
+            }
+        }
+
+        if (!imageBlob) {
+            ElMessage.warning(t('utils.No image in clipboard'))
+            return
+        }
+
+        const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png'
+        const file = new File([imageBlob], `paste-${Date.now()}.${ext}`, { type: mimeType }) as UploadRawFile
+        startUploadFile(file)
+    } catch {
+        ElMessage.warning(t('utils.Failed to read clipboard'))
+    }
+}
+
 defineExpose({
     getRef,
     showSelectFile,
@@ -434,17 +647,54 @@ watch(
 </script>
 
 <style scoped lang="scss">
-.ba-upload-select-image {
+.ba-upload-wrapper {
+    position: relative;
+    outline: none;
+    &.is-drag-over:not(.is-disabled) :deep(.el-upload--picture-card),
+    &.is-drag-over:not(.is-disabled) :deep(.el-upload-dragger) {
+        border-color: var(--el-color-primary);
+    }
+}
+.ba-upload-trigger {
     position: absolute;
-    top: 0px;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    &.ba-upload-trigger-file {
+        position: relative;
+        inset: unset;
+        gap: 6px;
+        padding: 0 10px;
+        min-height: 32px;
+    }
+}
+.ba-upload-drag-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 2px dashed var(--el-color-primary);
+    border-radius: 6px;
+    color: var(--el-color-primary);
+    font-size: var(--el-font-size-small);
+    pointer-events: none;
+}
+.ba-upload-select-image,
+.ba-upload-paste-image {
+    position: absolute;
     border: 1px dashed var(--el-border-color);
-    border-top: 1px dashed transparent;
     width: var(--el-upload-picture-card-size);
     height: 30px;
     line-height: 30px;
     border-radius: 6px;
-    border-bottom-right-radius: 20px;
-    border-bottom-left-radius: 20px;
     text-align: center;
     font-size: var(--el-font-size-extra-small);
     color: var(--el-text-color-regular);
@@ -452,7 +702,24 @@ watch(
     &:hover {
         color: var(--el-color-primary);
         border: 1px dashed var(--el-color-primary);
+    }
+}
+.ba-upload-select-image {
+    top: 0px;
+    border-top: 1px dashed transparent;
+    border-bottom-right-radius: 20px;
+    border-bottom-left-radius: 20px;
+    &:hover {
         border-top: 1px dashed var(--el-color-primary);
+    }
+}
+.ba-upload-paste-image {
+    bottom: 0px;
+    border-bottom: 1px dashed transparent;
+    border-top-right-radius: 20px;
+    border-top-left-radius: 20px;
+    &:hover {
+        border-bottom: 1px dashed var(--el-color-primary);
     }
 }
 .ba-upload :deep(.el-upload:hover .ba-upload-icon) {
@@ -489,6 +756,20 @@ watch(
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+.ba-upload.image :deep(.el-upload--picture-card > .el-tooltip__trigger),
+.ba-upload.images :deep(.el-upload--picture-card > .el-tooltip__trigger) {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+.ba-upload.file :deep(.el-upload),
+.ba-upload.files :deep(.el-upload) {
+    position: relative;
 }
 .ba-upload.file :deep(.el-upload-list),
 .ba-upload.files :deep(.el-upload-list) {

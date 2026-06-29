@@ -95,8 +95,7 @@
                                 <el-checkbox
                                     v-if="item.prop"
                                     @change="onChangeShowColumn($event, item.prop!)"
-                                    :checked="!item.show"
-                                    :model-value="item.show"
+                                    :model-value="item.show !== false"
                                     size="small"
                                     :label="item.label"
                                 />
