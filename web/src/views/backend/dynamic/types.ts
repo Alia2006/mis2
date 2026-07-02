@@ -78,7 +78,7 @@ export interface DynamicFormField {
 }
 
 /**
- * 后端字段配置原始记录（dynamic_table_field 表行）
+ * 后端字段配置原始记录（dynamic_table_config.fields JSON 数组元素）
  */
 export interface TableFieldRecord {
     id: number

@@ -145,7 +145,14 @@ const loadConfig = async () => {
         // 重新初始化公共搜索（列已更新）
         baTable.comSearch.fieldData.clear()
         Object.keys(baTable.comSearch.form).forEach((k) => delete baTable.comSearch.form[k])
+        // mount() 在 await 之后调用，useRoute() 可能失效，预先设置 routePath
+        baTable.table.routePath = route.fullPath
         baTable.mount()
+        // mount() 内部可能无法读取 route.query，此处补充处理
+        if (baTable.table.acceptQuery && Object.keys(route.query).length > 0) {
+            baTable.setComSearchData(route.query)
+            baTable.setFilterSearchData(baTable.getComSearchData(), 'merge')
+        }
         baTable.getData()
     } catch (err) {
         console.error('Failed to load dynamic table config:', err)

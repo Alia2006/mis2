@@ -2,7 +2,7 @@ import type { FormInstance, TableColumnCtx } from 'element-plus'
 import { ElNotification, dayjs } from 'element-plus'
 import { cloneDeep, isArray, isEmpty } from 'lodash-es'
 import Sortable from 'sortablejs'
-import { reactive } from 'vue'
+import { getCurrentInstance, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import type { baTableApi } from '/@/api/common'
 import { findIndexRow } from '/@/components/table'
@@ -489,15 +489,19 @@ export default class baTable {
         if (this.runBefore('mount') === false) return
 
         // 记录表格的路由路径
-        const route = useRoute()
-        this.table.routePath = route.fullPath
+        // useRoute() 必须在 Vue setup 上下文中调用；在 async await 之后调用时
+        // getCurrentInstance() 返回 null，此时跳过路由读取（routePath 可由调用方预先设置）
+        const route = getCurrentInstance() ? useRoute() : undefined
+        if (route) {
+            this.table.routePath = route.fullPath
+        }
 
         // 按需初始化公共搜索表单数据和字段Map
         if (this.comSearch.fieldData.size === 0) {
             this.initComSearch()
         }
 
-        if (this.table.acceptQuery && !isEmpty(route.query)) {
+        if (route && this.table.acceptQuery && !isEmpty(route.query)) {
             // 根据当前 URL 的 query 初始化公共搜索默认值
             this.setComSearchData(route.query)
 
