@@ -6,6 +6,8 @@ use think\Model;
 
 /**
  * 动态表格配置模型
+ *
+ * fields 作为 JSON 字段直接存储，不再使用独立的 dynamic_table_field 表
  */
 class TableConfig extends Model
 {
@@ -18,14 +20,11 @@ class TableConfig extends Model
     // 自动写入时间戳
     protected $autoWriteTimestamp = 'datetime';
 
-    // JSON 字段
-    protected $json = ['default_items'];
+    // JSON 字段（含 fields）
+    protected $json = ['default_items', 'fields'];
 
-    // 字段关联
-    public function fields()
-    {
-        return $this->hasMany(TableField::class, 'table_id', 'id')->order('sort', 'asc');
-    }
+    // JSON 关联数组
+    protected $jsonAssoc = true;
 
     /**
      * 获取器：header_buttons 自动 JSON 解码
