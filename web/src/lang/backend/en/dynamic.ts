@@ -72,5 +72,29 @@ export default {
         f_validators: 'Validators',
         f_dict: 'Dictionary',
         f_dict_ph: 'JSON: {"0":"Off","1":"On"}',
+        // Data-driven panel property labels
+        f_comSearchInputAttr: 'Search Input Attr',
+        f_validatorMsg: 'Validator Message',
+        f_step: 'Step',
+        f_rows: 'Rows',
+        f_select_multi: 'Select Multi',
+        f_image_multi: 'Image Multi',
+        f_file_multi: 'File Multi',
+        // Design type names
+        type_pk: 'Primary Key',
+        type_spk: 'Primary Key (Snowflake)',
+        type_weigh: 'Weight (Drag Sort)',
+        type_timestamp: 'Datetime (Timestamp)',
+        // Common suffixes / options
+        label_multi: 'Multi',
+        label_upload: 'Upload',
+        op_false: 'No Search',
+        ph_comSearchAttr: 'Format: size=large, one per line',
+        ph_validatorMsg: 'Auto from validator name if blank',
+        // remoteSelect association config
+        f_remote_table: 'Remote Table',
+        f_remote_pk: 'Remote PK Field',
+        f_remote_label: 'Display Field',
+        remote_assoc_title: 'Remote Select Association',
     },
 }

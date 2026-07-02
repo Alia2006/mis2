@@ -72,5 +72,29 @@ export default {
         f_validators: '校验器',
         f_dict: '字典数据',
         f_dict_ph: 'JSON: {"0":"禁用","1":"启用"}',
+        // 数据驱动面板的属性标签
+        f_comSearchInputAttr: '搜索扩展属性',
+        f_validatorMsg: '验证提示',
+        f_step: '步进值',
+        f_rows: '行数',
+        f_select_multi: '下拉多选',
+        f_image_multi: '图片多选',
+        f_file_multi: '文件多选',
+        // 设计类型名称
+        type_pk: '主键',
+        type_spk: '主键 (雪花ID)',
+        type_weigh: '权重 (拖拽排序)',
+        type_timestamp: '时间日期 (时间戳)',
+        // 通用后缀 / 选项
+        label_multi: '多选',
+        label_upload: '上传',
+        op_false: '关闭搜索',
+        ph_comSearchAttr: '格式如：size=large，一行一个属性',
+        ph_validatorMsg: '留空则自动使用验证器名称',
+        // remoteSelect 关联配置
+        f_remote_table: '关联数据表',
+        f_remote_pk: '关联键字段',
+        f_remote_label: '显示字段',
+        remote_assoc_title: '远程下拉关联配置',
     },
 }

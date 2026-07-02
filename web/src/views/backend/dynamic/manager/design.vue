@@ -82,12 +82,38 @@
                 <el-row :gutter="16">
                     <el-col :span="3">
                         <el-form-item label="PK">
-                            <el-input v-model="form.pk" placeholder="id" />
+                            <el-select
+                                v-model="form.pk"
+                                filterable
+                                clearable
+                                placeholder="id"
+                                style="width: 100%"
+                            >
+                                <el-option
+                                    v-for="f in form.fields"
+                                    :key="f.prop"
+                                    :label="f.label[designerLang] || f.prop"
+                                    :value="f.prop"
+                                />
+                            </el-select>
                         </el-form-item>
                     </el-col>
                     <el-col :span="4">
                         <el-form-item :label="t('dynamic.designer.sort_field')">
-                            <el-input v-model="form.default_sort_field" placeholder="id" />
+                            <el-select
+                                v-model="form.default_sort_field"
+                                filterable
+                                clearable
+                                :placeholder="t('dynamic.designer.sort_field_ph', 'id')"
+                                style="width: 100%"
+                            >
+                                <el-option
+                                    v-for="f in form.fields"
+                                    :key="f.prop"
+                                    :label="f.label[designerLang] || f.prop"
+                                    :value="f.prop"
+                                />
+                            </el-select>
                         </el-form-item>
                     </el-col>
                     <el-col :span="3">
@@ -171,7 +197,7 @@
                                     @click="onAddFieldFromTemplate(field)"
                                 >
                                     <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
-                                    <span>{{ field.title }}</span>
+                                    <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
                                 </div>
                             </el-collapse-item>
                             <el-collapse-item :title="t('dynamic.designer.base_fields')" name="base">
@@ -182,7 +208,7 @@
                                     @click="onAddFieldFromTemplate(field)"
                                 >
                                     <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
-                                    <span>{{ field.title }}</span>
+                                    <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
                                 </div>
                             </el-collapse-item>
                             <el-collapse-item :title="t('dynamic.designer.senior_fields')" name="senior">
@@ -193,7 +219,7 @@
                                     @click="onAddFieldFromTemplate(field)"
                                 >
                                     <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
-                                    <span>{{ field.title }}</span>
+                                    <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
                                 </div>
                             </el-collapse-item>
                         </el-collapse>
@@ -244,7 +270,7 @@
                     </div>
                 </el-col>
 
-                <!-- ── 右栏：属性编辑器 ── -->
+                <!-- ── 右栏：属性编辑器（数据驱动，参照 CRUD design.vue） ── -->
                 <el-col :span="10">
                     <div class="field-config ba-scroll-style">
                         <div v-if="activateField === -1" class="design-field-empty">
@@ -255,16 +281,12 @@
                             <el-divider content-position="left">{{ t('dynamic.designer.f_type') }}</el-divider>
                             <el-form-item :label="t('dynamic.designer.f_designtype')">
                                 <el-select
-                                    v-model="form.fields[activateField]._designType"
+                                    v-model="form.fields[activateField].design_type"
                                     style="width: 100%"
                                     @change="onDesignTypeChange($event, activateField)"
                                 >
                                     <el-option-group
-                                        v-for="group in [
-                                            { label: 'Common', types: ['pk','spk','switch','textarea','weigh','timestamp','remoteSelect'] },
-                                            { label: 'Base', types: ['string','number','float','image','file','radio','checkbox','select','editor','password','date','time','datetime','year'] },
-                                            { label: 'Senior', types: ['array','city','icon','color','images','files','selects','remoteSelects'] },
-                                        ]"
+                                        v-for="group in designTypeGroups"
                                         :key="group.label"
                                         :label="group.label"
                                     >
@@ -287,13 +309,10 @@
                                 <el-input v-model="form.fields[activateField].label.en" placeholder="English label" />
                             </el-form-item>
 
-                            <!-- 表格列属性 -->
+                            <!-- 表格列属性 — 通用（始终显示） -->
                             <el-divider content-position="left">{{ t('dynamic.designer.f_table_props') }}</el-divider>
                             <el-form-item :label="t('dynamic.designer.f_show')">
                                 <el-switch v-model="form.fields[activateField].column_show" />
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_width')">
-                                <el-input-number v-model="form.fields[activateField].column_width" :controls="false" style="width: 100%" />
                             </el-form-item>
                             <el-form-item :label="t('dynamic.designer.f_align')">
                                 <el-select v-model="form.fields[activateField].column_align" style="width: 100%">
@@ -302,32 +321,24 @@
                                     <el-option label="right" value="right" />
                                 </el-select>
                             </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_render')">
-                                <el-select v-model="form.fields[activateField].column_render" clearable placeholder="none" style="width: 100%">
-                                    <el-option v-for="r in renderOptions" :key="r" :label="r" :value="r" />
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_operator')">
-                                <el-select v-model="form.fields[activateField].column_operator" style="width: 100%">
-                                    <el-option v-for="op in operatorOptions" :key="op" :label="op" :value="op" />
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_sortable')">
-                                <el-select v-model="form.fields[activateField].column_sortable" style="width: 100%">
-                                    <el-option label="false" value="false" />
-                                    <el-option label="custom" value="custom" />
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_comSearch')">
-                                <el-select v-model="form.fields[activateField].column_com_search_render" clearable placeholder="auto" style="width: 100%">
-                                    <el-option v-for="r in comSearchRenderOptions" :key="r" :label="r" :value="r" />
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_timeformat')">
-                                <el-input v-model="form.fields[activateField].column_time_format" placeholder="yyyy-mm-dd hh:MM:ss" />
-                            </el-form-item>
 
-                            <!-- 字典/替换值 -->
+                            <!-- 表格列属性 — 类型相关（数据驱动） -->
+                            <template v-if="hasTableProps(activateField)">
+                                <template v-for="(item, key) in form.fields[activateField].table" :key="'tbl-' + key">
+                                    <FormItem
+                                        :label="t(tablePropLabelKeys[key] || key)"
+                                        :type="item.type"
+                                        v-model="form.fields[activateField].table[key].value"
+                                        :placeholder="item.placeholder ?? ''"
+                                        :input-attr="{
+                                            content: item.options ?? {},
+                                            ...(item.attr ?? {}),
+                                        }"
+                                    />
+                                </template>
+                            </template>
+
+                            <!-- 字典/替换值（始终可用） -->
                             <el-form-item :label="t('dynamic.designer.f_replacevalue')">
                                 <el-input
                                     type="textarea"
@@ -346,26 +357,82 @@
                                 />
                             </el-form-item>
 
-                            <!-- 表单属性 -->
-                            <el-divider content-position="left">{{ t('dynamic.designer.f_form_props') }}</el-divider>
+                            <!-- 表单属性 — 类型相关（数据驱动） -->
+                            <template v-if="hasFormProps(activateField)">
+                                <el-divider content-position="left">{{ t('dynamic.designer.f_form_props') }}</el-divider>
+                                <template v-for="(item, key) in form.fields[activateField].form" :key="'frm-' + key">
+                                    <FormItem
+                                        v-if="item.type !== 'hidden'"
+                                        :label="t(formPropLabelKeys[key] || key)"
+                                        :type="item.type"
+                                        v-model="form.fields[activateField].form[key].value"
+                                        :placeholder="item.placeholder ?? ''"
+                                        :input-attr="{
+                                            content: item.options ?? {},
+                                            ...(item.attr ?? {}),
+                                        }"
+                                    />
+                                </template>
+                            </template>
+
+                            <!-- remoteSelect 关联配置 -->
+                            <template v-if="['remoteSelect', 'remoteSelects'].includes(form.fields[activateField].design_type)">
+                                <el-divider content-position="left">{{ t('dynamic.designer.remote_assoc_title') }}</el-divider>
+                                <el-form-item :label="t('dynamic.designer.f_remote_table')">
+                                    <el-select
+                                        v-model="form.fields[activateField].remote_table"
+                                        filterable
+                                        clearable
+                                        placeholder=""
+                                        style="width: 100%"
+                                        @change="onRemoteTableChange(activateField)"
+                                    >
+                                        <el-option
+                                            v-for="item in tableOptions"
+                                            :key="item.table"
+                                            :label="item.comment ? `${item.table} (${item.comment})` : item.table"
+                                            :value="item.table"
+                                        />
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_remote_pk')">
+                                    <el-select
+                                        v-model="form.fields[activateField].remote_pk"
+                                        filterable
+                                        clearable
+                                        placeholder="id"
+                                        style="width: 100%"
+                                    >
+                                        <el-option
+                                            v-for="f in (remoteFieldOptions[activateField] || [])"
+                                            :key="f.name"
+                                            :label="`${f.name} (${f.type || ''})`"
+                                            :value="f.name"
+                                        />
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_remote_label')">
+                                    <el-select
+                                        v-model="form.fields[activateField].remote_label"
+                                        filterable
+                                        clearable
+                                        placeholder="name"
+                                        style="width: 100%"
+                                    >
+                                        <el-option
+                                            v-for="f in (remoteFieldOptions[activateField] || [])"
+                                            :key="f.name"
+                                            :label="`${f.name} (${f.type || ''})`"
+                                            :value="f.name"
+                                        />
+                                    </el-select>
+                                </el-form-item>
+                            </template>
+
+                            <!-- 表单类型（始终可手动调整） -->
                             <el-form-item :label="t('dynamic.designer.f_formtype')">
                                 <el-select v-model="form.fields[activateField].form_type" style="width: 100%">
                                     <el-option v-for="ft in formTypeOptions" :key="ft" :label="ft" :value="ft" />
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_validators')">
-                                <el-select
-                                    v-model="form.fields[activateField].form_validators"
-                                    multiple
-                                    style="width: 100%"
-                                >
-                                    <el-option label="required" value="required" />
-                                    <el-option label="number" value="number" />
-                                    <el-option label="date" value="date" />
-                                    <el-option label="email" value="email" />
-                                    <el-option label="float" value="float" />
-                                    <el-option label="phone" value="phone" />
-                                    <el-option label="password" value="password" />
                                 </el-select>
                             </el-form-item>
                         </el-form>
@@ -390,9 +457,21 @@ import { ref, watch, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import Icon from '/@/components/icon/index.vue'
+import FormItem from '/@/components/formItem/index.vue'
 import createAxios from '/@/utils/axios'
 import { addDynamicConfig, editDynamicConfig, getDynamicConfigDetail, getDbTableFields, getMenuTree } from '/@/api/backend/dynamic'
-import { fieldTemplates, designTypes, createFieldFromTemplate, type FieldTemplate } from '../fieldTypes'
+import { index as adminIndex } from '/@/api/backend'
+import { handleAdminRoute } from '/@/utils/router'
+import {
+    fieldTemplates,
+    designTypes,
+    tablePropKeyMap,
+    formPropKeyMap,
+    tablePropLabelKeys,
+    formPropLabelKeys,
+    createFieldFromTemplate,
+    type FieldTemplate,
+} from '../fieldTypes'
 import { getDatabaseConnectionListUrl, getTableListUrl } from '/@/api/common'
 
 defineOptions({
@@ -425,14 +504,79 @@ watch(() => props.modelValue, (v) => {
 watch(show, (v) => emit('update:modelValue', v))
 
 const headerButtonOptions = ['refresh', 'add', 'edit', 'delete', 'unfold', 'comSearch', 'quickSearch', 'columnDisplay']
-const renderOptions = ['tag', 'tags', 'switch', 'datetime', 'image', 'images', 'icon', 'color', 'url']
-const operatorOptions = ['false', 'eq', 'ne', 'gt', 'egt', 'lt', 'elt', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'RANGE', 'NOT RANGE', 'NULL', 'NOT NULL', 'FIND_IN_SET']
-const comSearchRenderOptions = ['string', 'select', 'remoteSelect', 'time', 'date', 'datetime']
 const formTypeOptions = ['string', 'number', 'textarea', 'switch', 'datetime', 'date', 'time', 'year', 'select', 'selects', 'radio', 'checkbox', 'remoteSelect', 'remoteSelects', 'image', 'images', 'file', 'files', 'editor', 'password', 'array', 'city', 'icon', 'color']
+
+const designTypeGroups = [
+    { label: 'Common', types: ['pk', 'spk', 'switch', 'textarea', 'weigh', 'timestamp', 'remoteSelect'] },
+    { label: 'Base', types: ['string', 'number', 'float', 'image', 'file', 'radio', 'checkbox', 'select', 'editor', 'password', 'date', 'time', 'datetime', 'year'] },
+    { label: 'Senior', types: ['array', 'city', 'icon', 'color', 'images', 'files', 'selects', 'remoteSelects'] },
+]
 
 const menuTree = ref<any[]>([])
 const connectionOptions = ref<any[]>([])
 const tableOptions = ref<any[]>([])
+const remoteFieldOptions = ref<Record<number, any[]>>({})
+
+/**
+ * remoteSelect 关联表变更时，加载关联表字段列表
+ */
+const onRemoteTableChange = async (idx: number) => {
+    const field = form.fields[idx]
+    if (!field) return
+
+    // 清空旧选项和已选值
+    field.remote_pk = ''
+    field.remote_label = ''
+
+    if (!field.remote_table) {
+        delete remoteFieldOptions.value[idx]
+        return
+    }
+
+    try {
+        const res = await getDbTableFields(field.remote_table, form.db_connection)
+        const fields = res.data?.fields ?? res.data?.data?.fields ?? []
+        remoteFieldOptions.value[idx] = fields
+
+        // 自动推断 PK 和 label
+        const pkField = fields.find((f: any) => f.primary)
+        if (pkField) field.remote_pk = pkField.name
+        else if (fields.length) field.remote_pk = fields[0].name
+
+        // label 默认选第一个字符串类型字段（排除 PK）
+        const labelField = fields.find((f: any) => {
+            const t = (f.type || '').toLowerCase()
+            return !f.primary && (t.includes('varchar') || t.includes('text') || t.includes('char'))
+        })
+        if (labelField) field.remote_label = labelField.name
+        else if (fields.length > 1) field.remote_label = fields[1].name
+        else if (fields.length) field.remote_label = fields[0].name
+    } catch {
+        remoteFieldOptions.value[idx] = []
+    }
+}
+
+/**
+ * 切换到 remoteSelect 字段时，自动加载关联表字段选项
+ */
+const ensureRemoteFieldOptions = async (idx: number) => {
+    const field = form.fields[idx]
+    if (!field || !['remoteSelect', 'remoteSelects'].includes(field.design_type)) return
+    if (!field.remote_table) return
+    if (remoteFieldOptions.value[idx]) return // 已加载
+
+    try {
+        const res = await getDbTableFields(field.remote_table, form.db_connection)
+        remoteFieldOptions.value[idx] = res.data?.fields ?? res.data?.data?.fields ?? []
+    } catch {
+        remoteFieldOptions.value[idx] = []
+    }
+}
+
+// 监听字段切换，自动加载关联表字段
+watch(activateField, (idx) => {
+    if (idx !== -1) ensureRemoteFieldOptions(idx)
+})
 
 /**
  * 将原始值规范化为多语言对象
@@ -508,47 +652,158 @@ const loadMenuTree = async () => {
     }
 }
 
+/* ─── 字段模型 ─── */
+
+interface PropBagItem {
+    type: string
+    value: any
+    options?: Record<string, any>
+    placeholder?: string
+    attr?: Record<string, any>
+}
+
 interface FieldRow {
     prop: string
     label: Record<string, string>
+    design_type: string
     column_show: boolean
-    column_width: number | null
     column_align: string
-    column_render: string | null
-    column_operator: string
-    column_sortable: string
-    column_com_search_render: string | null
     column_replace_value: any
     _replaceValueStr: string
-    column_custom: any
-    column_time_format: string | null
-    column_operator_placeholder: string | null
+    column_custom: string | null
     form_type: string
     form_validators: string[]
-    form_input_attr: any
-    _designType: string
+    form_input_attr: Record<string, any>
+    remote_table: string
+    remote_pk: string
+    remote_label: string
+    table: Record<string, PropBagItem>
+    form: Record<string, PropBagItem>
 }
 
-const defaultField = (): FieldRow => ({
-    prop: '',
-    label: { 'zh-cn': '', en: '' },
-    column_show: true,
-    column_width: null,
-    column_align: 'center',
-    column_render: null,
-    column_operator: 'eq',
-    column_sortable: 'false',
-    column_com_search_render: null,
-    column_replace_value: null,
-    _replaceValueStr: '',
-    column_custom: null,
-    column_time_format: null,
-    column_operator_placeholder: null,
-    form_type: 'string',
-    form_validators: [],
-    form_input_attr: {},
-    _designType: 'string',
-})
+/* ─── 属性 bag 构建辅助 ─── */
+
+/**
+ * 根据 designType 和 DB 字段数据，构建表格列属性 bag
+ * bag 中每个属性的 value 从 DB 字段读取，type/options/placeholder 从 designTypes 模板读取
+ */
+const buildTableBag = (designType: string, dbField: any): Record<string, PropBagItem> => {
+    const dt = designTypes[designType]
+    if (!dt?.table) return {}
+    const bag: Record<string, PropBagItem> = {}
+    for (const [key, def] of Object.entries(dt.table)) {
+        const fieldName = tablePropKeyMap[key]
+        const dbVal = fieldName ? dbField[fieldName] : undefined
+        bag[key] = {
+            ...(def as any),
+            value: dbVal ?? (def as any).value,
+        }
+    }
+    return bag
+}
+
+/**
+ * 根据 designType 和 DB 字段数据，构建表单属性 bag
+ */
+const buildFormBag = (designType: string, dbField: any): Record<string, PropBagItem> => {
+    const dt = designTypes[designType]
+    if (!dt?.form) return {}
+    const bag: Record<string, PropBagItem> = {}
+    const inputAttr = dbField.form_input_attr || {}
+    for (const [key, def] of Object.entries(dt.form)) {
+        let dbVal: any
+        if (key === 'validator') {
+            dbVal = dbField.form_validators
+        } else {
+            const subKey = formPropKeyMap[key]
+            if (subKey && !subKey.startsWith('__')) {
+                dbVal = inputAttr[subKey]
+            }
+        }
+        bag[key] = {
+            ...(def as any),
+            value: dbVal ?? (def as any).value,
+        }
+    }
+    return bag
+}
+
+/**
+ * 将属性 bag 扁平化回 DB 字段格式（保存时调用）
+ */
+const flattenBags = (field: FieldRow) => {
+    const flat: Record<string, any> = {
+        prop: field.prop,
+        label: field.label,
+        design_type: field.design_type,
+        column_show: field.column_show,
+        column_align: field.column_align,
+        column_replace_value: field.column_replace_value,
+        column_custom: field.column_custom,
+        form_type: field.form_type,
+        form_validators: [] as string[],
+        form_input_attr: {} as Record<string, any>,
+    }
+
+    // 表格属性 bag → 扁平 DB 列
+    for (const [key, item] of Object.entries(field.table)) {
+        const fieldName = tablePropKeyMap[key]
+        if (fieldName) {
+            flat[fieldName] = item.value
+        }
+    }
+
+    // 表单属性 bag → form_validators + form_input_attr
+    for (const [key, item] of Object.entries(field.form)) {
+        if (key === 'validator') {
+            flat.form_validators = item.value
+        } else {
+            const subKey = formPropKeyMap[key]
+            if (subKey && !subKey.startsWith('__')) {
+                flat.form_input_attr[subKey] = item.value
+            }
+        }
+    }
+
+    // remoteSelect 关联属性 → form_input_attr
+    if (field.remote_table) flat.form_input_attr.remote_table = field.remote_table
+    if (field.remote_pk) flat.form_input_attr.remote_pk = field.remote_pk
+    if (field.remote_label) flat.form_input_attr.remote_label = field.remote_label
+
+    return flat
+}
+
+/**
+ * 检查字段是否有类型相关的表格属性
+ */
+const hasTableProps = (idx: number): boolean => {
+    const field = form.fields[idx]
+    if (!field?.table) return false
+    return Object.keys(field.table).length > 0
+}
+
+/**
+ * 检查字段是否有类型相关的表单属性
+ */
+const hasFormProps = (idx: number): boolean => {
+    const field = form.fields[idx]
+    if (!field?.form) return false
+    return Object.keys(field.form).length > 0
+}
+
+/**
+ * 从 form_type 推断 design_type（加载旧数据时）
+ */
+const inferDesignType = (formType: string, prop: string): string => {
+    // 直接匹配的 form_type
+    if (designTypes[formType]) return formType
+    // 常见推断
+    if (prop === 'id') return 'pk'
+    if (prop === 'weigh') return 'weigh'
+    if (prop === 'status') return 'switch'
+    if (prop === 'create_time' || prop === 'update_time') return 'timestamp'
+    return 'string'
+}
 
 const form = reactive({
     id: 0,
@@ -611,28 +866,30 @@ const initForm = async () => {
 
             if (row.fields && Array.isArray(row.fields)) {
                 form.fields = row.fields.map((f: any) => {
+                    // 推断 design type
+                    const dt = f.design_type || inferDesignType(f.form_type || 'string', f.prop)
                     const rv = f.column_replace_value
                     const rvStr = rv ? (typeof rv === 'string' ? rv : JSON.stringify(rv)) : ''
+                    const ia = (typeof f.form_input_attr === 'string' ? JSON.parse(f.form_input_attr || '{}') : f.form_input_attr) || {}
+
                     return {
-                        ...defaultField(),
                         prop: f.prop,
                         label: normalizeLangValue(f.label),
-                        column_show: !!f.column_show,
-                        column_width: f.column_width,
-                        column_render: f.column_render,
-                        column_operator: f.column_operator || 'eq',
-                        column_sortable: f.column_sortable || 'false',
-                        column_com_search_render: f.column_com_search_render,
+                        design_type: dt,
+                        column_show: f.column_show !== undefined ? !!f.column_show : true,
+                        column_align: f.column_align || 'center',
                         column_replace_value: rv,
                         _replaceValueStr: rvStr,
-                        column_custom: f.column_custom,
-                        column_time_format: f.column_time_format,
-                        column_operator_placeholder: f.column_operator_placeholder,
-                        form_type: f.form_type || 'string',
+                        column_custom: f.column_custom || null,
+                        form_type: f.form_type || dt,
                         form_validators: f.form_validators || [],
-                        form_input_attr: f.form_input_attr || {},
-                        _designType: f.form_type || 'string',
-                    }
+                        form_input_attr: ia,
+                        remote_table: ia.remote_table || '',
+                        remote_pk: ia.remote_pk || '',
+                        remote_label: ia.remote_label || '',
+                        table: buildTableBag(dt, f),
+                        form: buildFormBag(dt, f),
+                    } as FieldRow
                 })
             }
         } catch (err) {
@@ -647,7 +904,25 @@ const initForm = async () => {
  * 从左侧面板添加字段
  */
 const onAddFieldFromTemplate = (template: FieldTemplate) => {
-    const newField = { ...defaultField(), ...createFieldFromTemplate(template) } as FieldRow
+    const base = createFieldFromTemplate(template)
+    const newField: FieldRow = {
+        prop: base.prop,
+        label: base.label,
+        design_type: template.designType,
+        column_show: base.column_show,
+        column_align: base.column_align,
+        column_replace_value: base.column_replace_value,
+        _replaceValueStr: '',
+        column_custom: base.column_custom,
+        form_type: base.form_type,
+        form_validators: base.form_validators,
+        form_input_attr: base.form_input_attr,
+        remote_table: '',
+        remote_pk: '',
+        remote_label: '',
+        table: buildTableBag(template.designType, base),
+        form: buildFormBag(template.designType, base),
+    }
     form.fields.push(newField)
     activateField.value = form.fields.length - 1
 }
@@ -663,26 +938,46 @@ const onDelField = (index: number) => {
 }
 
 /**
- * 设计类型变更时，更新默认属性
+ * 设计类型变更时，重建属性 bag 并应用新类型的默认值
  */
 const onDesignTypeChange = (newType: string, index: number) => {
     const dt = designTypes[newType]
     if (!dt) return
     const field = form.fields[index]
 
-    // 更新表格列属性
-    if (dt.table) {
-        for (const [key, val] of Object.entries(dt.table)) {
-            const propName = key === 'width' ? 'column_width' : key === 'render' ? 'column_render' :
-                key === 'operator' ? 'column_operator' : key === 'sortable' ? 'column_sortable' :
-                key === 'comSearchRender' ? 'column_com_search_render' : key === 'timeFormat' ? 'column_time_format' : null
-            if (propName) {
-                (field as any)[propName] = (val as any).value
-            }
-        }
+    // 保存当前 bag 中用户可能已修改的值
+    const oldTableValues: Record<string, any> = {}
+    for (const [key, item] of Object.entries(field.table || {})) {
+        oldTableValues[key] = item.value
+    }
+    const oldFormValues: Record<string, any> = {}
+    for (const [key, item] of Object.entries(field.form || {})) {
+        oldFormValues[key] = item.value
     }
 
-    // 更新表单类型
+    // 重建 bag（使用新类型的模板）
+    field.table = buildTableBag(newType, {
+        // 把旧值作为 DB 值传入，保持用户已修改的属性
+        column_render: oldTableValues.render,
+        column_operator: oldTableValues.operator,
+        column_sortable: oldTableValues.sortable,
+        column_com_search_render: oldTableValues.comSearchRender,
+        column_operator_placeholder: oldTableValues.comSearchInputAttr,
+        column_width: oldTableValues.width,
+        column_time_format: oldTableValues.timeFormat,
+    })
+    field.form = buildFormBag(newType, {
+        form_validators: oldFormValues.validator,
+        form_input_attr: {
+            step: oldFormValues.step,
+            rows: oldFormValues.rows,
+            'select-multi': oldFormValues['select-multi'],
+            'image-multi': oldFormValues['image-multi'],
+            'file-multi': oldFormValues['file-multi'],
+        },
+    })
+
+    // 同步 form_type
     field.form_type = newType
 }
 
@@ -732,8 +1027,25 @@ const onImportFields = async () => {
                     designType,
                     formType: designType === 'pk' ? 'string' : designType,
                 }
-                const row = { ...createFieldFromTemplate(template) } as FieldRow
-                row.label = { 'zh-cn': f.comment || f.name, en: '' }
+                const base = createFieldFromTemplate(template)
+                const row: FieldRow = {
+                    prop: base.prop,
+                    label: { 'zh-cn': f.comment || f.name, en: '' },
+                    design_type: designType,
+                    column_show: base.column_show,
+                    column_align: base.column_align,
+                    column_replace_value: base.column_replace_value,
+                    _replaceValueStr: '',
+                    column_custom: base.column_custom,
+                    form_type: base.form_type,
+                    form_validators: base.form_validators,
+                    form_input_attr: base.form_input_attr,
+                    remote_table: '',
+                    remote_pk: '',
+                    remote_label: '',
+                    table: buildTableBag(designType, base),
+                    form: buildFormBag(designType, base),
+                }
                 form.fields.push(row)
             }
         }
@@ -755,11 +1067,15 @@ const onSave = async () => {
 
     saving.value = true
     try {
-        const payload = { ...form }
-        payload.quick_search_fields = form.quick_search_fields
+        // 扁平化属性 bag → DB 字段格式
+        const cleanFields = form.fields.map((f) => {
+            const flat = flattenBags(f)
+            // 移除前端辅助字段
+            const { _replaceValueStr, table, form: formBag, remote_table, remote_pk, remote_label, ...rest } = f as any
+            return { ...rest, ...flat }
+        })
 
-        const cleanFields = form.fields.map(({ _replaceValueStr, _designType, ...rest }) => rest)
-        payload.fields = cleanFields
+        const payload = { ...form, fields: cleanFields }
 
         if (props.editId) {
             payload.id = props.editId
@@ -768,6 +1084,17 @@ const onSave = async () => {
             await addDynamicConfig(payload)
         }
         ElMessage.success(t('axios.Operation successful'))
+
+        // 刷新后台菜单路由（与 CRUD 生成后行为一致）
+        try {
+            const res = await adminIndex()
+            if (res.data?.menus) {
+                handleAdminRoute(res.data.menus)
+            }
+        } catch (e) {
+            console.error('Menu refresh failed:', e)
+        }
+
         emit('saved')
     } catch (err) {
         console.error(err)

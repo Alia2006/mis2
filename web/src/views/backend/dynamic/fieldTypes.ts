@@ -1,35 +1,43 @@
 /**
  * 动态表格设计器 — 字段类型定义
  *
- * 参照 CRUD 的 designTypes / fieldItem 模式，
- * 但仅保留「表格列属性」和「表单属性」，不需要 DB schema 信息。
+ * 完全参照 CRUD 的 designTypes / fieldItem 模式：
+ * 每个类型定义 table（表格列属性）和 form（表单属性），
+ * 右侧面板通过遍历这两个对象动态渲染，而非硬编码。
+ *
+ * i18n 键全部使用 dynamic.designer.* 或全局 utils.* 命名空间，
+ * 确保在动态表格路由下语言包已加载。
  */
 
-/**
- * 表格列属性模板
- */
+import { i18n } from '/@/lang/index'
+import { validatorType } from '/@/utils/validate'
+
+const t = i18n.global.t
+
+/* ─── 基础属性模板 ─── */
+
 const tableBaseAttr = {
     render: {
         type: 'select',
         value: 'none',
         options: {
-            none: 'None',
+            none: t('None'),
             icon: 'Icon',
-            switch: 'Switch',
-            image: 'Image',
-            images: 'Images',
+            switch: t('utils.switch'),
+            image: t('utils.image'),
+            images: t('utils.multi image'),
             tag: 'Tag',
             tags: 'Tags',
             url: 'URL',
-            datetime: 'DateTime',
-            color: 'Color',
+            datetime: t('utils.time date'),
+            color: t('utils.color'),
         },
     },
     operator: {
         type: 'select',
         value: 'eq',
         options: {
-            false: 'Disable Search',
+            false: t('dynamic.designer.op_false'),
             eq: 'eq =',
             ne: 'ne !=',
             gt: 'gt >',
@@ -51,32 +59,41 @@ const tableBaseAttr = {
         type: 'select',
         value: 'string',
         options: {
-            string: 'String',
-            select: 'Select',
-            remoteSelect: 'Remote Select',
-            time: 'Time',
-            date: 'Date',
-            datetime: 'DateTime',
+            string: t('utils.string'),
+            select: t('utils.select'),
+            remoteSelect: t('utils.remote select'),
+            time: t('utils.time') + t('utils.choice'),
+            date: t('utils.date') + t('utils.choice'),
+            datetime: t('utils.time date') + t('utils.choice'),
         },
+    },
+    comSearchInputAttr: {
+        type: 'textarea',
+        value: '',
+        placeholder: t('dynamic.designer.ph_comSearchAttr'),
+        attr: { rows: 3 },
     },
     sortable: {
         type: 'select',
         value: 'false',
         options: {
-            false: 'Disable',
-            custom: 'Enable',
+            false: t('Disable'),
+            custom: t('Enable'),
         },
     },
 } as const
 
-/**
- * 表单属性模板
- */
 const formBaseAttr = {
     validator: {
         type: 'selects',
         value: [] as string[],
-        options: ['required', 'number', 'date', 'email', 'float', 'phone', 'password'],
+        options: validatorType,
+    },
+    validatorMsg: {
+        type: 'textarea',
+        value: '',
+        placeholder: t('dynamic.designer.ph_validatorMsg'),
+        attr: { rows: 2 },
     },
 }
 
@@ -90,45 +107,139 @@ const getFormAttr = (type: keyof typeof formBaseAttr, val: string[]) => ({
     value: val,
 })
 
+/* ─── 通用 width 定义（所有类型都可调整列宽） ─── */
+const widthAttr = (val: number | null = null) => ({ type: 'number' as const, value: val })
+
+/* ─── 属性 key 到字段模型的映射 ─── */
+
+export const tablePropKeyMap: Record<string, string> = {
+    render:              'column_render',
+    operator:            'column_operator',
+    sortable:            'column_sortable',
+    comSearchRender:     'column_com_search_render',
+    comSearchInputAttr:  'column_operator_placeholder',
+    width:               'column_width',
+    timeFormat:          'column_time_format',
+}
+
+export const formPropKeyMap: Record<string, string> = {
+    validator:       '__validators',
+    validatorMsg:    'validatorMsg',
+    step:            'step',
+    rows:            'rows',
+    'select-multi':  'select-multi',
+    'image-multi':   'image-multi',
+    'file-multi':    'file-multi',
+    // remoteSelect association props (stored in form_input_attr, rendered in dedicated UI)
+    'remote-table':  'remote_table',
+    'remote-pk':     'remote_pk',
+    'remote-label':  'remote_label',
+}
+
 /**
- * 设计器字段类型定义
- * 每个类型定义了添加该类型字段时的默认表格列属性和表单属性
+ * table 属性 i18n key（存 key，在模板中用 t() 翻译）
  */
+export const tablePropLabelKeys: Record<string, string> = {
+    render:             'dynamic.designer.f_render',
+    operator:           'dynamic.designer.f_operator',
+    sortable:           'dynamic.designer.f_sortable',
+    comSearchRender:    'dynamic.designer.f_comSearch',
+    comSearchInputAttr: 'dynamic.designer.f_comSearchInputAttr',
+    width:              'dynamic.designer.f_width',
+    timeFormat:         'dynamic.designer.f_timeformat',
+}
+
+/**
+ * form 属性 i18n key（存 key，在模板中用 t() 翻译）
+ */
+export const formPropLabelKeys: Record<string, string> = {
+    validator:      'dynamic.designer.f_validators',
+    validatorMsg:   'dynamic.designer.f_validatorMsg',
+    step:           'dynamic.designer.f_step',
+    rows:           'dynamic.designer.f_rows',
+    'select-multi': 'dynamic.designer.f_select_multi',
+    'image-multi':  'dynamic.designer.f_image_multi',
+    'file-multi':   'dynamic.designer.f_file_multi',
+    'remote-table': 'dynamic.designer.f_remote_table',
+    'remote-pk':    'dynamic.designer.f_remote_pk',
+    'remote-label': 'dynamic.designer.f_remote_label',
+}
+
+/* ─── 设计器字段类型定义 ─── */
+
 export const designTypes: Record<string, {
     name: string
     table: Record<string, any>
     form: Record<string, any>
 }> = {
     pk: {
-        name: 'Primary Key',
+        name: t('dynamic.designer.type_pk'),
         table: {
-            width: { type: 'number', value: 70 },
+            width: widthAttr(70),
             operator: getTableAttr('operator', 'RANGE'),
             sortable: getTableAttr('sortable', 'custom'),
         },
         form: {},
     },
     spk: {
-        name: 'Primary Key (Snowflake)',
+        name: t('dynamic.designer.type_spk'),
         table: {
-            width: { type: 'number', value: 180 },
+            width: widthAttr(180),
             operator: getTableAttr('operator', 'RANGE'),
             sortable: getTableAttr('sortable', 'custom'),
         },
         form: {},
     },
-    string: {
-        name: 'String',
+    weigh: {
+        name: t('dynamic.designer.type_weigh'),
         table: {
+            width: widthAttr(),
+            operator: getTableAttr('operator', 'RANGE'),
+            sortable: getTableAttr('sortable', 'custom'),
+        },
+        form: { ...formBaseAttr },
+    },
+    timestamp: {
+        name: t('dynamic.designer.type_timestamp'),
+        table: {
+            render: getTableAttr('render', 'datetime'),
+            operator: getTableAttr('operator', 'RANGE'),
+            comSearchRender: getTableAttr('comSearchRender', 'datetime'),
+            comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
+            sortable: getTableAttr('sortable', 'custom'),
+            width: widthAttr(160),
+            timeFormat: { type: 'string', value: 'yyyy-mm-dd hh:MM:ss' },
+        },
+        form: {
+            ...formBaseAttr,
+            validator: getFormAttr('validator', ['date']),
+        },
+    },
+    string: {
+        name: t('utils.string'),
+        table: {
+            width: widthAttr(),
             render: getTableAttr('render', 'none'),
             sortable: getTableAttr('sortable', 'false'),
             operator: getTableAttr('operator', 'LIKE'),
         },
         form: { ...formBaseAttr },
     },
-    number: {
-        name: 'Number',
+    password: {
+        name: t('utils.password'),
         table: {
+            width: widthAttr(),
+            operator: getTableAttr('operator', 'false'),
+        },
+        form: {
+            ...formBaseAttr,
+            validator: getFormAttr('validator', ['password']),
+        },
+    },
+    number: {
+        name: t('utils.number'),
+        table: {
+            width: widthAttr(),
             render: getTableAttr('render', 'none'),
             sortable: getTableAttr('sortable', 'false'),
             operator: getTableAttr('operator', 'RANGE'),
@@ -140,8 +251,9 @@ export const designTypes: Record<string, {
         },
     },
     float: {
-        name: 'Float',
+        name: t('utils.float'),
         table: {
+            width: widthAttr(),
             render: getTableAttr('render', 'none'),
             sortable: getTableAttr('sortable', 'false'),
             operator: getTableAttr('operator', 'RANGE'),
@@ -152,18 +264,10 @@ export const designTypes: Record<string, {
             step: { type: 'number', value: 1 },
         },
     },
-    switch: {
-        name: 'Switch',
-        table: {
-            operator: getTableAttr('operator', 'eq'),
-            sortable: getTableAttr('sortable', 'false'),
-            render: getTableAttr('render', 'switch'),
-        },
-        form: { ...formBaseAttr },
-    },
     radio: {
-        name: 'Radio',
+        name: t('utils.radio'),
         table: {
+            width: widthAttr(),
             operator: getTableAttr('operator', 'eq'),
             sortable: getTableAttr('sortable', 'false'),
             render: getTableAttr('render', 'tag'),
@@ -171,35 +275,29 @@ export const designTypes: Record<string, {
         form: { ...formBaseAttr },
     },
     checkbox: {
-        name: 'Checkbox',
+        name: t('utils.checkbox'),
         table: {
+            width: widthAttr(),
             sortable: getTableAttr('sortable', 'false'),
             render: getTableAttr('render', 'tags'),
             operator: getTableAttr('operator', 'FIND_IN_SET'),
         },
         form: { ...formBaseAttr },
     },
-    select: {
-        name: 'Select',
+    switch: {
+        name: t('utils.switch'),
         table: {
+            width: widthAttr(),
             operator: getTableAttr('operator', 'eq'),
             sortable: getTableAttr('sortable', 'false'),
-            render: getTableAttr('render', 'tag'),
-        },
-        form: { ...formBaseAttr },
-    },
-    selects: {
-        name: 'Select (Multi)',
-        table: {
-            sortable: getTableAttr('sortable', 'false'),
-            render: getTableAttr('render', 'tags'),
-            operator: getTableAttr('operator', 'FIND_IN_SET'),
+            render: getTableAttr('render', 'switch'),
         },
         form: { ...formBaseAttr },
     },
     textarea: {
-        name: 'Textarea',
+        name: t('utils.textarea'),
         table: {
+            width: widthAttr(),
             operator: getTableAttr('operator', 'false'),
         },
         form: {
@@ -207,25 +305,35 @@ export const designTypes: Record<string, {
             rows: { type: 'number', value: 3 },
         },
     },
-    password: {
-        name: 'Password',
+    array: {
+        name: t('utils.array'),
         table: {
+            width: widthAttr(),
             operator: getTableAttr('operator', 'false'),
         },
-        form: {
-            ...formBaseAttr,
-            validator: getFormAttr('validator', ['password']),
-        },
+        form: { ...formBaseAttr },
     },
     datetime: {
-        name: 'DateTime',
+        name: t('utils.time date') + t('utils.choice'),
         table: {
             operator: getTableAttr('operator', 'RANGE'),
             comSearchRender: getTableAttr('comSearchRender', 'datetime'),
+            comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
             sortable: getTableAttr('sortable', 'custom'),
-            width: { type: 'number', value: 160 },
+            width: widthAttr(160),
             render: getTableAttr('render', 'datetime'),
-            timeFormat: { type: 'string', value: 'yyyy-mm-dd hh:MM:ss' },
+        },
+        form: {
+            ...formBaseAttr,
+            validator: getFormAttr('validator', ['date']),
+        },
+    },
+    year: {
+        name: t('utils.year') + t('utils.choice'),
+        table: {
+            width: widthAttr(),
+            operator: getTableAttr('operator', 'RANGE'),
+            sortable: getTableAttr('sortable', 'custom'),
         },
         form: {
             ...formBaseAttr,
@@ -233,12 +341,13 @@ export const designTypes: Record<string, {
         },
     },
     date: {
-        name: 'Date',
+        name: t('utils.date') + t('utils.choice'),
         table: {
+            width: widthAttr(),
             operator: getTableAttr('operator', 'RANGE'),
             comSearchRender: getTableAttr('comSearchRender', 'date'),
+            comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
             sortable: getTableAttr('sortable', 'custom'),
-            render: getTableAttr('render', 'datetime'),
         },
         form: {
             ...formBaseAttr,
@@ -246,141 +355,160 @@ export const designTypes: Record<string, {
         },
     },
     time: {
-        name: 'Time',
+        name: t('utils.time') + t('utils.choice'),
         table: {
+            width: widthAttr(),
             operator: getTableAttr('operator', 'RANGE'),
             comSearchRender: getTableAttr('comSearchRender', 'time'),
+            comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
             sortable: getTableAttr('sortable', 'custom'),
         },
         form: { ...formBaseAttr },
     },
-    year: {
-        name: 'Year',
+    select: {
+        name: t('utils.select'),
         table: {
-            operator: getTableAttr('operator', 'RANGE'),
-            sortable: getTableAttr('sortable', 'custom'),
+            width: widthAttr(),
+            operator: getTableAttr('operator', 'eq'),
+            sortable: getTableAttr('sortable', 'false'),
+            render: getTableAttr('render', 'tag'),
         },
         form: {
             ...formBaseAttr,
-            validator: getFormAttr('validator', ['date']),
+            'select-multi': { type: 'switch', value: false },
         },
     },
-    timestamp: {
-        name: 'Timestamp',
+    selects: {
+        name: t('utils.select') + '(' + t('dynamic.designer.label_multi') + ')',
         table: {
-            operator: getTableAttr('operator', 'RANGE'),
-            comSearchRender: getTableAttr('comSearchRender', 'datetime'),
-            sortable: getTableAttr('sortable', 'custom'),
-            width: { type: 'number', value: 160 },
-            render: getTableAttr('render', 'datetime'),
-            timeFormat: { type: 'string', value: 'yyyy-mm-dd hh:MM:ss' },
+            width: widthAttr(),
+            sortable: getTableAttr('sortable', 'false'),
+            render: getTableAttr('render', 'tags'),
+            operator: getTableAttr('operator', 'FIND_IN_SET'),
         },
         form: {
             ...formBaseAttr,
-            validator: getFormAttr('validator', ['date']),
+            'select-multi': { type: 'switch', value: true },
         },
+    },
+    remoteSelect: {
+        name: t('utils.remote select') + t('utils.choice'),
+        table: {
+            width: widthAttr(),
+            render: getTableAttr('render', 'tags'),
+            operator: getTableAttr('operator', 'LIKE'),
+            comSearchRender: getTableAttr('comSearchRender', 'string'),
+            comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
+        },
+        form: {
+            ...formBaseAttr,
+            'select-multi': { type: 'switch', value: false },
+        },
+    },
+    remoteSelects: {
+        name: t('utils.remote select') + t('utils.choice') + '(' + t('dynamic.designer.label_multi') + ')',
+        table: {
+            width: widthAttr(),
+            render: getTableAttr('render', 'tags'),
+            operator: getTableAttr('operator', 'LIKE'),
+            comSearchRender: getTableAttr('comSearchRender', 'remoteSelect'),
+            comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
+        },
+        form: {
+            ...formBaseAttr,
+            'select-multi': { type: 'switch', value: true },
+        },
+    },
+    editor: {
+        name: t('utils.rich Text'),
+        table: {
+            width: widthAttr(),
+            operator: getTableAttr('operator', 'false'),
+        },
+        form: {
+            ...formBaseAttr,
+            validator: getFormAttr('validator', ['editorRequired']),
+        },
+    },
+    city: {
+        name: t('utils.city select'),
+        table: {
+            width: widthAttr(),
+            operator: getTableAttr('operator', 'false'),
+        },
+        form: { ...formBaseAttr },
     },
     image: {
-        name: 'Image',
+        name: t('utils.image') + t('dynamic.designer.label_upload'),
         table: {
+            width: widthAttr(),
             render: getTableAttr('render', 'image'),
             operator: getTableAttr('operator', 'false'),
         },
-        form: { ...formBaseAttr },
+        form: {
+            ...formBaseAttr,
+            'image-multi': { type: 'switch', value: false },
+        },
     },
     images: {
-        name: 'Images',
+        name: t('utils.image') + t('dynamic.designer.label_upload') + '(' + t('dynamic.designer.label_multi') + ')',
         table: {
+            width: widthAttr(),
             render: getTableAttr('render', 'images'),
             operator: getTableAttr('operator', 'false'),
         },
-        form: { ...formBaseAttr },
+        form: {
+            ...formBaseAttr,
+            'image-multi': { type: 'switch', value: true },
+        },
     },
     file: {
-        name: 'File',
+        name: t('utils.file') + t('dynamic.designer.label_upload'),
         table: {
+            width: widthAttr(),
+            render: getTableAttr('render', 'none'),
             operator: getTableAttr('operator', 'false'),
         },
-        form: { ...formBaseAttr },
+        form: {
+            ...formBaseAttr,
+            'file-multi': { type: 'switch', value: false },
+        },
     },
     files: {
-        name: 'Files',
+        name: t('utils.file') + t('dynamic.designer.label_upload') + '(' + t('dynamic.designer.label_multi') + ')',
         table: {
+            width: widthAttr(),
+            render: getTableAttr('render', 'none'),
             operator: getTableAttr('operator', 'false'),
         },
-        form: { ...formBaseAttr },
-    },
-    editor: {
-        name: 'Rich Text',
-        table: {
-            operator: getTableAttr('operator', 'false'),
+        form: {
+            ...formBaseAttr,
+            'file-multi': { type: 'switch', value: true },
         },
-        form: { ...formBaseAttr },
-    },
-    array: {
-        name: 'Array',
-        table: {
-            operator: getTableAttr('operator', 'false'),
-        },
-        form: { ...formBaseAttr },
-    },
-    city: {
-        name: 'City Select',
-        table: {
-            operator: getTableAttr('operator', 'false'),
-        },
-        form: { ...formBaseAttr },
     },
     icon: {
-        name: 'Icon',
+        name: t('utils.icon select'),
         table: {
+            width: widthAttr(),
             render: getTableAttr('render', 'icon'),
             operator: getTableAttr('operator', 'false'),
         },
         form: { ...formBaseAttr },
     },
     color: {
-        name: 'Color',
+        name: t('utils.color picker'),
         table: {
+            width: widthAttr(),
             render: getTableAttr('render', 'color'),
             operator: getTableAttr('operator', 'false'),
         },
         form: { ...formBaseAttr },
     },
-    weigh: {
-        name: 'Weight (Drag Sort)',
-        table: {
-            operator: getTableAttr('operator', 'RANGE'),
-            sortable: getTableAttr('sortable', 'custom'),
-        },
-        form: { ...formBaseAttr },
-    },
-    remoteSelect: {
-        name: 'Remote Select',
-        table: {
-            render: getTableAttr('render', 'tags'),
-            operator: getTableAttr('operator', 'LIKE'),
-            comSearchRender: getTableAttr('comSearchRender', 'string'),
-        },
-        form: { ...formBaseAttr },
-    },
-    remoteSelects: {
-        name: 'Remote Select (Multi)',
-        table: {
-            render: getTableAttr('render', 'tags'),
-            operator: getTableAttr('operator', 'LIKE'),
-            comSearchRender: getTableAttr('comSearchRender', 'string'),
-        },
-        form: { ...formBaseAttr },
-    },
 }
 
-/**
- * 字段面板分类（参照 CRUD fieldItem）
- * 点击左侧字段类型可快速添加字段
- */
+/* ─── 字段面板分类（title 自动从 designTypes.name 获取） ─── */
+
 export interface FieldTemplate {
-    title: string
     name: string
     designType: string
     formType: string
@@ -392,66 +520,69 @@ export const fieldTemplates: {
     senior: FieldTemplate[]
 } = {
     common: [
-        { title: 'Primary Key', name: 'id', designType: 'pk', formType: 'string' },
-        { title: 'Primary Key (Snowflake)', name: 'id', designType: 'spk', formType: 'string' },
-        { title: 'Status', name: 'status', designType: 'switch', formType: 'switch' },
-        { title: 'Remark', name: 'remark', designType: 'textarea', formType: 'textarea' },
-        { title: 'Weight (Drag Sort)', name: 'weigh', designType: 'weigh', formType: 'number' },
-        { title: 'Update Time', name: 'update_time', designType: 'timestamp', formType: 'datetime' },
-        { title: 'Create Time', name: 'create_time', designType: 'timestamp', formType: 'datetime' },
-        { title: 'Remote Select (Association)', name: 'remote_select', designType: 'remoteSelect', formType: 'remoteSelect' },
+        { name: 'id', designType: 'pk', formType: 'string' },
+        { name: 'id', designType: 'spk', formType: 'string' },
+        { name: 'status', designType: 'switch', formType: 'switch' },
+        { name: 'remark', designType: 'textarea', formType: 'textarea' },
+        { name: 'weigh', designType: 'weigh', formType: 'number' },
+        { name: 'update_time', designType: 'timestamp', formType: 'datetime' },
+        { name: 'create_time', designType: 'timestamp', formType: 'datetime' },
+        { name: 'remote_select', designType: 'remoteSelect', formType: 'remoteSelect' },
     ],
     base: [
-        { title: 'String', name: 'string', designType: 'string', formType: 'string' },
-        { title: 'Number', name: 'number', designType: 'number', formType: 'number' },
-        { title: 'Image', name: 'image', designType: 'image', formType: 'image' },
-        { title: 'File', name: 'file', designType: 'file', formType: 'file' },
-        { title: 'Radio', name: 'radio', designType: 'radio', formType: 'radio' },
-        { title: 'Checkbox', name: 'checkbox', designType: 'checkbox', formType: 'checkbox' },
-        { title: 'Select', name: 'select', designType: 'select', formType: 'select' },
-        { title: 'Switch', name: 'switch', designType: 'switch', formType: 'switch' },
-        { title: 'Rich Text', name: 'editor', designType: 'editor', formType: 'editor' },
-        { title: 'Textarea', name: 'textarea', designType: 'textarea', formType: 'textarea' },
-        { title: 'Password', name: 'password', designType: 'password', formType: 'password' },
-        { title: 'Date', name: 'date', designType: 'date', formType: 'date' },
-        { title: 'Time', name: 'time', designType: 'time', formType: 'time' },
-        { title: 'DateTime', name: 'datetime', designType: 'datetime', formType: 'datetime' },
-        { title: 'Year', name: 'year', designType: 'year', formType: 'year' },
-        { title: 'Timestamp', name: 'timestamp', designType: 'timestamp', formType: 'datetime' },
+        { name: 'string', designType: 'string', formType: 'string' },
+        { name: 'number', designType: 'number', formType: 'number' },
+        { name: 'image', designType: 'image', formType: 'image' },
+        { name: 'file', designType: 'file', formType: 'file' },
+        { name: 'radio', designType: 'radio', formType: 'radio' },
+        { name: 'checkbox', designType: 'checkbox', formType: 'checkbox' },
+        { name: 'select', designType: 'select', formType: 'select' },
+        { name: 'switch', designType: 'switch', formType: 'switch' },
+        { name: 'editor', designType: 'editor', formType: 'editor' },
+        { name: 'textarea', designType: 'textarea', formType: 'textarea' },
+        { name: 'password', designType: 'password', formType: 'password' },
+        { name: 'date', designType: 'date', formType: 'date' },
+        { name: 'time', designType: 'time', formType: 'time' },
+        { name: 'datetime', designType: 'datetime', formType: 'datetime' },
+        { name: 'year', designType: 'year', formType: 'year' },
+        { name: 'timestamp', designType: 'timestamp', formType: 'datetime' },
     ],
     senior: [
-        { title: 'Array', name: 'array', designType: 'array', formType: 'array' },
-        { title: 'City Select', name: 'city', designType: 'city', formType: 'city' },
-        { title: 'Icon', name: 'icon', designType: 'icon', formType: 'icon' },
-        { title: 'Color', name: 'color', designType: 'color', formType: 'color' },
-        { title: 'Images', name: 'images', designType: 'images', formType: 'images' },
-        { title: 'Files', name: 'files', designType: 'files', formType: 'files' },
-        { title: 'Select (Multi)', name: 'selects', designType: 'selects', formType: 'selects' },
-        { title: 'Remote Select (Multi)', name: 'remote_selects', designType: 'remoteSelects', formType: 'remoteSelects' },
+        { name: 'array', designType: 'array', formType: 'array' },
+        { name: 'city', designType: 'city', formType: 'city' },
+        { name: 'icon', designType: 'icon', formType: 'icon' },
+        { name: 'color', designType: 'color', formType: 'color' },
+        { name: 'images', designType: 'images', formType: 'images' },
+        { name: 'files', designType: 'files', formType: 'files' },
+        { name: 'selects', designType: 'selects', formType: 'selects' },
+        { name: 'remote_selects', designType: 'remoteSelects', formType: 'remoteSelects' },
     ],
 }
 
-/**
- * 根据 designType 创建字段默认值
- */
+/* ─── 根据 designType 创建字段默认值 ─── */
+
 export const createFieldFromTemplate = (template: FieldTemplate) => {
     const dt = designTypes[template.designType]
     const tableProps: Record<string, any> = {}
     const formProps: Record<string, any> = {}
 
-    // 提取表格列属性默认值
     if (dt?.table) {
         for (const [key, val] of Object.entries(dt.table)) {
             tableProps[key] = (val as any).value
         }
     }
-
-    // 提取表单属性默认值
     if (dt?.form) {
         for (const [key, val] of Object.entries(dt.form)) {
             formProps[key] = (val as any).value
         }
     }
+
+    const inputAttr: Record<string, any> = {}
+    if (formProps['select-multi'] !== undefined) inputAttr['select-multi'] = formProps['select-multi']
+    if (formProps['image-multi'] !== undefined) inputAttr['image-multi'] = formProps['image-multi']
+    if (formProps['file-multi'] !== undefined) inputAttr['file-multi'] = formProps['file-multi']
+    if (formProps.step !== undefined) inputAttr.step = formProps.step
+    if (formProps.rows !== undefined) inputAttr.rows = formProps.rows
 
     return {
         prop: template.name,
@@ -466,10 +597,10 @@ export const createFieldFromTemplate = (template: FieldTemplate) => {
         column_replace_value: null,
         column_custom: null,
         column_time_format: tableProps.timeFormat ?? null,
-        column_operator_placeholder: null,
+        column_operator_placeholder: tableProps.comSearchInputAttr ?? null,
         form_type: template.formType,
         form_validators: formProps.validator ?? [],
-        form_input_attr: {},
-        _designType: template.designType,
+        form_input_attr: inputAttr,
+        design_type: template.designType,
     }
 }
