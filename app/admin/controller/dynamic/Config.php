@@ -5,6 +5,8 @@ namespace app\admin\controller\dynamic;
 use app\common\controller\Backend;
 use app\admin\model\dynamic\TableConfig;
 use app\admin\model\AdminRule;
+use app\admin\library\crud\Helper;
+use ba\TableManager;
 use think\facade\Db;
 use think\facade\Lang;
 use Throwable;
@@ -145,7 +147,11 @@ class Config extends Backend
         $fields = $config->fields ?: [];
         $hasSortable = false;
         foreach ($fields as $field) {
-            if (($field['column_sortable'] ?? '') === 'custom') {
+            // 新格式：render.column_sortable；旧格式：column_sortable
+            $sortable = isset($field['schema'])
+                ? ($field['render']['column_sortable'] ?? '')
+                : ($field['column_sortable'] ?? '');
+            if ($sortable === 'custom') {
                 $hasSortable = true;
                 break;
             }
@@ -321,85 +327,144 @@ class Config extends Backend
 
     /**
      * 将数据库配置记录转换为前端 DynamicTableConfig 结构
+     * 兼容新格式 {schema, render, remote} 和旧扁平格式
      */
     protected function buildFrontendConfig(TableConfig $config): array
     {
         $fields = $config->fields ?: [];
 
-        // 构建列定义
+        // ─── 构建列定义 ───
         $columns = [];
         foreach ($fields as $field) {
-            if (empty($field['column_show'])) continue;
+            // 格式检测 + 数据提取
+            if (isset($field['schema'])) {
+                // 新结构格式
+                $render = $field['render'] ?? [];
+                if (empty($render['column_show'] ?? true)) continue;
 
-            $formType = $field['form_type'] ?? '';
+                $prop      = $field['schema']['prop'] ?? '';
+                $label     = $this->resolveLangValue($render['label'] ?? '');
+                $formType  = $render['form_type'] ?? '';
+                $colAlign  = $render['column_align'] ?? 'center';
+                $colWidth  = $render['column_width'] ?? null;
+                $colRender = $render['column_render'] ?? null;
+                $colOp     = $render['column_operator'] ?? null;
+                $colSort   = $render['column_sortable'] ?? null;
+                $colComSR  = $render['column_com_search_render'] ?? null;
+                $colRV     = $render['column_replace_value'] ?? null;
+                $colCustom = $render['column_custom'] ?? null;
+                $colTF     = $render['column_time_format'] ?? null;
+                $colOpPH   = $render['column_operator_placeholder'] ?? null;
+            } else {
+                // 旧扁平格式
+                if (empty($field['column_show'])) continue;
+
+                $prop      = $field['prop'] ?? '';
+                $label     = $this->resolveLangValue($field['label'] ?? '');
+                $formType  = $field['form_type'] ?? '';
+                $colAlign  = $field['column_align'] ?? 'center';
+                $colWidth  = $field['column_width'] ?? null;
+                $colRender = $field['column_render'] ?? null;
+                $colOp     = $field['column_operator'] ?? null;
+                $colSort   = $field['column_sortable'] ?? null;
+                $colComSR  = $field['column_com_search_render'] ?? null;
+                $colRV     = $field['column_replace_value'] ?? null;
+                $colCustom = $field['column_custom'] ?? null;
+                $colTF     = $field['column_time_format'] ?? null;
+                $colOpPH   = $field['column_operator_placeholder'] ?? null;
+                $render    = $field;
+            }
+
             $isRemoteSelect = in_array($formType, ['remoteSelect', 'remoteSelects']);
 
             $col = [
-                'prop'    => $isRemoteSelect ? $field['prop'] . '__text' : $field['prop'],
-                'label'   => $this->resolveLangValue($field['label'] ?? ''),
-                'align'   => $field['column_align'] ?: 'center',
+                'prop'  => $isRemoteSelect ? $prop . '__text' : $prop,
+                'label' => $label,
+                'align' => $colAlign ?: 'center',
             ];
-            if (!empty($field['column_width'])) $col['width'] = $field['column_width'];
-            if (!empty($field['column_render'])) $col['render'] = $field['column_render'];
-            if (!empty($field['column_operator'])) {
-                $col['operator'] = ($field['column_operator'] === 'false') ? false : $field['column_operator'];
+            if (!empty($colWidth)) $col['width'] = $colWidth;
+            if (!empty($colRender)) $col['render'] = $colRender;
+            if (!empty($colOp)) {
+                $col['operator'] = ($colOp === 'false') ? false : $colOp;
             }
-            // remoteSelect 列禁止排序（排序列指向 __text 别名，需特殊处理，暂不启用）
-            if (!$isRemoteSelect && !empty($field['column_sortable']) && $field['column_sortable'] !== 'false') {
-                $col['sortable'] = $field['column_sortable'];
+            // remoteSelect 列禁止排序
+            if (!$isRemoteSelect && !empty($colSort) && $colSort !== 'false') {
+                $col['sortable'] = $colSort;
             }
-            if (!$isRemoteSelect && !empty($field['column_com_search_render'])) {
-                $col['comSearchRender'] = $field['column_com_search_render'];
+            if (!$isRemoteSelect && !empty($colComSR)) {
+                $col['comSearchRender'] = $colComSR;
             }
-            $rv = $this->decodeJsonField($field['column_replace_value'] ?? null);
+            $rv = $this->decodeJsonField($colRV);
             if ($rv) $col['replaceValue'] = $rv;
-            $custom = $this->decodeJsonField($field['column_custom'] ?? null);
+            $custom = $this->decodeJsonField($colCustom);
             if ($custom) $col['custom'] = $custom;
-            if (!empty($field['column_time_format'])) $col['timeFormat'] = $field['column_time_format'];
-            if (!empty($field['column_operator_placeholder'])) {
-                $col['operatorPlaceholder'] = $this->resolveLangValue($field['column_operator_placeholder']);
+            if (!empty($colTF)) $col['timeFormat'] = $colTF;
+            if (!empty($colOpPH)) {
+                $col['operatorPlaceholder'] = $this->resolveLangValue($colOpPH);
             }
 
             $columns[] = $col;
         }
 
-        // 构建表单字段
+        // ─── 构建表单字段 ───
         $formFields = [];
         foreach ($fields as $field) {
-            $label = $this->resolveLangValue($field['label'] ?? '');
+            // 格式检测 + 数据提取
+            if (isset($field['schema'])) {
+                $schema  = $field['schema'];
+                $render  = $field['render'] ?? [];
+                $remote  = $field['remote'] ?? [];
+                $prop    = $schema['prop'] ?? '';
+                $label   = $this->resolveLangValue($render['label'] ?? '');
+                $fType   = $render['form_type'] ?? 'string';
+                $fVal    = $this->decodeJsonField($render['form_validators'] ?? null);
+                $fAttr   = $this->decodeJsonField($render['form_input_attr'] ?? null);
+                $rTable  = $remote['table'] ?? '';
+                $rPk     = $remote['pk'] ?? 'id';
+                $rLabel  = $remote['label'] ?? 'name';
+            } else {
+                $prop    = $field['prop'] ?? '';
+                $label   = $this->resolveLangValue($field['label'] ?? '');
+                $fType   = $field['form_type'] ?? 'string';
+                $fVal    = $this->decodeJsonField($field['form_validators'] ?? null);
+                $fAttr   = $this->decodeJsonField($field['form_input_attr'] ?? null);
+                $rTable  = $fAttr['remote_table'] ?? '';
+                $rPk     = $fAttr['remote_pk'] ?? 'id';
+                $rLabel  = $fAttr['remote_label'] ?? 'name';
+            }
+
+            if (!is_array($fAttr)) $fAttr = [];
+
             $ff = [
-                'prop'  => $field['prop'],
+                'prop'  => $prop,
                 'label' => $label,
-                'type'  => $field['form_type'] ?: 'string',
+                'type'  => $fType ?: 'string',
             ];
-            $validators = $this->decodeJsonField($field['form_validators'] ?? null);
-            if ($validators) {
-                // remoteSelect 值为字符串 PK，移除类型验证器（number/integer/float/date/url/email）
-                if (in_array($field['form_type'] ?? '', ['remoteSelect', 'remoteSelects'])) {
-                    $validators = array_values(array_filter($validators, function ($v) {
+            if ($fVal) {
+                // remoteSelect 值为字符串 PK，移除类型验证器
+                if (in_array($fType, ['remoteSelect', 'remoteSelects'])) {
+                    $fVal = array_values(array_filter($fVal, function ($v) {
                         return !in_array($v, ['number', 'integer', 'float', 'date', 'url', 'email']);
                     }));
                 }
-                if ($validators) $ff['validators'] = $validators;
+                if ($fVal) $ff['validators'] = $fVal;
             }
-            $inputAttr = $this->decodeJsonField($field['form_input_attr'] ?? null);
-            if (!is_array($inputAttr)) $inputAttr = [];
 
             // remoteSelect 字段注入下拉组件所需属性
             if (in_array($ff['type'], ['remoteSelect', 'remoteSelects'])) {
-                $inputAttr['remoteUrl'] = '/admin/dynamic.Table/index';
-                $inputAttr['pk']        = $inputAttr['remote_pk'] ?? 'id';
-                $inputAttr['field']     = $inputAttr['remote_label'] ?? 'name';
-                $inputAttr['params']    = [
+                $fAttr['remoteUrl'] = '/admin/dynamic.Table/index';
+                $fAttr['pk']        = $rPk;
+                $fAttr['field']     = $rLabel;
+                $fAttr['params']    = [
                     'table' => $config->name,
-                    'field' => $field['prop'],
+                    'field' => $prop,
                 ];
             }
 
             // 移除不需要传给前端的内部属性
-            unset($inputAttr['remote_table'], $inputAttr['remote_pk'], $inputAttr['remote_label']);
+            unset($fAttr['remote_table'], $fAttr['remote_pk'], $fAttr['remote_label']);
 
-            if ($inputAttr) $ff['inputAttr'] = $inputAttr;
+            if ($fAttr) $ff['inputAttr'] = $fAttr;
             $ff['placeholder'] = '请输入' . $label;
             if (in_array($ff['type'], ['datetime', 'date', 'time', 'year', 'remoteSelect', 'remoteSelects', 'select', 'selects'])) {
                 $ff['placeholder'] = '请选择' . $label;
@@ -408,7 +473,7 @@ class Config extends Backend
             $formFields[] = $ff;
         }
 
-        // 构建表级配置
+        // ─── 构建表级配置 ───
         $headerButtons = $config->header_buttons ?: ['refresh', 'add', 'edit', 'delete', 'comSearch', 'quickSearch', 'columnDisplay'];
         $rowButtons    = $config->row_buttons ?: ['edit', 'delete'];
 
@@ -452,6 +517,7 @@ class Config extends Backend
     {
         if ($this->request->isPost()) {
             $data = $this->request->post();
+            unset($data['designChange']);
             $fields = $this->prepareFields($data['fields'] ?? []);
             $data['fields'] = $fields;
 
@@ -475,6 +541,15 @@ class Config extends Backend
                 $config = $this->model->create($data);
                 $this->syncAdminRuleCreate($config);
                 $this->model->commit();
+
+                // 同步数据库表结构（DDL 在 commit 后执行，不可回滚）
+                try {
+                    $this->syncTableSchema($data, []);
+                } catch (Throwable $schemaErr) {
+                    $this->success('添加成功，但数据表同步失败：' . $schemaErr->getMessage());
+                    return;
+                }
+
                 $this->success('添加成功');
             } catch (\think\exception\HttpResponseException $e) {
                 throw $e;
@@ -499,6 +574,8 @@ class Config extends Backend
 
         if ($this->request->isPost()) {
             $data = $this->request->post();
+            $designChange = $data['designChange'] ?? [];
+            unset($data['designChange']);
             $data['fields'] = $this->prepareFields($data['fields'] ?? []);
 
             // JSON 字段编码（表级多语言）
@@ -525,6 +602,17 @@ class Config extends Backend
                 $row->save($data);
                 $this->syncAdminRuleUpdate($row);
                 $this->model->commit();
+
+                // 同步数据库表结构（DDL 在 commit 后执行，不可回滚）
+                if (!empty($designChange)) {
+                    try {
+                        $this->syncTableSchema($data, $designChange);
+                    } catch (Throwable $schemaErr) {
+                        $this->success('保存成功，但数据表结构同步失败：' . $schemaErr->getMessage());
+                        return;
+                    }
+                }
+
                 $this->success('保存成功');
             } catch (\think\exception\HttpResponseException $e) {
                 throw $e;
@@ -574,6 +662,7 @@ class Config extends Backend
     /**
      * 准备 fields 数据：编码字段级多语言和 JSON 属性
      * 返回数组，由模型 $json 自动编码为 JSON 字符串写入数据库
+     * 兼容新格式 {schema, render, remote} 和旧扁平格式
      */
     protected function prepareFields(array $fields): array
     {
@@ -588,15 +677,26 @@ class Config extends Backend
 
             $field['sort'] = $sort++;
 
-            // 多语言字段编码（label, column_operator_placeholder）
-            foreach ($this->fieldLangFields as $lf) {
-                if (isset($field[$lf]) && is_array($field[$lf])) {
-                    $field[$lf] = json_encode($field[$lf], JSON_UNESCAPED_UNICODE);
+            if (isset($field['schema'])) {
+                // ─── 新结构格式：多语言 + JSON 在 render 内部 ───
+                $render = $field['render'] ?? [];
+                foreach ($this->fieldLangFields as $lf) {
+                    if (isset($render[$lf]) && is_array($render[$lf])) {
+                        $render[$lf] = json_encode($render[$lf], JSON_UNESCAPED_UNICODE);
+                    }
                 }
+                // column_show 转布尔
+                $render['column_show'] = !empty($render['column_show'] ?? true);
+                $field['render'] = $render;
+            } else {
+                // ─── 旧扁平格式 ───
+                foreach ($this->fieldLangFields as $lf) {
+                    if (isset($field[$lf]) && is_array($field[$lf])) {
+                        $field[$lf] = json_encode($field[$lf], JSON_UNESCAPED_UNICODE);
+                    }
+                }
+                $field['column_show'] = !empty($field['column_show']);
             }
-
-            // column_show 转布尔
-            $field['column_show'] = !empty($field['column_show']);
 
             $cleaned[] = $field;
         }
@@ -607,31 +707,171 @@ class Config extends Backend
      * 规范化单个 field 的子属性：
      * - 解码多层 HTML 实体（旧数据经多次 htmlspecialchars 过滤）
      * - 将 JSON 字符串还原为数组/对象
+     * 兼容新格式 {schema, render, remote} 和旧扁平格式
      */
     protected function normalizeField(array $field): array
     {
         // 需要确保为数组/对象的 JSON 子字段
         $jsonKeys = ['form_validators', 'column_replace_value', 'column_custom', 'form_input_attr'];
-        foreach ($jsonKeys as $key) {
-            if (isset($field[$key])) {
-                $field[$key] = $this->decodeJsonField($field[$key]);
-            }
-        }
 
-        // 多语言字段：解码 HTML 实体（保留为字符串，由 resolveLangValue 处理）
-        foreach ($this->fieldLangFields as $lf) {
-            if (isset($field[$lf]) && is_string($field[$lf])) {
-                $cleaned = $field[$lf];
-                for ($i = 0; $i < 3; $i++) {
-                    $d = htmlspecialchars_decode($cleaned, ENT_QUOTES);
-                    if ($d === $cleaned) break;
-                    $cleaned = $d;
+        if (isset($field['schema'])) {
+            // ─── 新结构格式：JSON 字段在 render 内部 ───
+            if (isset($field['render']) && is_array($field['render'])) {
+                foreach ($jsonKeys as $key) {
+                    if (isset($field['render'][$key])) {
+                        $field['render'][$key] = $this->decodeJsonField($field['render'][$key]);
+                    }
                 }
-                $field[$lf] = $cleaned;
+                // 多语言字段：解码 HTML 实体
+                foreach ($this->fieldLangFields as $lf) {
+                    if (isset($field['render'][$lf]) && is_string($field['render'][$lf])) {
+                        $cleaned = $field['render'][$lf];
+                        for ($i = 0; $i < 3; $i++) {
+                            $d = htmlspecialchars_decode($cleaned, ENT_QUOTES);
+                            if ($d === $cleaned) break;
+                            $cleaned = $d;
+                        }
+                        $field['render'][$lf] = $cleaned;
+                    }
+                }
+            }
+        } else {
+            // ─── 旧扁平格式 ───
+            foreach ($jsonKeys as $key) {
+                if (isset($field[$key])) {
+                    $field[$key] = $this->decodeJsonField($field[$key]);
+                }
+            }
+            // 多语言字段：解码 HTML 实体
+            foreach ($this->fieldLangFields as $lf) {
+                if (isset($field[$lf]) && is_string($field[$lf])) {
+                    $cleaned = $field[$lf];
+                    for ($i = 0; $i < 3; $i++) {
+                        $d = htmlspecialchars_decode($cleaned, ENT_QUOTES);
+                        if ($d === $cleaned) break;
+                        $cleaned = $d;
+                    }
+                    $field[$lf] = $cleaned;
+                }
             }
         }
 
         return $field;
+    }
+
+    // ─── DB Schema Sync (Phase 2) ──────────────────────────────
+
+    /**
+     * 构建 SQL dataType 字符串（如 varchar(255), decimal(10,2), int(10)）
+     */
+    protected function buildDataType(array $schema): string
+    {
+        $type      = $schema['type'] ?? 'varchar';
+        $length    = $schema['length'] ?? 0;
+        $precision = $schema['precision'] ?? 0;
+
+        $typesWithPrecision = ['decimal', 'float', 'double'];
+        $typesWithLength    = ['varchar', 'char', 'int', 'bigint', 'tinyint', 'smallint', 'mediumint'];
+
+        if (in_array($type, $typesWithPrecision) && $length) {
+            return "$type($length,$precision)";
+        }
+        if (in_array($type, $typesWithLength) && $length) {
+            return "$type($length)";
+        }
+        return $type;
+    }
+
+    /**
+     * 将动态字段（新 {schema, render, remote} 格式）转换为 CRUD Helper 字段格式
+     * CRUD Helper 期望的字段键：name, type, dataType, length, precision, null, default, defaultType, primaryKey, unsigned, autoIncrement, comment
+     */
+    protected function buildCrudFields(array $dynamicFields): array
+    {
+        $result = [];
+        foreach ($dynamicFields as $field) {
+            if (isset($field['schema'])) {
+                // 新结构格式
+                $schema = $field['schema'];
+                $result[] = [
+                    'name'          => $schema['prop'] ?? '',
+                    'type'          => $schema['type'] ?? 'varchar',
+                    'dataType'      => $this->buildDataType($schema),
+                    'length'        => $schema['length'] ?? 255,
+                    'precision'     => $schema['precision'] ?? 0,
+                    'null'          => $schema['nullable'] ?? true,
+                    'default'       => $schema['default'] ?? '',
+                    'defaultType'   => $schema['defaultType'] ?? 'NULL',
+                    'primaryKey'    => $schema['primary'] ?? false,
+                    'unsigned'      => $schema['unsigned'] ?? false,
+                    'autoIncrement' => $schema['autoIncrement'] ?? false,
+                    'comment'       => $schema['comment'] ?? '',
+                ];
+            } else {
+                // 旧扁平格式 — 从 form_input_attr 等推断 schema 属性
+                $designType = $field['design_type'] ?? 'string';
+                $typeMap = [
+                    'pk' => 'int', 'spk' => 'bigint', 'weigh' => 'int',
+                    'string' => 'varchar', 'password' => 'varchar', 'textarea' => 'varchar',
+                    'number' => 'int', 'float' => 'decimal', 'switch' => 'tinyint',
+                    'datetime' => 'bigint', 'timestamp' => 'bigint', 'date' => 'date',
+                    'time' => 'time', 'year' => 'year',
+                    'remoteSelect' => 'int', 'remoteSelects' => 'varchar',
+                    'image' => 'varchar', 'images' => 'varchar', 'file' => 'varchar', 'files' => 'varchar',
+                    'editor' => 'text', 'city' => 'varchar', 'icon' => 'varchar', 'color' => 'varchar',
+                    'select' => 'enum', 'radio' => 'enum', 'checkbox' => 'set',
+                    'array' => 'varchar',
+                ];
+                $type = $typeMap[$designType] ?? 'varchar';
+                $result[] = [
+                    'name'          => $field['prop'] ?? '',
+                    'type'          => $type,
+                    'dataType'      => $type,
+                    'length'        => ($type === 'varchar') ? 255 : (($type === 'bigint') ? 20 : 10),
+                    'precision'     => ($type === 'decimal') ? 2 : 0,
+                    'null'          => !($field['prop'] ?? '' === 'id'),
+                    'default'       => '',
+                    'defaultType'   => 'NULL',
+                    'primaryKey'    => in_array($designType, ['pk', 'spk']),
+                    'unsigned'      => in_array($designType, ['pk', 'spk', 'weigh', 'datetime', 'timestamp']),
+                    'autoIncrement' => $designType === 'pk',
+                    'comment'       => '',
+                ];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 同步数据库表结构
+     * - 新增配置时：如果表不存在，创建表
+     * - 编辑配置时：根据 designChange 修改表结构
+     * 委托给 Helper::handleTableDesign() 处理
+     *
+     * @param array $configData 配置数据（含 db_table, db_connection, fields, title）
+     * @param array $designChange 字段变更记录
+     */
+    protected function syncTableSchema(array $configData, array $designChange = []): void
+    {
+        $tableName = $configData['db_table'] ?? '';
+        if (!$tableName) return;
+
+        $connection = $configData['db_connection'] ?? '';
+        $comment    = $this->resolveLangValue($configData['title'] ?? '');
+        if (!$comment) $comment = $tableName;
+
+        // 构建 CRUD Helper 格式的字段数组
+        $crudFields = $this->buildCrudFields($configData['fields'] ?? []);
+
+        // 委托给 CRUD Helper::handleTableDesign()
+        $tableData = [
+            'name'               => $tableName,
+            'comment'            => $comment,
+            'designChange'       => $designChange,
+            'databaseConnection' => $connection ?: null,
+        ];
+
+        Helper::handleTableDesign($tableData, $crudFields);
     }
 
     /**
