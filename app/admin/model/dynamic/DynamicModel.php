@@ -40,6 +40,23 @@ class DynamicModel extends Model
     }
 
     /**
+     * 创建新的模型实例（覆盖父类）
+     *
+     * ThinkPHP 的 Model::newInstance() 只复制 connection 和 suffix，
+     * 不复制 table 和 pk。导致 find()/select() 返回的实例丢失动态表名，
+     * 回退到 Str::snake(className) = 'dynamic_model'，触发 SQL 错误。
+     *
+     * 此方法确保所有子实例都继承动态表名和主键。
+     */
+    public function newInstance(array $data = [], $where = null, array $options = []): Model
+    {
+        $model = parent::newInstance($data, $where, $options);
+        $model->table = $this->table;
+        $model->pk    = $this->pk;
+        return $model;
+    }
+
+    /**
      * 获取表完整名称（含前缀），供 Db::name 等使用
      */
     public function getFullTableName(): string

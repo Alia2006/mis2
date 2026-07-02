@@ -85,8 +85,9 @@ const rebuildRules = () => {
 
     for (const field of props.fields) {
         if (field.validators && field.validators.length > 0) {
+            const isRemoteSelect = ['remoteSelect', 'remoteSelects'].includes(field.type)
             rules[field.prop] = field.validators.map((name) =>
-                buildValidatorData({ name, title: field.label })
+                buildValidatorData({ name, title: field.label, trigger: isRemoteSelect ? 'change' : 'blur' })
             )
         }
     }

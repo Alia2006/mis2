@@ -373,7 +373,15 @@ class Config extends Backend
                 'type'  => $field['form_type'] ?: 'string',
             ];
             $validators = $this->decodeJsonField($field['form_validators'] ?? null);
-            if ($validators) $ff['validators'] = $validators;
+            if ($validators) {
+                // remoteSelect 值为字符串 PK，移除类型验证器（number/integer/float/date/url/email）
+                if (in_array($field['form_type'] ?? '', ['remoteSelect', 'remoteSelects'])) {
+                    $validators = array_values(array_filter($validators, function ($v) {
+                        return !in_array($v, ['number', 'integer', 'float', 'date', 'url', 'email']);
+                    }));
+                }
+                if ($validators) $ff['validators'] = $validators;
+            }
             $inputAttr = $this->decodeJsonField($field['form_input_attr'] ?? null);
             if (!is_array($inputAttr)) $inputAttr = [];
 

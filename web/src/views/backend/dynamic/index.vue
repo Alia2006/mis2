@@ -82,6 +82,19 @@ class DynamicTableApi extends baTableApi {
         })
     }
 
+    postData(action: string, data: anyObj) {
+        return createAxios(
+            {
+                url: this.actionUrl.has(action) ? this.actionUrl.get(action) : this.controllerUrl + action,
+                method: 'post',
+                data: { ...this.tableParam, ...data },
+            },
+            {
+                showSuccessMessage: true,
+            }
+        )
+    }
+
     sortable(data: anyObj) {
         return createAxios({
             url: this.actionUrl.get('sortable'),
@@ -126,6 +139,7 @@ const loadConfig = async () => {
             label: t('Operate'),
             align: 'center',
             width: 130,
+            fixed: 'right',
             render: 'buttons',
             buttons: defaultOptButtons(cfg.rowButtonNames),
             operator: false,
