@@ -561,6 +561,75 @@ export const fieldTemplates: {
 
 /* ─── 根据 designType 创建字段默认值 ─── */
 
+/* ─── 根据 designType 创建字段默认值 ─── */
+
+/**
+ * 每个 designType 对应的数据库 Schema 默认值
+ * 数据来源：baInput/helper.ts fieldData + CRUD index.ts fieldItem
+ */
+export const schemaDefaults: Record<string, {
+    type: string
+    length: number
+    precision: number
+    nullable: boolean
+    default: string
+    defaultType: string
+    primary: boolean
+    unsigned: boolean
+    autoIncrement: boolean
+}> = {
+    pk:        { type: 'int',     length: 10,  precision: 0, nullable: false, default: '',    defaultType: 'NONE',        primary: true,  unsigned: true,  autoIncrement: true  },
+    spk:       { type: 'bigint',  length: 20,  precision: 0, nullable: false, default: '',    defaultType: 'NONE',        primary: true,  unsigned: true,  autoIncrement: false },
+    weigh:     { type: 'int',     length: 10,  precision: 0, nullable: false, default: '0',   defaultType: 'INPUT',       primary: false, unsigned: true,  autoIncrement: false },
+    timestamp: { type: 'bigint',  length: 16,  precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: true,  autoIncrement: false },
+    string:    { type: 'varchar', length: 255, precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    password:  { type: 'varchar', length: 32,  precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    number:    { type: 'int',     length: 10,  precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    float:     { type: 'decimal', length: 10,  precision: 2, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    radio:     { type: 'enum',    length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    checkbox:  { type: 'set',     length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    switch:    { type: 'tinyint', length: 1,   precision: 0, nullable: false, default: '0',   defaultType: 'INPUT',       primary: false, unsigned: true,  autoIncrement: false },
+    textarea:  { type: 'varchar', length: 255, precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    array:     { type: 'varchar', length: 255, precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    datetime:  { type: 'bigint',  length: 16,  precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: true,  autoIncrement: false },
+    year:      { type: 'year',    length: 4,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    date:      { type: 'date',    length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    time:      { type: 'time',    length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    select:    { type: 'enum',    length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    selects:   { type: 'varchar', length: 255, precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    remoteSelect:  { type: 'int',     length: 10,  precision: 0, nullable: true, default: '', defaultType: 'NULL',        primary: false, unsigned: true,  autoIncrement: false },
+    remoteSelects: { type: 'varchar', length: 255, precision: 0, nullable: false, default: '', defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    editor:    { type: 'text',    length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    city:      { type: 'varchar', length: 100, precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    image:     { type: 'varchar', length: 255, precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    images:    { type: 'varchar', length: 1500,precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    file:      { type: 'varchar', length: 255, precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    files:     { type: 'varchar', length: 1500,precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    icon:      { type: 'varchar', length: 50,  precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    color:     { type: 'varchar', length: 50,  precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+}
+
+/**
+ * 可选的数据库字段类型列表（用于 Schema 属性面板下拉选择）
+ */
+export const dbTypeOptions = [
+    'varchar', 'text', 'longtext', 'mediumtext', 'tinytext',
+    'int', 'bigint', 'tinyint', 'smallint', 'mediumint',
+    'decimal', 'float', 'double',
+    'date', 'time', 'datetime', 'year', 'timestamp',
+    'enum', 'set', 'json', 'blob',
+]
+
+/**
+ * 默认值类型选项
+ */
+export const defaultTypeOptions = {
+    'NULL': 'NULL',
+    'EMPTY STRING': 'Empty String',
+    'INPUT': 'Custom Value',
+    'NONE': 'No Default',
+}
+
 export const createFieldFromTemplate = (template: FieldTemplate) => {
     const dt = designTypes[template.designType]
     const tableProps: Record<string, any> = {}
@@ -584,23 +653,46 @@ export const createFieldFromTemplate = (template: FieldTemplate) => {
     if (formProps.step !== undefined) inputAttr.step = formProps.step
     if (formProps.rows !== undefined) inputAttr.rows = formProps.rows
 
+    // Schema 默认值
+    const sd = schemaDefaults[template.designType] || schemaDefaults['string']
+
     return {
-        prop: template.name,
-        label: { 'zh-cn': '', en: '' } as Record<string, string>,
-        column_show: template.designType !== 'pk' && template.designType !== 'spk',
-        column_width: tableProps.width ?? null,
-        column_align: 'center',
-        column_render: tableProps.render ?? null,
-        column_operator: tableProps.operator ?? 'eq',
-        column_sortable: tableProps.sortable ?? 'false',
-        column_com_search_render: tableProps.comSearchRender ?? null,
-        column_replace_value: null,
-        column_custom: null,
-        column_time_format: tableProps.timeFormat ?? null,
-        column_operator_placeholder: tableProps.comSearchInputAttr ?? null,
-        form_type: template.formType,
-        form_validators: formProps.validator ?? [],
-        form_input_attr: inputAttr,
-        design_type: template.designType,
+        schema: {
+            prop: template.name,
+            type: sd.type,
+            length: sd.length,
+            precision: sd.precision,
+            nullable: sd.nullable,
+            default: sd.default,
+            defaultType: sd.defaultType,
+            primary: sd.primary,
+            unsigned: sd.unsigned,
+            autoIncrement: sd.autoIncrement,
+            comment: '',
+        },
+        render: {
+            label: { 'zh-cn': '', en: '' } as Record<string, string>,
+            design_type: template.designType,
+            column_show: template.designType !== 'pk' && template.designType !== 'spk',
+            column_width: tableProps.width ?? null,
+            column_align: 'center',
+            column_render: tableProps.render ?? null,
+            column_operator: tableProps.operator ?? 'eq',
+            column_sortable: tableProps.sortable ?? 'false',
+            column_com_search_render: tableProps.comSearchRender ?? null,
+            column_replace_value: null,
+            column_custom: null,
+            column_time_format: tableProps.timeFormat ?? null,
+            column_operator_placeholder: tableProps.comSearchInputAttr ?? null,
+            form_type: template.formType,
+            form_validators: formProps.validator ?? [],
+            form_input_attr: inputAttr,
+        },
+        remote: {
+            table: '',
+            pk: 'id',
+            label: 'name',
+            key_type: 'number' as 'string' | 'number',
+        },
     }
 }

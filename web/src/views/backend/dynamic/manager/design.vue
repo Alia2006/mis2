@@ -22,7 +22,6 @@
                             <el-input v-model="form.title[designerLang]" :placeholder="t('dynamic.designer.title_ph')" />
                         </el-form-item>
                     </el-col>
-                    <!-- 数据库连接：下拉选择 -->
                     <el-col :span="4">
                         <el-form-item :label="t('dynamic.designer.db_connection')">
                             <el-select
@@ -42,7 +41,6 @@
                             </el-select>
                         </el-form-item>
                     </el-col>
-                    <!-- 数据表名：可搜索 + 可新建 -->
                     <el-col :span="5">
                         <el-form-item :label="t('dynamic.designer.db_table')" required>
                             <el-select
@@ -91,9 +89,9 @@
                             >
                                 <el-option
                                     v-for="f in form.fields"
-                                    :key="f.prop"
-                                    :label="f.label[designerLang] || f.prop"
-                                    :value="f.prop"
+                                    :key="f.schema.prop"
+                                    :label="f.render.label[designerLang] || f.schema.prop"
+                                    :value="f.schema.prop"
                                 />
                             </el-select>
                         </el-form-item>
@@ -109,9 +107,9 @@
                             >
                                 <el-option
                                     v-for="f in form.fields"
-                                    :key="f.prop"
-                                    :label="f.label[designerLang] || f.prop"
-                                    :value="f.prop"
+                                    :key="f.schema.prop"
+                                    :label="f.render.label[designerLang] || f.schema.prop"
+                                    :value="f.schema.prop"
                                 />
                             </el-select>
                         </el-form-item>
@@ -137,9 +135,9 @@
                             >
                                 <el-option
                                     v-for="field in form.fields"
-                                    :key="field.prop"
-                                    :label="field.label['zh-cn'] || field.label.en || field.prop"
-                                    :value="field.prop"
+                                    :key="field.schema.prop"
+                                    :label="field.render.label['zh-cn'] || field.render.label.en || field.schema.prop"
+                                    :value="field.schema.prop"
                                 />
                             </el-select>
                         </el-form-item>
@@ -168,7 +166,6 @@
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <!-- 多语言切换 + 操作按钮 -->
                 <div class="designer-toolbar">
                     <el-radio-group v-model="designerLang" size="small">
                         <el-radio-button value="zh-cn">中文</el-radio-button>
@@ -238,16 +235,17 @@
                             <div class="design-field-name">
                                 <span class="field-label">{{ t('dynamic.designer.f_prop') }}：</span>
                                 <el-input
-                                    v-model="field.prop"
+                                    v-model="field.schema.prop"
                                     size="small"
                                     class="field-name-input"
                                     @pointerdown.stop
+                                    @change="onFieldRename(index)"
                                 />
                             </div>
                             <div class="design-field-comment">
                                 <span class="field-label">{{ t('dynamic.designer.f_label') }}：</span>
                                 <el-input
-                                    v-model="field.label[designerLang]"
+                                    v-model="field.render.label[designerLang]"
                                     size="small"
                                     class="field-comment-input"
                                     @pointerdown.stop
@@ -270,7 +268,7 @@
                     </div>
                 </el-col>
 
-                <!-- ── 右栏：属性编辑器（数据驱动，参照 CRUD design.vue） ── -->
+                <!-- ── 右栏：属性编辑器 ── -->
                 <el-col :span="10">
                     <div class="field-config ba-scroll-style">
                         <div v-if="activateField === -1" class="design-field-empty">
@@ -281,7 +279,7 @@
                             <el-divider content-position="left">{{ t('dynamic.designer.f_type') }}</el-divider>
                             <el-form-item :label="t('dynamic.designer.f_designtype')">
                                 <el-select
-                                    v-model="form.fields[activateField].design_type"
+                                    v-model="form.fields[activateField].render.design_type"
                                     style="width: 100%"
                                     @change="onDesignTypeChange($event, activateField)"
                                 >
@@ -303,26 +301,84 @@
                             <!-- 多语言标签 -->
                             <el-divider content-position="left">{{ t('dynamic.designer.f_label_section') }}</el-divider>
                             <el-form-item label="中文">
-                                <el-input v-model="form.fields[activateField].label['zh-cn']" placeholder="中文名称" />
+                                <el-input v-model="form.fields[activateField].render.label['zh-cn']" placeholder="中文名称" />
                             </el-form-item>
                             <el-form-item label="English">
-                                <el-input v-model="form.fields[activateField].label.en" placeholder="English label" />
+                                <el-input v-model="form.fields[activateField].render.label.en" placeholder="English label" />
                             </el-form-item>
 
-                            <!-- 表格列属性 — 通用（始终显示） -->
+                            <!-- 数据库 Schema 属性 -->
+                            <el-divider content-position="left">{{ t('dynamic.designer.f_schema_props') }}</el-divider>
+                            <el-form-item :label="t('dynamic.designer.f_db_type')">
+                                <el-select
+                                    v-model="form.fields[activateField].schema.type"
+                                    filterable
+                                    allow-create
+                                    style="width: 100%"
+                                >
+                                    <el-option v-for="dt in dbTypeOptions" :key="dt" :label="dt" :value="dt" />
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item :label="t('dynamic.designer.f_db_length')">
+                                <el-input-number
+                                    v-model="form.fields[activateField].schema.length"
+                                    :min="0"
+                                    controls-position="right"
+                                    style="width: 100%"
+                                />
+                            </el-form-item>
+                            <el-form-item
+                                v-if="['decimal', 'float', 'double'].includes(form.fields[activateField].schema.type)"
+                                :label="t('dynamic.designer.f_db_precision')"
+                            >
+                                <el-input-number
+                                    v-model="form.fields[activateField].schema.precision"
+                                    :min="0"
+                                    controls-position="right"
+                                    style="width: 100%"
+                                />
+                            </el-form-item>
+                            <el-form-item :label="t('dynamic.designer.f_db_nullable')">
+                                <el-switch v-model="form.fields[activateField].schema.nullable" />
+                            </el-form-item>
+                            <el-form-item :label="t('dynamic.designer.f_db_default_type')">
+                                <el-select v-model="form.fields[activateField].schema.defaultType" style="width: 100%">
+                                    <el-option
+                                        v-for="(label, key) in defaultTypeOptions"
+                                        :key="key"
+                                        :label="label"
+                                        :value="key"
+                                    />
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item
+                                v-if="form.fields[activateField].schema.defaultType === 'INPUT'"
+                                :label="t('dynamic.designer.f_db_default')"
+                            >
+                                <el-input v-model="form.fields[activateField].schema.default" />
+                            </el-form-item>
+                            <el-form-item :label="t('dynamic.designer.f_db_unsigned')">
+                                <el-switch v-model="form.fields[activateField].schema.unsigned" />
+                            </el-form-item>
+                            <el-form-item :label="t('dynamic.designer.f_db_auto_increment')">
+                                <el-switch v-model="form.fields[activateField].schema.autoIncrement" />
+                            </el-form-item>
+                            <el-form-item :label="t('dynamic.designer.f_db_comment')">
+                                <el-input v-model="form.fields[activateField].schema.comment" />
+                            </el-form-item>
+
+                            <!-- 表格列属性 -->
                             <el-divider content-position="left">{{ t('dynamic.designer.f_table_props') }}</el-divider>
                             <el-form-item :label="t('dynamic.designer.f_show')">
-                                <el-switch v-model="form.fields[activateField].column_show" />
+                                <el-switch v-model="form.fields[activateField].render.column_show" />
                             </el-form-item>
                             <el-form-item :label="t('dynamic.designer.f_align')">
-                                <el-select v-model="form.fields[activateField].column_align" style="width: 100%">
+                                <el-select v-model="form.fields[activateField].render.column_align" style="width: 100%">
                                     <el-option label="left" value="left" />
                                     <el-option label="center" value="center" />
                                     <el-option label="right" value="right" />
                                 </el-select>
                             </el-form-item>
-
-                            <!-- 表格列属性 — 类型相关（数据驱动） -->
                             <template v-if="hasTableProps(activateField)">
                                 <template v-for="(item, key) in form.fields[activateField].table" :key="'tbl-' + key">
                                     <FormItem
@@ -337,13 +393,11 @@
                                     />
                                 </template>
                             </template>
-
-                            <!-- 字典/替换值（始终可用） -->
                             <el-form-item :label="t('dynamic.designer.f_replacevalue')">
                                 <el-input
                                     type="textarea"
                                     :rows="2"
-                                    :model-value="form.fields[activateField]._replaceValueStr"
+                                    :model-value="form.fields[activateField].render._replaceValueStr"
                                     @update:model-value="onDictInput(form.fields[activateField], $event)"
                                     :placeholder='`{"0":"Disabled","1":"Enabled"}`'
                                 />
@@ -352,12 +406,12 @@
                                 <el-input
                                     type="textarea"
                                     :rows="2"
-                                    v-model="form.fields[activateField].column_custom"
+                                    v-model="form.fields[activateField].render.column_custom"
                                     placeholder='{"0":"danger","1":"success"}'
                                 />
                             </el-form-item>
 
-                            <!-- 表单属性 — 类型相关（数据驱动） -->
+                            <!-- 表单属性 -->
                             <template v-if="hasFormProps(activateField)">
                                 <el-divider content-position="left">{{ t('dynamic.designer.f_form_props') }}</el-divider>
                                 <template v-for="(item, key) in form.fields[activateField].form" :key="'frm-' + key">
@@ -376,11 +430,11 @@
                             </template>
 
                             <!-- remoteSelect 关联配置 -->
-                            <template v-if="['remoteSelect', 'remoteSelects'].includes(form.fields[activateField].design_type)">
+                            <template v-if="['remoteSelect', 'remoteSelects'].includes(form.fields[activateField].render.design_type)">
                                 <el-divider content-position="left">{{ t('dynamic.designer.remote_assoc_title') }}</el-divider>
                                 <el-form-item :label="t('dynamic.designer.f_remote_table')">
                                     <el-select
-                                        v-model="form.fields[activateField].remote_table"
+                                        v-model="form.fields[activateField].remote.table"
                                         filterable
                                         clearable
                                         placeholder=""
@@ -397,7 +451,7 @@
                                 </el-form-item>
                                 <el-form-item :label="t('dynamic.designer.f_remote_pk')">
                                     <el-select
-                                        v-model="form.fields[activateField].remote_pk"
+                                        v-model="form.fields[activateField].remote.pk"
                                         filterable
                                         clearable
                                         placeholder="id"
@@ -413,7 +467,7 @@
                                 </el-form-item>
                                 <el-form-item :label="t('dynamic.designer.f_remote_label')">
                                     <el-select
-                                        v-model="form.fields[activateField].remote_label"
+                                        v-model="form.fields[activateField].remote.label"
                                         filterable
                                         clearable
                                         placeholder="name"
@@ -427,11 +481,17 @@
                                         />
                                     </el-select>
                                 </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_remote_key_type')">
+                                    <el-radio-group v-model="form.fields[activateField].remote.key_type">
+                                        <el-radio-button value="number">Number</el-radio-button>
+                                        <el-radio-button value="string">String</el-radio-button>
+                                    </el-radio-group>
+                                </el-form-item>
                             </template>
 
-                            <!-- 表单类型（始终可手动调整） -->
+                            <!-- 表单类型 -->
                             <el-form-item :label="t('dynamic.designer.f_formtype')">
-                                <el-select v-model="form.fields[activateField].form_type" style="width: 100%">
+                                <el-select v-model="form.fields[activateField].render.form_type" style="width: 100%">
                                     <el-option v-for="ft in formTypeOptions" :key="ft" :label="ft" :value="ft" />
                                 </el-select>
                             </el-form-item>
@@ -440,6 +500,40 @@
                 </el-col>
             </el-row>
         </div>
+
+        <!-- ═══ 表结构变更确认弹窗 ═══ -->
+        <el-dialog
+            v-model="showSchemaSync"
+            :title="t('dynamic.designer.schema_sync_title')"
+            width="500px"
+            append-to-body
+            :close-on-click-modal="false"
+        >
+            <div v-if="designChange.length === 0" class="design-field-empty">
+                {{ t('dynamic.designer.schema_sync_none') }}
+            </div>
+            <template v-else>
+                <p>{{ t('dynamic.designer.schema_sync_desc') }}</p>
+                <el-scrollbar max-height="300px">
+                    <div v-for="(item, idx) in designChange" :key="idx" class="schema-change-item">
+                        <el-checkbox v-model="item.sync" :label="getChangeDescription(item)" size="small" />
+                    </div>
+                </el-scrollbar>
+                <el-alert
+                    :title="t('dynamic.designer.schema_sync_warning')"
+                    type="warning"
+                    :closable="false"
+                    show-icon
+                    style="margin-top: 12px"
+                />
+            </template>
+            <template #footer>
+                <el-button @click="showSchemaSync = false">{{ t('Cancel') }}</el-button>
+                <el-button type="primary" :loading="saving" @click="doSave">
+                    {{ t('Save') }}
+                </el-button>
+            </template>
+        </el-dialog>
 
         <template #footer>
             <div class="dialog-footer">
@@ -470,6 +564,9 @@ import {
     tablePropLabelKeys,
     formPropLabelKeys,
     createFieldFromTemplate,
+    schemaDefaults,
+    dbTypeOptions,
+    defaultTypeOptions,
     type FieldTemplate,
 } from '../fieldTypes'
 import { getDatabaseConnectionListUrl, getTableListUrl } from '/@/api/common'
@@ -496,6 +593,7 @@ const importing = ref(false)
 const designerLang = ref<'zh-cn' | 'en'>('zh-cn')
 const activateField = ref(-1)
 const paletteActiveNames = ref(['common', 'base'])
+const showSchemaSync = ref(false)
 
 watch(() => props.modelValue, (v) => {
     show.value = v
@@ -517,70 +615,195 @@ const connectionOptions = ref<any[]>([])
 const tableOptions = ref<any[]>([])
 const remoteFieldOptions = ref<Record<number, any[]>>({})
 
+/* ═══ Design Change Tracking (Phase 3) ═══ */
+
+type DesignChangeType = 'add-field' | 'del-field' | 'change-field-name' | 'change-field-attr'
+
+interface DesignChange {
+    type: DesignChangeType
+    oldName: string
+    newName: string
+    sync: boolean
+}
+
+const designChange = ref<DesignChange[]>([])
+
 /**
- * remoteSelect 关联表变更时，加载关联表字段列表
+ * Log a design change with CRUD-style dedup logic
+ * Adapted from web/src/views/backend/crud/design.vue logTableDesignChange()
  */
+const logTableDesignChange = (data: DesignChange) => {
+    // Only track when editing existing configs
+    if (!props.editId) return
+    let push = true
+
+    if (data.type === 'change-field-name') {
+        // Update references in existing changes
+        for (const key in designChange.value) {
+            // Attr change tracking follows rename
+            if (designChange.value[key].type === 'change-field-attr' && data.oldName === designChange.value[key].oldName) {
+                designChange.value[key].oldName = data.newName
+            }
+            // Newly added field renamed
+            if (designChange.value[key].type === 'add-field' && designChange.value[key].newName === data.oldName) {
+                designChange.value[key].newName = data.newName
+                push = false
+                break
+            }
+            // Field renamed again
+            if (designChange.value[key].type === 'change-field-name' && designChange.value[key].newName === data.oldName) {
+                data.oldName = designChange.value[key].oldName
+                designChange.value[key] = data
+                // Undo rename
+                if (designChange.value[key].newName === designChange.value[key].oldName) {
+                    designChange.value.splice(Number(key), 1)
+                }
+                push = false
+                break
+            }
+        }
+    } else if (data.type === 'del-field') {
+        let wasAdded = false
+        // Added then deleted → cancel out
+        designChange.value = designChange.value.filter((item) => {
+            wasAdded = item.type === 'add-field' && item.newName === data.oldName
+            const attr = item.type === 'change-field-attr' && item.oldName === data.oldName
+            return !wasAdded && !attr
+        })
+        // Rename then deleted
+        designChange.value = designChange.value.filter((item) => {
+            const name = item.type === 'change-field-name' && item.newName === data.oldName
+            if (name) data.oldName = item.oldName
+            return !name
+        })
+        if (wasAdded) push = false
+        // Dedup duplicate deletes
+        for (const key in designChange.value) {
+            if (designChange.value[key].type === 'del-field' && designChange.value[key].oldName === data.oldName) {
+                push = false
+                break
+            }
+        }
+    } else if (data.type === 'change-field-attr') {
+        // Skip attr change for newly-added fields
+        for (const key in designChange.value) {
+            if (designChange.value[key].type === 'add-field' && designChange.value[key].newName === data.oldName) {
+                push = false
+                break
+            }
+            // Dedup: only one attr change per field
+            if (designChange.value[key].type === 'change-field-attr' && designChange.value[key].oldName === data.oldName) {
+                push = false
+                break
+            }
+        }
+    } else if (data.type === 'add-field') {
+        // Field was deleted then re-added
+        for (const key in designChange.value) {
+            if (designChange.value[key].type === 'del-field' && designChange.value[key].oldName === data.newName) {
+                designChange.value.splice(Number(key), 1)
+                push = false
+                break
+            }
+        }
+    }
+
+    data.sync = true
+    if (push) designChange.value.push(data)
+}
+
+const getChangeDescription = (item: DesignChange): string => {
+    switch (item.type) {
+        case 'add-field':
+            return t('dynamic.designer.schema_change_add') + ' ' + item.newName
+        case 'del-field':
+            return t('dynamic.designer.schema_change_del') + ' ' + item.oldName
+        case 'change-field-name':
+            return t('dynamic.designer.schema_change_rename') + ' ' + item.oldName + ' => ' + item.newName
+        case 'change-field-attr':
+            return t('dynamic.designer.schema_change_attr') + ' ' + item.oldName
+        default:
+            return 'Unknown'
+    }
+}
+
+/**
+ * Called when user renames a field (schema.prop changes)
+ */
+const onFieldRename = (index: number) => {
+    const field = form.fields[index]
+    if (!field) return
+    // Tracking handled via @change event since we need old name
+    // This is called after the name has already changed in v-model
+    // For proper rename tracking, we store the original name on field load
+    const originalName = field._originalProp || ''
+    const currentName = field.schema.prop
+    if (originalName && originalName !== currentName) {
+        logTableDesignChange({
+            type: 'change-field-name',
+            oldName: originalName,
+            newName: currentName,
+            sync: true,
+        })
+        field._originalProp = currentName
+    }
+}
+
+/* ═══ Remote Select helpers ═══ */
+
 const onRemoteTableChange = async (idx: number) => {
     const field = form.fields[idx]
     if (!field) return
 
-    // 清空旧选项和已选值
-    field.remote_pk = ''
-    field.remote_label = ''
+    field.remote.pk = ''
+    field.remote.label = ''
 
-    if (!field.remote_table) {
+    if (!field.remote.table) {
         delete remoteFieldOptions.value[idx]
         return
     }
 
     try {
-        const res = await getDbTableFields(field.remote_table, form.db_connection)
+        const res = await getDbTableFields(field.remote.table, form.db_connection)
         const fields = res.data?.fields ?? res.data?.data?.fields ?? []
         remoteFieldOptions.value[idx] = fields
 
-        // 自动推断 PK 和 label
         const pkField = fields.find((f: any) => f.primary)
-        if (pkField) field.remote_pk = pkField.name
-        else if (fields.length) field.remote_pk = fields[0].name
+        if (pkField) field.remote.pk = pkField.name
+        else if (fields.length) field.remote.pk = fields[0].name
 
-        // label 默认选第一个字符串类型字段（排除 PK）
         const labelField = fields.find((f: any) => {
-            const t = (f.type || '').toLowerCase()
-            return !f.primary && (t.includes('varchar') || t.includes('text') || t.includes('char'))
+            const ty = (f.type || '').toLowerCase()
+            return !f.primary && (ty.includes('varchar') || ty.includes('text') || ty.includes('char'))
         })
-        if (labelField) field.remote_label = labelField.name
-        else if (fields.length > 1) field.remote_label = fields[1].name
-        else if (fields.length) field.remote_label = fields[0].name
+        if (labelField) field.remote.label = labelField.name
+        else if (fields.length > 1) field.remote.label = fields[1].name
+        else if (fields.length) field.remote.label = fields[0].name
     } catch {
         remoteFieldOptions.value[idx] = []
     }
 }
 
-/**
- * 切换到 remoteSelect 字段时，自动加载关联表字段选项
- */
 const ensureRemoteFieldOptions = async (idx: number) => {
     const field = form.fields[idx]
-    if (!field || !['remoteSelect', 'remoteSelects'].includes(field.design_type)) return
-    if (!field.remote_table) return
-    if (remoteFieldOptions.value[idx]) return // 已加载
+    if (!field || !['remoteSelect', 'remoteSelects'].includes(field.render.design_type)) return
+    if (!field.remote.table) return
+    if (remoteFieldOptions.value[idx]) return
 
     try {
-        const res = await getDbTableFields(field.remote_table, form.db_connection)
+        const res = await getDbTableFields(field.remote.table, form.db_connection)
         remoteFieldOptions.value[idx] = res.data?.fields ?? res.data?.data?.fields ?? []
     } catch {
         remoteFieldOptions.value[idx] = []
     }
 }
 
-// 监听字段切换，自动加载关联表字段
 watch(activateField, (idx) => {
     if (idx !== -1) ensureRemoteFieldOptions(idx)
 })
 
-/**
- * 将原始值规范化为多语言对象
- */
+/* ═══ Utilities ═══ */
+
 const normalizeLangValue = (raw: any): Record<string, string> => {
     const empty = { 'zh-cn': '', en: '' }
     if (!raw) return { ...empty }
@@ -600,9 +823,6 @@ const normalizeLangValue = (raw: any): Record<string, string> => {
     return { ...empty }
 }
 
-/**
- * 加载数据库连接列表
- */
 const loadConnectionOptions = async () => {
     try {
         const res = await createAxios({
@@ -615,9 +835,6 @@ const loadConnectionOptions = async () => {
     }
 }
 
-/**
- * 加载数据表列表
- */
 const loadTableOptions = async () => {
     try {
         const res = await createAxios({
@@ -639,9 +856,7 @@ const onConnectionChange = () => {
     loadTableOptions()
 }
 
-const onTableChange = () => {
-    // 选择表后可手动触发导入
-}
+const onTableChange = () => {}
 
 const loadMenuTree = async () => {
     try {
@@ -652,7 +867,7 @@ const loadMenuTree = async () => {
     }
 }
 
-/* ─── 字段模型 ─── */
+/* ═══ Field Model ═══ */
 
 interface PropBagItem {
     type: string
@@ -663,37 +878,58 @@ interface PropBagItem {
 }
 
 interface FieldRow {
-    prop: string
-    label: Record<string, string>
-    design_type: string
-    column_show: boolean
-    column_align: string
-    column_replace_value: any
-    _replaceValueStr: string
-    column_custom: string | null
-    form_type: string
-    form_validators: string[]
-    form_input_attr: Record<string, any>
-    remote_table: string
-    remote_pk: string
-    remote_label: string
+    schema: {
+        prop: string
+        type: string
+        length: number
+        precision: number
+        nullable: boolean
+        default: any
+        defaultType: string
+        primary: boolean
+        unsigned: boolean
+        autoIncrement: boolean
+        comment: string
+    }
+    render: {
+        label: Record<string, string>
+        design_type: string
+        column_show: boolean
+        column_align: string
+        column_width: number | null
+        column_render: string | null
+        column_sortable: string
+        column_operator: string
+        column_com_search_render: string | null
+        column_operator_placeholder: string | null
+        column_time_format: string | null
+        column_replace_value: any
+        column_custom: string | null
+        _replaceValueStr: string
+        form_type: string
+        form_validators: string[]
+        form_input_attr: Record<string, any>
+    }
+    remote: {
+        table: string
+        pk: string
+        label: string
+        key_type: 'string' | 'number'
+    }
     table: Record<string, PropBagItem>
     form: Record<string, PropBagItem>
+    _originalProp?: string  // for rename tracking
 }
 
-/* ─── 属性 bag 构建辅助 ─── */
+/* ═══ Property Bag Builders ═══ */
 
-/**
- * 根据 designType 和 DB 字段数据，构建表格列属性 bag
- * bag 中每个属性的 value 从 DB 字段读取，type/options/placeholder 从 designTypes 模板读取
- */
-const buildTableBag = (designType: string, dbField: any): Record<string, PropBagItem> => {
+const buildTableBag = (designType: string, renderData: any): Record<string, PropBagItem> => {
     const dt = designTypes[designType]
     if (!dt?.table) return {}
     const bag: Record<string, PropBagItem> = {}
     for (const [key, def] of Object.entries(dt.table)) {
         const fieldName = tablePropKeyMap[key]
-        const dbVal = fieldName ? dbField[fieldName] : undefined
+        const dbVal = fieldName ? renderData[fieldName] : undefined
         bag[key] = {
             ...(def as any),
             value: dbVal ?? (def as any).value,
@@ -702,18 +938,15 @@ const buildTableBag = (designType: string, dbField: any): Record<string, PropBag
     return bag
 }
 
-/**
- * 根据 designType 和 DB 字段数据，构建表单属性 bag
- */
-const buildFormBag = (designType: string, dbField: any): Record<string, PropBagItem> => {
+const buildFormBag = (designType: string, renderData: any): Record<string, PropBagItem> => {
     const dt = designTypes[designType]
     if (!dt?.form) return {}
     const bag: Record<string, PropBagItem> = {}
-    const inputAttr = dbField.form_input_attr || {}
+    const inputAttr = renderData.form_input_attr || {}
     for (const [key, def] of Object.entries(dt.form)) {
         let dbVal: any
         if (key === 'validator') {
-            dbVal = dbField.form_validators
+            dbVal = renderData.form_validators
         } else {
             const subKey = formPropKeyMap[key]
             if (subKey && !subKey.startsWith('__')) {
@@ -729,62 +962,58 @@ const buildFormBag = (designType: string, dbField: any): Record<string, PropBagI
 }
 
 /**
- * 将属性 bag 扁平化回 DB 字段格式（保存时调用）
+ * Flatten field back to DB JSON format (schema/render/remote structure)
  */
-const flattenBags = (field: FieldRow) => {
-    const flat: Record<string, any> = {
-        prop: field.prop,
-        label: field.label,
-        design_type: field.design_type,
-        column_show: field.column_show,
-        column_align: field.column_align,
-        column_replace_value: field.column_replace_value,
-        column_custom: field.column_custom,
-        form_type: field.form_type,
-        form_validators: [] as string[],
-        form_input_attr: {} as Record<string, any>,
-    }
-
-    // 表格属性 bag → 扁平 DB 列
+const flattenField = (field: FieldRow) => {
+    // Flatten table bag → render columns
     for (const [key, item] of Object.entries(field.table)) {
         const fieldName = tablePropKeyMap[key]
         if (fieldName) {
-            flat[fieldName] = item.value
+            (field.render as any)[fieldName] = item.value
         }
     }
-
-    // 表单属性 bag → form_validators + form_input_attr
+    // Flatten form bag → form_validators + form_input_attr
     for (const [key, item] of Object.entries(field.form)) {
         if (key === 'validator') {
-            flat.form_validators = item.value
+            field.render.form_validators = item.value
         } else {
             const subKey = formPropKeyMap[key]
             if (subKey && !subKey.startsWith('__')) {
-                flat.form_input_attr[subKey] = item.value
+                field.render.form_input_attr[subKey] = item.value
             }
         }
     }
 
-    // remoteSelect 关联属性 → form_input_attr
-    if (field.remote_table) flat.form_input_attr.remote_table = field.remote_table
-    if (field.remote_pk) flat.form_input_attr.remote_pk = field.remote_pk
-    if (field.remote_label) flat.form_input_attr.remote_label = field.remote_label
-
-    return flat
+    return {
+        schema: { ...field.schema },
+        render: {
+            label: field.render.label,
+            design_type: field.render.design_type,
+            column_show: field.render.column_show,
+            column_align: field.render.column_align,
+            column_width: field.render.column_width,
+            column_render: field.render.column_render,
+            column_sortable: field.render.column_sortable,
+            column_operator: field.render.column_operator,
+            column_com_search_render: field.render.column_com_search_render,
+            column_operator_placeholder: field.render.column_operator_placeholder,
+            column_time_format: field.render.column_time_format,
+            column_replace_value: field.render.column_replace_value,
+            column_custom: field.render.column_custom,
+            form_type: field.render.form_type,
+            form_validators: field.render.form_validators,
+            form_input_attr: field.render.form_input_attr,
+        },
+        remote: { ...field.remote },
+    }
 }
 
-/**
- * 检查字段是否有类型相关的表格属性
- */
 const hasTableProps = (idx: number): boolean => {
     const field = form.fields[idx]
     if (!field?.table) return false
     return Object.keys(field.table).length > 0
 }
 
-/**
- * 检查字段是否有类型相关的表单属性
- */
 const hasFormProps = (idx: number): boolean => {
     const field = form.fields[idx]
     if (!field?.form) return false
@@ -792,12 +1021,10 @@ const hasFormProps = (idx: number): boolean => {
 }
 
 /**
- * 从 form_type 推断 design_type（加载旧数据时）
+ * Infer design_type from form_type for backward compat
  */
 const inferDesignType = (formType: string, prop: string): string => {
-    // 直接匹配的 form_type
     if (designTypes[formType]) return formType
-    // 常见推断
     if (prop === 'id') return 'pk'
     if (prop === 'weigh') return 'weigh'
     if (prop === 'status') return 'switch'
@@ -824,8 +1051,11 @@ const form = reactive({
     fields: [] as FieldRow[],
 })
 
+/* ═══ initForm — with backward compat for old flat format ═══ */
+
 const initForm = async () => {
     activateField.value = -1
+    designChange.value = []
     Object.assign(form, {
         id: 0, name: '', title: { 'zh-cn': '', en: '' }, db_table: '', db_connection: '',
         pk: 'id', default_sort_field: '', default_sort_order: 'desc',
@@ -836,7 +1066,6 @@ const initForm = async () => {
     })
     designerLang.value = 'zh-cn'
 
-    // 并行加载下拉数据
     loadMenuTree()
     loadConnectionOptions()
     loadTableOptions()
@@ -866,30 +1095,140 @@ const initForm = async () => {
 
             if (row.fields && Array.isArray(row.fields)) {
                 form.fields = row.fields.map((f: any) => {
-                    // 推断 design type
-                    const dt = f.design_type || inferDesignType(f.form_type || 'string', f.prop)
-                    const rv = f.column_replace_value
-                    const rvStr = rv ? (typeof rv === 'string' ? rv : JSON.stringify(rv)) : ''
-                    const ia = (typeof f.form_input_attr === 'string' ? JSON.parse(f.form_input_attr || '{}') : f.form_input_attr) || {}
+                    // ─── Backward compat: detect old vs new format ───
+                    if (f.schema) {
+                        // New structured format
+                        const dt = f.render.design_type || 'string'
+                        const rv = f.render.column_replace_value
+                        const rvStr = rv ? (typeof rv === 'string' ? rv : JSON.stringify(rv)) : ''
+                        let ia = f.render.form_input_attr
+                        if (typeof ia === 'string') { try { ia = JSON.parse(ia || '{}') } catch { ia = {} } }
+                        if (!ia) ia = {}
 
-                    return {
-                        prop: f.prop,
-                        label: normalizeLangValue(f.label),
-                        design_type: dt,
-                        column_show: f.column_show !== undefined ? !!f.column_show : true,
-                        column_align: f.column_align || 'center',
-                        column_replace_value: rv,
-                        _replaceValueStr: rvStr,
-                        column_custom: f.column_custom || null,
-                        form_type: f.form_type || dt,
-                        form_validators: f.form_validators || [],
-                        form_input_attr: ia,
-                        remote_table: ia.remote_table || '',
-                        remote_pk: ia.remote_pk || '',
-                        remote_label: ia.remote_label || '',
-                        table: buildTableBag(dt, f),
-                        form: buildFormBag(dt, f),
-                    } as FieldRow
+                        const fieldRow: FieldRow = {
+                            schema: {
+                                prop: f.schema.prop || '',
+                                type: f.schema.type || 'varchar',
+                                length: f.schema.length ?? 255,
+                                precision: f.schema.precision ?? 0,
+                                nullable: f.schema.nullable ?? true,
+                                default: f.schema.default ?? '',
+                                defaultType: f.schema.defaultType ?? 'NULL',
+                                primary: f.schema.primary ?? false,
+                                unsigned: f.schema.unsigned ?? false,
+                                autoIncrement: f.schema.autoIncrement ?? false,
+                                comment: f.schema.comment ?? '',
+                            },
+                            render: {
+                                label: normalizeLangValue(f.render.label),
+                                design_type: dt,
+                                column_show: f.render.column_show !== undefined ? !!f.render.column_show : true,
+                                column_align: f.render.column_align || 'center',
+                                column_width: f.render.column_width ?? null,
+                                column_render: f.render.column_render ?? null,
+                                column_sortable: f.render.column_sortable ?? 'false',
+                                column_operator: f.render.column_operator ?? 'eq',
+                                column_com_search_render: f.render.column_com_search_render ?? null,
+                                column_operator_placeholder: f.render.column_operator_placeholder ?? null,
+                                column_time_format: f.render.column_time_format ?? null,
+                                column_replace_value: rv,
+                                _replaceValueStr: rvStr,
+                                column_custom: f.render.column_custom ?? null,
+                                form_type: f.render.form_type || dt,
+                                form_validators: f.render.form_validators || [],
+                                form_input_attr: ia,
+                            },
+                            remote: {
+                                table: f.remote?.table || ia.remote_table || '',
+                                pk: f.remote?.pk || ia.remote_pk || 'id',
+                                label: f.remote?.label || ia.remote_label || 'name',
+                                key_type: f.remote?.key_type || 'number',
+                            },
+                            table: {},
+                            form: {},
+                            _originalProp: f.schema.prop || '',
+                        }
+                        // Build bags from render data
+                        fieldRow.table = buildTableBag(dt, {
+                            column_render: fieldRow.render.column_render,
+                            column_operator: fieldRow.render.column_operator,
+                            column_sortable: fieldRow.render.column_sortable,
+                            column_com_search_render: fieldRow.render.column_com_search_render,
+                            column_operator_placeholder: fieldRow.render.column_operator_placeholder,
+                            column_width: fieldRow.render.column_width,
+                            column_time_format: fieldRow.render.column_time_format,
+                        })
+                        fieldRow.form = buildFormBag(dt, {
+                            form_validators: fieldRow.render.form_validators,
+                            form_input_attr: fieldRow.render.form_input_attr,
+                        })
+                        return fieldRow
+                    } else {
+                        // ─── Old flat format → migrate ───
+                        const dt = f.design_type || inferDesignType(f.form_type || 'string', f.prop)
+                        const rv = f.column_replace_value
+                        const rvStr = rv ? (typeof rv === 'string' ? rv : JSON.stringify(rv)) : ''
+                        let ia = (typeof f.form_input_attr === 'string' ? JSON.parse(f.form_input_attr || '{}') : f.form_input_attr) || {}
+                        const sd = schemaDefaults[dt] || schemaDefaults['string']
+
+                        const fieldRow: FieldRow = {
+                            schema: {
+                                prop: f.prop,
+                                type: sd.type,
+                                length: sd.length,
+                                precision: sd.precision,
+                                nullable: sd.nullable,
+                                default: sd.default,
+                                defaultType: sd.defaultType,
+                                primary: sd.primary,
+                                unsigned: sd.unsigned,
+                                autoIncrement: sd.autoIncrement,
+                                comment: '',
+                            },
+                            render: {
+                                label: normalizeLangValue(f.label),
+                                design_type: dt,
+                                column_show: f.column_show !== undefined ? !!f.column_show : true,
+                                column_align: f.column_align || 'center',
+                                column_width: f.column_width ?? null,
+                                column_render: f.column_render ?? null,
+                                column_sortable: f.column_sortable ?? 'false',
+                                column_operator: f.column_operator ?? 'eq',
+                                column_com_search_render: f.column_com_search_render ?? null,
+                                column_operator_placeholder: f.column_operator_placeholder ?? null,
+                                column_time_format: f.column_time_format ?? null,
+                                column_replace_value: rv,
+                                _replaceValueStr: rvStr,
+                                column_custom: f.column_custom ?? null,
+                                form_type: f.form_type || dt,
+                                form_validators: f.form_validators || [],
+                                form_input_attr: ia,
+                            },
+                            remote: {
+                                table: ia.remote_table || '',
+                                pk: ia.remote_pk || 'id',
+                                label: ia.remote_label || 'name',
+                                key_type: 'number',
+                            },
+                            table: {},
+                            form: {},
+                            _originalProp: f.prop,
+                        }
+                        fieldRow.table = buildTableBag(dt, {
+                            column_render: fieldRow.render.column_render,
+                            column_operator: fieldRow.render.column_operator,
+                            column_sortable: fieldRow.render.column_sortable,
+                            column_com_search_render: fieldRow.render.column_com_search_render,
+                            column_operator_placeholder: fieldRow.render.column_operator_placeholder,
+                            column_width: fieldRow.render.column_width,
+                            column_time_format: fieldRow.render.column_time_format,
+                        })
+                        fieldRow.form = buildFormBag(dt, {
+                            form_validators: fieldRow.render.form_validators,
+                            form_input_attr: fieldRow.render.form_input_attr,
+                        })
+                        return fieldRow
+                    }
                 })
             }
         } catch (err) {
@@ -900,52 +1239,66 @@ const initForm = async () => {
     }
 }
 
-/**
- * 从左侧面板添加字段
- */
+/* ═══ Field Operations ═══ */
+
 const onAddFieldFromTemplate = (template: FieldTemplate) => {
     const base = createFieldFromTemplate(template)
     const newField: FieldRow = {
-        prop: base.prop,
-        label: base.label,
-        design_type: template.designType,
-        column_show: base.column_show,
-        column_align: base.column_align,
-        column_replace_value: base.column_replace_value,
-        _replaceValueStr: '',
-        column_custom: base.column_custom,
-        form_type: base.form_type,
-        form_validators: base.form_validators,
-        form_input_attr: base.form_input_attr,
-        remote_table: '',
-        remote_pk: '',
-        remote_label: '',
-        table: buildTableBag(template.designType, base),
-        form: buildFormBag(template.designType, base),
+        schema: base.schema,
+        render: {
+            ...base.render,
+            _replaceValueStr: '',
+        },
+        remote: base.remote,
+        table: buildTableBag(template.designType, {
+            column_render: base.render.column_render,
+            column_operator: base.render.column_operator,
+            column_sortable: base.render.column_sortable,
+            column_com_search_render: base.render.column_com_search_render,
+            column_operator_placeholder: base.render.column_operator_placeholder,
+            column_width: base.render.column_width,
+            column_time_format: base.render.column_time_format,
+        }),
+        form: buildFormBag(template.designType, {
+            form_validators: base.render.form_validators,
+            form_input_attr: base.render.form_input_attr,
+        }),
+        _originalProp: base.schema.prop,
     }
     form.fields.push(newField)
     activateField.value = form.fields.length - 1
+
+    logTableDesignChange({
+        type: 'add-field',
+        oldName: '',
+        newName: base.schema.prop,
+        sync: true,
+    })
 }
 
-/**
- * 删除字段
- */
 const onDelField = (index: number) => {
+    const field = form.fields[index]
+    if (field) {
+        const name = field.schema.prop
+        logTableDesignChange({
+            type: 'del-field',
+            oldName: name,
+            newName: '',
+            sync: true,
+        })
+    }
     form.fields.splice(index, 1)
     if (activateField.value >= form.fields.length) {
         activateField.value = form.fields.length - 1
     }
 }
 
-/**
- * 设计类型变更时，重建属性 bag 并应用新类型的默认值
- */
 const onDesignTypeChange = (newType: string, index: number) => {
     const dt = designTypes[newType]
     if (!dt) return
     const field = form.fields[index]
 
-    // 保存当前 bag 中用户可能已修改的值
+    // Preserve user-modified values
     const oldTableValues: Record<string, any> = {}
     for (const [key, item] of Object.entries(field.table || {})) {
         oldTableValues[key] = item.value
@@ -955,9 +1308,8 @@ const onDesignTypeChange = (newType: string, index: number) => {
         oldFormValues[key] = item.value
     }
 
-    // 重建 bag（使用新类型的模板）
+    // Rebuild bags
     field.table = buildTableBag(newType, {
-        // 把旧值作为 DB 值传入，保持用户已修改的属性
         column_render: oldTableValues.render,
         column_operator: oldTableValues.operator,
         column_sortable: oldTableValues.sortable,
@@ -977,22 +1329,43 @@ const onDesignTypeChange = (newType: string, index: number) => {
         },
     })
 
-    // 同步 form_type
-    field.form_type = newType
+    // Update schema defaults for new type
+    const sd = schemaDefaults[newType]
+    if (sd) {
+        field.schema.type = sd.type
+        field.schema.length = sd.length
+        field.schema.precision = sd.precision
+        field.schema.nullable = sd.nullable
+        field.schema.defaultType = sd.defaultType
+        field.schema.unsigned = sd.unsigned
+        field.schema.autoIncrement = sd.autoIncrement
+        field.schema.primary = sd.primary
+    }
+
+    // Sync form_type
+    field.render.form_type = newType
+    field.render.design_type = newType
+
+    // Track as attr change (schema changed)
+    logTableDesignChange({
+        type: 'change-field-attr',
+        oldName: field.schema.prop,
+        newName: '',
+        sync: true,
+    })
 }
 
 const onDictInput = (row: FieldRow, val: string) => {
-    row._replaceValueStr = val
+    row.render._replaceValueStr = val
     try {
-        row.column_replace_value = val ? JSON.parse(val) : null
+        row.render.column_replace_value = val ? JSON.parse(val) : null
     } catch {
-        // JSON 还不完整
+        // JSON incomplete
     }
 }
 
-/**
- * 从数据库表导入字段
- */
+/* ═══ Import Fields from DB ═══ */
+
 const onImportFields = async () => {
     if (!form.db_table) {
         ElMessage.warning(t('dynamic.designer.need_db_table'))
@@ -1002,7 +1375,7 @@ const onImportFields = async () => {
     try {
         const res = await getDbTableFields(form.db_table, form.db_connection)
         const fields = res.data?.fields ?? res.data?.data?.fields ?? []
-        const existingProps = new Set(form.fields.map((f) => f.prop))
+        const existingProps = new Set(form.fields.map((f) => f.schema.prop))
         for (const f of fields) {
             if (!existingProps.has(f.name)) {
                 const dbType = (f.type || '').toLowerCase()
@@ -1021,30 +1394,39 @@ const onImportFields = async () => {
                     designType = 'float'
                 }
 
-                const template = {
+                const template: FieldTemplate = {
                     title: f.name,
                     name: f.name,
                     designType,
                     formType: designType === 'pk' ? 'string' : designType,
                 }
                 const base = createFieldFromTemplate(template)
+                // Override schema with actual DB values
+                base.schema.comment = f.comment || ''
+                base.schema.nullable = !(f.notnull === false)
+
                 const row: FieldRow = {
-                    prop: base.prop,
-                    label: { 'zh-cn': f.comment || f.name, en: '' },
-                    design_type: designType,
-                    column_show: base.column_show,
-                    column_align: base.column_align,
-                    column_replace_value: base.column_replace_value,
-                    _replaceValueStr: '',
-                    column_custom: base.column_custom,
-                    form_type: base.form_type,
-                    form_validators: base.form_validators,
-                    form_input_attr: base.form_input_attr,
-                    remote_table: '',
-                    remote_pk: '',
-                    remote_label: '',
-                    table: buildTableBag(designType, base),
-                    form: buildFormBag(designType, base),
+                    schema: base.schema,
+                    render: {
+                        ...base.render,
+                        label: { 'zh-cn': f.comment || f.name, en: '' },
+                        _replaceValueStr: '',
+                    },
+                    remote: base.remote,
+                    table: buildTableBag(designType, {
+                        column_render: base.render.column_render,
+                        column_operator: base.render.column_operator,
+                        column_sortable: base.render.column_sortable,
+                        column_com_search_render: base.render.column_com_search_render,
+                        column_operator_placeholder: base.render.column_operator_placeholder,
+                        column_width: base.render.column_width,
+                        column_time_format: base.render.column_time_format,
+                    }),
+                    form: buildFormBag(designType, {
+                        form_validators: base.render.form_validators,
+                        form_input_attr: base.render.form_input_attr,
+                    }),
+                    _originalProp: f.name,
                 }
                 form.fields.push(row)
             }
@@ -1058,6 +1440,8 @@ const onImportFields = async () => {
     }
 }
 
+/* ═══ Save (with schema sync confirmation) ═══ */
+
 const onSave = async () => {
     const hasTitle = form.title['zh-cn'] || form.title['en']
     if (!form.name || !hasTitle || !form.db_table) {
@@ -1065,27 +1449,50 @@ const onSave = async () => {
         return
     }
 
+    // If editing existing config and has design changes → show confirmation
+    if (props.editId && designChange.value.length > 0) {
+        showSchemaSync.value = true
+    } else {
+        // No structural changes or new config → save directly
+        await doSave()
+    }
+}
+
+const doSave = async () => {
+    showSchemaSync.value = false
     saving.value = true
     try {
-        // 扁平化属性 bag → DB 字段格式
+        // Flatten fields to schema/render/remote format
         const cleanFields = form.fields.map((f) => {
-            const flat = flattenBags(f)
-            // 移除前端辅助字段
-            const { _replaceValueStr, table, form: formBag, remote_table, remote_pk, remote_label, ...rest } = f as any
-            return { ...rest, ...flat }
+            const flat = flattenField(f)
+            return flat
         })
 
-        const payload = { ...form, fields: cleanFields }
+        // Build designChange payload (only synced items)
+        const syncChanges = designChange.value
+            .filter((d) => d.sync)
+            .map((d) => ({
+                type: d.type,
+                oldName: d.oldName,
+                newName: d.newName,
+                sync: true,
+            }))
+
+        const payload = { ...form, fields: cleanFields, designChange: syncChanges }
+        // Remove frontend-only fields
+        const cleanPayload: any = { ...payload }
+        delete cleanPayload.default_items
+        if (form.default_items !== null) cleanPayload.default_items = form.default_items
 
         if (props.editId) {
-            payload.id = props.editId
-            await editDynamicConfig(payload)
+            cleanPayload.id = props.editId
+            await editDynamicConfig(cleanPayload)
         } else {
-            await addDynamicConfig(payload)
+            await addDynamicConfig(cleanPayload)
         }
         ElMessage.success(t('axios.Operation successful'))
 
-        // 刷新后台菜单路由（与 CRUD 生成后行为一致）
+        // Refresh admin menu routes
         try {
             const res = await adminIndex()
             if (res.data?.menus) {
@@ -1094,6 +1501,9 @@ const onSave = async () => {
         } catch (e) {
             console.error('Menu refresh failed:', e)
         }
+
+        // Clear design changes after successful save
+        designChange.value = []
 
         emit('saved')
     } catch (err) {
@@ -1137,7 +1547,6 @@ const onSave = async () => {
         overflow-y: auto;
     }
 }
-/* 左栏：字段类型面板 */
 .field-palette {
     .el-collapse-item__header {
         font-size: 13px;
@@ -1156,7 +1565,6 @@ const onSave = async () => {
         }
     }
 }
-/* 中栏：字段设计区 */
 .design-window {
     min-height: 300px;
     padding: 8px;
@@ -1200,7 +1608,6 @@ const onSave = async () => {
         font-size: 14px;
     }
 }
-/* 右栏：属性编辑器 */
 .field-config {
     min-height: 300px;
     padding: 8px 16px;
@@ -1211,5 +1618,8 @@ const onSave = async () => {
     .el-form-item {
         margin-bottom: 12px;
     }
+}
+.schema-change-item {
+    padding: 4px 0;
 }
 </style>
