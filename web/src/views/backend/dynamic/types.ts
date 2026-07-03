@@ -27,11 +27,32 @@ export interface DynamicTableConfig {
     rowButtonNames: string[]
     /** 新增默认值 */
     defaultItems?: Record<string, any>
+    /** 双击不打开编辑弹窗的列（如 switch 列） */
+    dblClickNotEditColumn?: (string | undefined | null)[]
 
     /** 列定义 */
     columns: DynamicColumn[]
     /** 表单字段定义 */
     formFields: DynamicFormField[]
+
+    /** 详情表配置（配置了详情表时非 null） */
+    detail?: DetailTableConfig | null
+}
+
+/**
+ * 详情表配置
+ */
+export interface DetailTableConfig {
+    /** 关联的动态表配置 ID */
+    tableId: number
+    /** 详情表标识名 */
+    tableName: string
+    /** 详情表标题 */
+    title: string
+    /** 详情表中用于过滤的外键字段名 */
+    foreignKey: string
+    /** 详情表的主键 */
+    pk: string
 }
 
 /**
@@ -60,6 +81,8 @@ export interface DynamicColumn {
     timeFormat?: string
     /** 搜索框 placeholder */
     operatorPlaceholder?: string
+    /** computed 列的模板表达式，如 "{price} * {quantity}" */
+    template?: string
 }
 
 /**

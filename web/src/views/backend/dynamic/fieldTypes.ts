@@ -26,11 +26,14 @@ const tableBaseAttr = {
             switch: t('utils.switch'),
             image: t('utils.image'),
             images: t('utils.multi image'),
+            file: t('utils.file'),
             tag: 'Tag',
             tags: 'Tags',
             url: 'URL',
             datetime: t('utils.time date'),
             color: t('utils.color'),
+            computed: t('dynamic.designer.type_computed'),
+            currency: t('dynamic.designer.render_currency'),
         },
     },
     operator: {
@@ -466,7 +469,7 @@ export const designTypes: Record<string, {
         name: t('utils.file') + t('dynamic.designer.label_upload'),
         table: {
             width: widthAttr(),
-            render: getTableAttr('render', 'none'),
+            render: getTableAttr('render', 'file'),
             operator: getTableAttr('operator', 'false'),
         },
         form: {
@@ -478,7 +481,7 @@ export const designTypes: Record<string, {
         name: t('utils.file') + t('dynamic.designer.label_upload') + '(' + t('dynamic.designer.label_multi') + ')',
         table: {
             width: widthAttr(),
-            render: getTableAttr('render', 'none'),
+            render: getTableAttr('render', 'file'),
             operator: getTableAttr('operator', 'false'),
         },
         form: {
@@ -503,6 +506,26 @@ export const designTypes: Record<string, {
             operator: getTableAttr('operator', 'false'),
         },
         form: { ...formBaseAttr },
+    },
+    computed: {
+        name: t('dynamic.designer.type_computed'),
+        table: {
+            width: widthAttr(),
+            render: getTableAttr('render', 'computed'),
+            operator: getTableAttr('operator', 'false'),
+            sortable: getTableAttr('sortable', 'false'),
+        },
+        form: {},
+    },
+    remoteExpand: {
+        name: t('dynamic.designer.type_remote_expand'),
+        table: {
+            width: widthAttr(),
+            render: getTableAttr('render', 'none'),
+            operator: getTableAttr('operator', 'false'),
+            sortable: getTableAttr('sortable', 'false'),
+        },
+        form: {},
     },
 }
 
@@ -556,6 +579,8 @@ export const fieldTemplates: {
         { name: 'files', designType: 'files', formType: 'files' },
         { name: 'selects', designType: 'selects', formType: 'selects' },
         { name: 'remote_selects', designType: 'remoteSelects', formType: 'remoteSelects' },
+        { name: 'computed_field', designType: 'computed', formType: '' },
+        { name: 'remote_expand', designType: 'remoteExpand', formType: '' },
     ],
 }
 
@@ -607,6 +632,8 @@ export const schemaDefaults: Record<string, {
     files:     { type: 'varchar', length: 1500,precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
     icon:      { type: 'varchar', length: 50,  precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
     color:     { type: 'varchar', length: 50,  precision: 0, nullable: false, default: '',    defaultType: 'EMPTY STRING',primary: false, unsigned: false, autoIncrement: false },
+    computed:    { type: 'virtual',  length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
+    remoteExpand: { type: 'virtual',  length: 0,   precision: 0, nullable: true,  default: '',    defaultType: 'NULL',        primary: false, unsigned: false, autoIncrement: false },
 }
 
 /**
@@ -687,6 +714,10 @@ export const createFieldFromTemplate = (template: FieldTemplate) => {
             form_type: template.formType,
             form_validators: formProps.validator ?? [],
             form_input_attr: inputAttr,
+            // Virtual field properties (null for non-virtual types)
+            template: null,
+            parent_field: null,
+            remote_field: null,
         },
         remote: {
             table: '',

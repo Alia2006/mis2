@@ -32,12 +32,7 @@
                                 style="width: 100%"
                                 @change="onConnectionChange"
                             >
-                                <el-option
-                                    v-for="item in connectionOptions"
-                                    :key="item.key"
-                                    :label="item.key"
-                                    :value="item.key"
-                                />
+                                <el-option v-for="item in connectionOptions" :key="item.key" :label="item.key" :value="item.key" />
                             </el-select>
                         </el-form-item>
                     </el-col>
@@ -80,13 +75,7 @@
                 <el-row :gutter="16">
                     <el-col :span="3">
                         <el-form-item label="PK">
-                            <el-select
-                                v-model="form.pk"
-                                filterable
-                                clearable
-                                placeholder="id"
-                                style="width: 100%"
-                            >
+                            <el-select v-model="form.pk" filterable clearable placeholder="id" style="width: 100%">
                                 <el-option
                                     v-for="f in form.fields"
                                     :key="f.schema.prop"
@@ -166,6 +155,48 @@
                         </el-form-item>
                     </el-col>
                 </el-row>
+
+                <!-- ═══ 详情表配置 ═══ -->
+                <el-row :gutter="16">
+                    <el-col :span="6">
+                        <el-form-item :label="t('dynamic.designer.detail_table')">
+                            <el-select
+                                v-model="form.detail_table_id"
+                                filterable
+                                clearable
+                                :placeholder="t('dynamic.designer.detail_table_ph')"
+                                style="width: 100%"
+                                @change="onDetailTableChange"
+                            >
+                                <el-option
+                                    v-for="dt in detailTableOptions"
+                                    :key="dt.id"
+                                    :label="dt.title ? `${dt.title} (${dt.name})` : dt.name"
+                                    :value="dt.id"
+                                />
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="4">
+                        <el-form-item :label="t('dynamic.designer.detail_fk')">
+                            <el-select
+                                v-model="form.detail_foreign_key"
+                                filterable
+                                clearable
+                                :disabled="!form.detail_table_id"
+                                :placeholder="t('dynamic.designer.detail_fk_ph')"
+                                style="width: 100%"
+                            >
+                                <el-option
+                                    v-for="f in detailFieldOptions"
+                                    :key="f.prop"
+                                    :label="f.label ? `${f.label} (${f.prop})` : f.prop"
+                                    :value="f.prop"
+                                />
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
                 <div class="designer-toolbar">
                     <el-radio-group v-model="designerLang" size="small">
                         <el-radio-button value="zh-cn">中文</el-radio-button>
@@ -187,36 +218,42 @@
                     <div class="field-palette ba-scroll-style">
                         <el-collapse v-model="paletteActiveNames">
                             <el-collapse-item :title="t('dynamic.designer.common_fields')" name="common">
-                                <div
-                                    v-for="(field, idx) in fieldTemplates.common"
-                                    :key="'common-' + idx"
-                                    class="palette-item"
-                                    @click="onAddFieldFromTemplate(field)"
-                                >
-                                    <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
-                                    <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
+                                <div class="palette-group" :ref="setPaletteRef">
+                                    <div
+                                        v-for="(field, idx) in fieldTemplates.common"
+                                        :key="'common-' + idx"
+                                        class="palette-item"
+                                        @click="onAddFieldFromTemplate(field)"
+                                    >
+                                        <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
+                                        <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
+                                    </div>
                                 </div>
                             </el-collapse-item>
                             <el-collapse-item :title="t('dynamic.designer.base_fields')" name="base">
-                                <div
-                                    v-for="(field, idx) in fieldTemplates.base"
-                                    :key="'base-' + idx"
-                                    class="palette-item"
-                                    @click="onAddFieldFromTemplate(field)"
-                                >
-                                    <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
-                                    <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
+                                <div class="palette-group" :ref="setPaletteRef">
+                                    <div
+                                        v-for="(field, idx) in fieldTemplates.base"
+                                        :key="'base-' + idx"
+                                        class="palette-item"
+                                        @click="onAddFieldFromTemplate(field)"
+                                    >
+                                        <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
+                                        <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
+                                    </div>
                                 </div>
                             </el-collapse-item>
                             <el-collapse-item :title="t('dynamic.designer.senior_fields')" name="senior">
-                                <div
-                                    v-for="(field, idx) in fieldTemplates.senior"
-                                    :key="'senior-' + idx"
-                                    class="palette-item"
-                                    @click="onAddFieldFromTemplate(field)"
-                                >
-                                    <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
-                                    <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
+                                <div class="palette-group" :ref="setPaletteRef">
+                                    <div
+                                        v-for="(field, idx) in fieldTemplates.senior"
+                                        :key="'senior-' + idx"
+                                        class="palette-item"
+                                        @click="onAddFieldFromTemplate(field)"
+                                    >
+                                        <Icon name="fa fa-plus" size="10" color="#909399" class="mr-2" />
+                                        <span>{{ designTypes[field.designType]?.name ?? field.name }}</span>
+                                    </div>
                                 </div>
                             </el-collapse-item>
                         </el-collapse>
@@ -225,11 +262,12 @@
 
                 <!-- ── 中栏：字段列表 ── -->
                 <el-col :span="9">
-                    <div class="design-window ba-scroll-style">
+                    <div ref="designWindowRef" class="design-window ba-scroll-style">
                         <div
                             v-for="(field, index) in form.fields"
                             :key="index"
                             :class="['design-field-box', { activate: activateField === index }]"
+                            :data-id="index"
                             @click="activateField = index"
                         >
                             <div class="design-field-name">
@@ -244,25 +282,15 @@
                             </div>
                             <div class="design-field-comment">
                                 <span class="field-label">{{ t('dynamic.designer.f_label') }}：</span>
-                                <el-input
-                                    v-model="field.render.label[designerLang]"
-                                    size="small"
-                                    class="field-comment-input"
-                                    @pointerdown.stop
-                                />
+                                <el-input v-model="field.render.label[designerLang]" size="small" class="field-comment-input" @pointerdown.stop />
                             </div>
                             <div class="design-field-actions">
-                                <el-button
-                                    size="small"
-                                    type="danger"
-                                    circle
-                                    @click.stop="onDelField(index)"
-                                >
+                                <el-button size="small" type="danger" circle @click.stop="onDelField(index)">
                                     <Icon name="fa fa-trash" size="12" color="#fff" />
                                 </el-button>
                             </div>
                         </div>
-                        <div v-if="!form.fields.length" class="design-field-empty">
+                        <div v-if="!form.fields.length && !draggingField" class="design-field-empty">
                             {{ t('dynamic.designer.drag_tip') }}
                         </div>
                     </div>
@@ -283,17 +311,8 @@
                                     style="width: 100%"
                                     @change="onDesignTypeChange($event, activateField)"
                                 >
-                                    <el-option-group
-                                        v-for="group in designTypeGroups"
-                                        :key="group.label"
-                                        :label="group.label"
-                                    >
-                                        <el-option
-                                            v-for="dt in group.types"
-                                            :key="dt"
-                                            :label="designTypes[dt]?.name ?? dt"
-                                            :value="dt"
-                                        />
+                                    <el-option-group v-for="group in designTypeGroups" :key="group.label" :label="group.label">
+                                        <el-option v-for="dt in group.types" :key="dt" :label="designTypes[dt]?.name ?? dt" :value="dt" />
                                     </el-option-group>
                                 </el-select>
                             </el-form-item>
@@ -307,65 +326,116 @@
                                 <el-input v-model="form.fields[activateField].render.label.en" placeholder="English label" />
                             </el-form-item>
 
-                            <!-- 数据库 Schema 属性 -->
-                            <el-divider content-position="left">{{ t('dynamic.designer.f_schema_props') }}</el-divider>
-                            <el-form-item :label="t('dynamic.designer.f_db_type')">
-                                <el-select
-                                    v-model="form.fields[activateField].schema.type"
-                                    filterable
-                                    allow-create
-                                    style="width: 100%"
-                                >
-                                    <el-option v-for="dt in dbTypeOptions" :key="dt" :label="dt" :value="dt" />
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_db_length')">
-                                <el-input-number
-                                    v-model="form.fields[activateField].schema.length"
-                                    :min="0"
-                                    controls-position="right"
-                                    style="width: 100%"
-                                />
-                            </el-form-item>
-                            <el-form-item
-                                v-if="['decimal', 'float', 'double'].includes(form.fields[activateField].schema.type)"
-                                :label="t('dynamic.designer.f_db_precision')"
-                            >
-                                <el-input-number
-                                    v-model="form.fields[activateField].schema.precision"
-                                    :min="0"
-                                    controls-position="right"
-                                    style="width: 100%"
-                                />
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_db_nullable')">
-                                <el-switch v-model="form.fields[activateField].schema.nullable" />
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_db_default_type')">
-                                <el-select v-model="form.fields[activateField].schema.defaultType" style="width: 100%">
-                                    <el-option
-                                        v-for="(label, key) in defaultTypeOptions"
-                                        :key="key"
-                                        :label="label"
-                                        :value="key"
+                            <!-- 数据库 Schema 属性 (hidden for virtual fields) -->
+                            <template v-if="!isVirtualField(activateField)">
+                                <el-divider content-position="left">{{ t('dynamic.designer.f_schema_props') }}</el-divider>
+                                <el-form-item :label="t('dynamic.designer.f_db_type')">
+                                    <el-select v-model="form.fields[activateField].schema.type" filterable allow-create style="width: 100%">
+                                        <el-option v-for="dt in dbTypeOptions" :key="dt" :label="dt" :value="dt" />
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_db_length')">
+                                    <el-input-number
+                                        v-model="form.fields[activateField].schema.length"
+                                        :min="0"
+                                        controls-position="right"
+                                        style="width: 100%"
                                     />
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item
-                                v-if="form.fields[activateField].schema.defaultType === 'INPUT'"
-                                :label="t('dynamic.designer.f_db_default')"
-                            >
-                                <el-input v-model="form.fields[activateField].schema.default" />
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_db_unsigned')">
-                                <el-switch v-model="form.fields[activateField].schema.unsigned" />
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_db_auto_increment')">
-                                <el-switch v-model="form.fields[activateField].schema.autoIncrement" />
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_db_comment')">
-                                <el-input v-model="form.fields[activateField].schema.comment" />
-                            </el-form-item>
+                                </el-form-item>
+                                <el-form-item
+                                    v-if="['decimal', 'float', 'double'].includes(form.fields[activateField].schema.type)"
+                                    :label="t('dynamic.designer.f_db_precision')"
+                                >
+                                    <el-input-number
+                                        v-model="form.fields[activateField].schema.precision"
+                                        :min="0"
+                                        controls-position="right"
+                                        style="width: 100%"
+                                    />
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_db_nullable')">
+                                    <el-switch v-model="form.fields[activateField].schema.nullable" />
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_db_default_type')">
+                                    <el-select v-model="form.fields[activateField].schema.defaultType" style="width: 100%">
+                                        <el-option v-for="(label, key) in defaultTypeOptions" :key="key" :label="label" :value="key" />
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item
+                                    v-if="form.fields[activateField].schema.defaultType === 'INPUT'"
+                                    :label="t('dynamic.designer.f_db_default')"
+                                >
+                                    <el-input v-model="form.fields[activateField].schema.default" />
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_db_unsigned')">
+                                    <el-switch v-model="form.fields[activateField].schema.unsigned" />
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_db_auto_increment')">
+                                    <el-switch v-model="form.fields[activateField].schema.autoIncrement" />
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_db_comment')">
+                                    <el-input v-model="form.fields[activateField].schema.comment" />
+                                </el-form-item>
+                            </template>
+
+                            <!-- 虚拟字段属性 (computed / remoteExpand) -->
+                            <template v-if="isVirtualField(activateField)">
+                                <el-divider content-position="left">{{ t('dynamic.designer.f_virtual_props') }}</el-divider>
+                                <!-- Computed template -->
+                                <template v-if="form.fields[activateField].render.design_type === 'computed'">
+                                    <el-form-item :label="t('dynamic.designer.f_computed_template')">
+                                        <el-input
+                                            type="textarea"
+                                            :rows="3"
+                                            v-model="form.fields[activateField].render.template"
+                                            :placeholder="`{price} * {quantity}`"
+                                        />
+                                    </el-form-item>
+                                    <div class="el-form-item__help" style="color: #909399; font-size: 12px; padding-left: 80px; margin-bottom: 12px">
+                                        {{ t('dynamic.designer.f_computed_template_help') }}<br />
+                                        <span
+                                            v-for="pf in templateFields"
+                                            :key="pf"
+                                            style="margin-right: 6px; cursor: pointer; color: var(--el-color-primary)"
+                                            @click="
+                                                form.fields[activateField].render.template =
+                                                    (form.fields[activateField].render.template || '') + `{${pf}}`
+                                            "
+                                            >{`{${pf}}`}</span
+                                        >
+                                    </div>
+                                </template>
+                                <!-- RemoteExpand: parent field + remote field -->
+                                <template v-if="form.fields[activateField].render.design_type === 'remoteExpand'">
+                                    <el-form-item :label="t('dynamic.designer.f_remote_expand_parent')">
+                                        <el-select
+                                            v-model="form.fields[activateField].render.parent_field"
+                                            filterable
+                                            clearable
+                                            :placeholder="t('dynamic.designer.f_remote_expand_parent_ph')"
+                                            style="width: 100%"
+                                            @change="onRemoteExpandParentChange"
+                                        >
+                                            <el-option v-for="opt in remoteSelectFields" :key="opt.value" :label="opt.label" :value="opt.value" />
+                                        </el-select>
+                                    </el-form-item>
+                                    <el-form-item :label="t('dynamic.designer.f_remote_expand_field')">
+                                        <el-select
+                                            v-model="form.fields[activateField].render.remote_field"
+                                            filterable
+                                            clearable
+                                            :disabled="!form.fields[activateField].render.parent_field"
+                                            :placeholder="t('dynamic.designer.f_remote_expand_field_ph')"
+                                            style="width: 100%"
+                                        >
+                                            <el-option v-for="opt in expandRemoteFieldOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                                        </el-select>
+                                    </el-form-item>
+                                    <div class="el-form-item__help" style="color: #909399; font-size: 12px; padding-left: 80px; margin-bottom: 12px">
+                                        {{ t('dynamic.designer.f_remote_expand_help') }}
+                                    </div>
+                                </template>
+                            </template>
 
                             <!-- 表格列属性 -->
                             <el-divider content-position="left">{{ t('dynamic.designer.f_table_props') }}</el-divider>
@@ -393,23 +463,25 @@
                                     />
                                 </template>
                             </template>
-                            <el-form-item :label="t('dynamic.designer.f_replacevalue')">
-                                <el-input
-                                    type="textarea"
-                                    :rows="2"
-                                    :model-value="form.fields[activateField].render._replaceValueStr"
-                                    @update:model-value="onDictInput(form.fields[activateField], $event)"
-                                    :placeholder='`{"0":"Disabled","1":"Enabled"}`'
-                                />
-                            </el-form-item>
-                            <el-form-item :label="t('dynamic.designer.f_custom')">
-                                <el-input
-                                    type="textarea"
-                                    :rows="2"
-                                    v-model="form.fields[activateField].render.column_custom"
-                                    placeholder='{"0":"danger","1":"success"}'
-                                />
-                            </el-form-item>
+                            <template v-if="!isVirtualField(activateField)">
+                                <el-form-item :label="t('dynamic.designer.f_replacevalue')">
+                                    <el-input
+                                        type="textarea"
+                                        :rows="2"
+                                        :model-value="form.fields[activateField].render._replaceValueStr"
+                                        @update:model-value="onDictInput(form.fields[activateField], $event)"
+                                        :placeholder="`{&quot;0&quot;:&quot;Disabled&quot;,&quot;1&quot;:&quot;Enabled&quot;}`"
+                                    />
+                                </el-form-item>
+                                <el-form-item :label="t('dynamic.designer.f_custom')">
+                                    <el-input
+                                        type="textarea"
+                                        :rows="2"
+                                        v-model="form.fields[activateField].render.column_custom"
+                                        placeholder='{"0":"danger","1":"success"}'
+                                    />
+                                </el-form-item>
+                            </template>
 
                             <!-- 表单属性 -->
                             <template v-if="hasFormProps(activateField)">
@@ -458,7 +530,7 @@
                                         style="width: 100%"
                                     >
                                         <el-option
-                                            v-for="f in (remoteFieldOptions[activateField] || [])"
+                                            v-for="f in remoteFieldOptions[activateField] || []"
                                             :key="f.name"
                                             :label="`${f.name} (${f.type || ''})`"
                                             :value="f.name"
@@ -474,7 +546,7 @@
                                         style="width: 100%"
                                     >
                                         <el-option
-                                            v-for="f in (remoteFieldOptions[activateField] || [])"
+                                            v-for="f in remoteFieldOptions[activateField] || []"
                                             :key="f.name"
                                             :label="`${f.name} (${f.type || ''})`"
                                             :value="f.name"
@@ -519,13 +591,7 @@
                         <el-checkbox v-model="item.sync" :label="getChangeDescription(item)" size="small" />
                     </div>
                 </el-scrollbar>
-                <el-alert
-                    :title="t('dynamic.designer.schema_sync_warning')"
-                    type="warning"
-                    :closable="false"
-                    show-icon
-                    style="margin-top: 12px"
-                />
+                <el-alert :title="t('dynamic.designer.schema_sync_warning')" type="warning" :closable="false" show-icon style="margin-top: 12px" />
             </template>
             <template #footer>
                 <el-button @click="showSchemaSync = false">{{ t('Cancel') }}</el-button>
@@ -547,13 +613,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive } from 'vue'
+import { ref, watch, reactive, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import Sortable from 'sortablejs'
+import type { SortableEvent } from 'sortablejs'
+import { range } from 'lodash-es'
 import Icon from '/@/components/icon/index.vue'
 import FormItem from '/@/components/formItem/index.vue'
 import createAxios from '/@/utils/axios'
-import { addDynamicConfig, editDynamicConfig, getDynamicConfigDetail, getDbTableFields, getMenuTree } from '/@/api/backend/dynamic'
+import {
+    addDynamicConfig,
+    editDynamicConfig,
+    getDynamicConfigDetail,
+    getDbTableFields,
+    getMenuTree,
+    getDynamicTableList,
+    getDynamicConfigById,
+} from '/@/api/backend/dynamic'
 import { index as adminIndex } from '/@/api/backend'
 import { handleAdminRoute } from '/@/utils/router'
 import {
@@ -594,26 +671,94 @@ const designerLang = ref<'zh-cn' | 'en'>('zh-cn')
 const activateField = ref(-1)
 const paletteActiveNames = ref(['common', 'base'])
 const showSchemaSync = ref(false)
+const draggingField = ref(false)
 
-watch(() => props.modelValue, (v) => {
-    show.value = v
-    if (v) initForm()
-})
+// Sortable template refs
+const paletteTabsRefs = ref<HTMLElement[]>([])
+const setPaletteRef = (el: any) => {
+    if (el) paletteTabsRefs.value.push(el)
+}
+const designWindowRef = ref<HTMLElement>()
+let sortableInstance: Sortable | null = null
+
+watch(
+    () => props.modelValue,
+    (v) => {
+        show.value = v
+        if (v) {
+            paletteTabsRefs.value = []
+            initForm().then(() => {
+                nextTick(() => setupSortable())
+            })
+        } else {
+            // Cleanup sortable when dialog closes
+            if (sortableInstance) {
+                sortableInstance.destroy()
+                sortableInstance = null
+            }
+        }
+    }
+)
 watch(show, (v) => emit('update:modelValue', v))
 
 const headerButtonOptions = ['refresh', 'add', 'edit', 'delete', 'unfold', 'comSearch', 'quickSearch', 'columnDisplay']
-const formTypeOptions = ['string', 'number', 'textarea', 'switch', 'datetime', 'date', 'time', 'year', 'select', 'selects', 'radio', 'checkbox', 'remoteSelect', 'remoteSelects', 'image', 'images', 'file', 'files', 'editor', 'password', 'array', 'city', 'icon', 'color']
+const formTypeOptions = [
+    'string',
+    'number',
+    'textarea',
+    'switch',
+    'datetime',
+    'date',
+    'time',
+    'year',
+    'select',
+    'selects',
+    'radio',
+    'checkbox',
+    'remoteSelect',
+    'remoteSelects',
+    'image',
+    'images',
+    'file',
+    'files',
+    'editor',
+    'password',
+    'array',
+    'city',
+    'icon',
+    'color',
+]
 
 const designTypeGroups = [
     { label: 'Common', types: ['pk', 'spk', 'switch', 'textarea', 'weigh', 'timestamp', 'remoteSelect'] },
-    { label: 'Base', types: ['string', 'number', 'float', 'image', 'file', 'radio', 'checkbox', 'select', 'editor', 'password', 'date', 'time', 'datetime', 'year'] },
-    { label: 'Senior', types: ['array', 'city', 'icon', 'color', 'images', 'files', 'selects', 'remoteSelects'] },
+    {
+        label: 'Base',
+        types: [
+            'string',
+            'number',
+            'float',
+            'image',
+            'file',
+            'radio',
+            'checkbox',
+            'select',
+            'editor',
+            'password',
+            'date',
+            'time',
+            'datetime',
+            'year',
+        ],
+    },
+    { label: 'Senior', types: ['array', 'city', 'icon', 'color', 'images', 'files', 'selects', 'remoteSelects', 'computed', 'remoteExpand'] },
 ]
 
 const menuTree = ref<any[]>([])
 const connectionOptions = ref<any[]>([])
 const tableOptions = ref<any[]>([])
 const remoteFieldOptions = ref<Record<number, any[]>>({})
+const detailTableOptions = ref<any[]>([])
+const detailFieldOptions = ref<{ prop: string; label: string }[]>([])
 
 /* ═══ Design Change Tracking (Phase 3) ═══ */
 
@@ -632,7 +777,10 @@ const designChange = ref<DesignChange[]>([])
  * Log a design change with CRUD-style dedup logic
  * Adapted from web/src/views/backend/crud/design.vue logTableDesignChange()
  */
-const logTableDesignChange = (data: DesignChange) => {
+ /** Virtual design types — never generate DDL designChange entries */
+ const VIRTUAL_DESIGN_TYPES = new Set(['computed', 'remoteExpand'])
+
+ const logTableDesignChange = (data: DesignChange) => {
     // Only track when editing existing configs
     if (!props.editId) return
     let push = true
@@ -739,12 +887,15 @@ const onFieldRename = (index: number) => {
     const originalName = field._originalProp || ''
     const currentName = field.schema.prop
     if (originalName && originalName !== currentName) {
-        logTableDesignChange({
-            type: 'change-field-name',
-            oldName: originalName,
-            newName: currentName,
-            sync: true,
-        })
+        // Skip designChange for virtual fields (no DB column)
+        if (!VIRTUAL_DESIGN_TYPES.has(field.render.design_type)) {
+            logTableDesignChange({
+                type: 'change-field-name',
+                oldName: originalName,
+                newName: currentName,
+                sync: true,
+            })
+        }
         field._originalProp = currentName
     }
 }
@@ -798,8 +949,16 @@ const ensureRemoteFieldOptions = async (idx: number) => {
     }
 }
 
-watch(activateField, (idx) => {
-    if (idx !== -1) ensureRemoteFieldOptions(idx)
+ watch(activateField, (idx) => {
+    if (idx !== -1) {
+        ensureRemoteFieldOptions(idx)
+        // For remoteExpand fields, also ensure parent field's remote options are loaded
+        const field = form.fields[idx]
+        if (field?.render.design_type === 'remoteExpand' && field.render.parent_field) {
+            const parentIdx = form.fields.findIndex((f) => f.schema.prop === field.render.parent_field)
+            if (parentIdx !== -1) ensureRemoteFieldOptions(parentIdx)
+        }
+    }
 })
 
 /* ═══ Utilities ═══ */
@@ -813,7 +972,9 @@ const normalizeLangValue = (raw: any): Record<string, string> => {
             try {
                 const obj = JSON.parse(trimmed)
                 return { 'zh-cn': obj['zh-cn'] || '', en: obj['en'] || '' }
-            } catch { /* fall through */ }
+            } catch {
+                /* fall through */
+            }
         }
         return { 'zh-cn': raw, en: '' }
     }
@@ -867,6 +1028,44 @@ const loadMenuTree = async () => {
     }
 }
 
+const loadDetailTableOptions = async () => {
+    try {
+        const res = await getDynamicTableList()
+        const list = res.data?.list ?? res.data?.data?.list ?? []
+        // 排除自身（不能选自己作为详情表）
+        detailTableOptions.value = props.editId ? list.filter((dt: any) => dt.id !== props.editId) : list
+    } catch {
+        detailTableOptions.value = []
+    }
+}
+
+/**
+ * 拉取详情表字段列表，填充外键选择器（不清空已选值）
+ */
+const loadDetailFields = async (id: number) => {
+    detailFieldOptions.value = []
+    if (!id) return
+    try {
+        const res = await getDynamicConfigById(id)
+        const cfg = (res.data?.data ?? res.data) as any
+        const fields = cfg?.formFields ?? []
+        detailFieldOptions.value = fields.map((f: any) => ({
+            prop: f.prop,
+            label: f.label || f.prop,
+        }))
+    } catch {
+        // ignore
+    }
+}
+
+/**
+ * 详情表切换时：清空外键 + 重新加载字段列表
+ */
+const onDetailTableChange = (id: number | string) => {
+    form.detail_foreign_key = ''
+    loadDetailFields(Number(id) || 0)
+}
+
 /* ═══ Field Model ═══ */
 
 interface PropBagItem {
@@ -909,6 +1108,10 @@ interface FieldRow {
         form_type: string
         form_validators: string[]
         form_input_attr: Record<string, any>
+        // Virtual field properties (computed/remoteExpand)
+        template?: string
+        parent_field?: string
+        remote_field?: string
     }
     remote: {
         table: string
@@ -918,7 +1121,7 @@ interface FieldRow {
     }
     table: Record<string, PropBagItem>
     form: Record<string, PropBagItem>
-    _originalProp?: string  // for rename tracking
+    _originalProp?: string // for rename tracking
 }
 
 /* ═══ Property Bag Builders ═══ */
@@ -969,7 +1172,7 @@ const flattenField = (field: FieldRow) => {
     for (const [key, item] of Object.entries(field.table)) {
         const fieldName = tablePropKeyMap[key]
         if (fieldName) {
-            (field.render as any)[fieldName] = item.value
+            ;(field.render as any)[fieldName] = item.value
         }
     }
     // Flatten form bag → form_validators + form_input_attr
@@ -1003,6 +1206,9 @@ const flattenField = (field: FieldRow) => {
             form_type: field.render.form_type,
             form_validators: field.render.form_validators,
             form_input_attr: field.render.form_input_attr,
+            template: field.render.template || null,
+            parent_field: field.render.parent_field || null,
+            remote_field: field.render.remote_field || null,
         },
         remote: { ...field.remote },
     }
@@ -1018,6 +1224,53 @@ const hasFormProps = (idx: number): boolean => {
     const field = form.fields[idx]
     if (!field?.form) return false
     return Object.keys(field.form).length > 0
+}
+
+const isVirtualField = (idx: number): boolean => {
+    const field = form.fields[idx]
+    if (!field) return false
+    return field.schema.type === 'virtual'
+}
+
+/** Get fields available as parent for remoteExpand (non-virtual fields with remoteSelect) */
+const remoteSelectFields = computed(() => {
+    return form.fields
+        .filter((f) => f.render.design_type === 'remoteSelect' || f.render.design_type === 'remoteSelects')
+        .map((f) => ({ label: `${f.schema.prop} (${f.render.label?.['zh-cn'] || f.schema.prop})`, value: f.schema.prop }))
+})
+
+/** Get available fields for template reference (all non-virtual fields) */
+const templateFields = computed(() => {
+    return form.fields.filter((f) => f.schema.type !== 'virtual').map((f) => f.schema.prop)
+})
+
+/** Remote field options for remoteExpand — derived from parent field's loaded DB fields */
+const expandRemoteFieldOptions = computed(() => {
+    const field = form.fields[activateField.value]
+    if (!field || field.render.design_type !== 'remoteExpand') return []
+    const parentProp = field.render.parent_field
+    if (!parentProp) return []
+    const parentIdx = form.fields.findIndex((f) => f.schema.prop === parentProp)
+    if (parentIdx === -1) return []
+    const fields = remoteFieldOptions.value[parentIdx]
+    if (!fields) return []
+    return fields.map((f: any) => ({
+        label: f.comment ? `${f.name} (${f.comment})` : f.name,
+        value: f.name,
+    }))
+})
+
+/** Ensure parent field's remote table fields are loaded when parent_field changes */
+const onRemoteExpandParentChange = (parentProp: string) => {
+    // Clear current remote_field selection
+    const field = form.fields[activateField.value]
+    if (field) field.render.remote_field = null
+
+    if (!parentProp) return
+    const parentIdx = form.fields.findIndex((f) => f.schema.prop === parentProp)
+    if (parentIdx !== -1) {
+        ensureRemoteFieldOptions(parentIdx)
+    }
 }
 
 /**
@@ -1044,6 +1297,8 @@ const form = reactive({
     quick_search_fields: [] as string[],
     header_buttons: ['refresh', 'add', 'edit', 'delete', 'comSearch', 'quickSearch', 'columnDisplay'] as string[],
     row_buttons: ['edit', 'delete'] as string[],
+    detail_table_id: 0 as number,
+    detail_foreign_key: '' as string,
     default_items: null as any,
     remark: { 'zh-cn': '', en: '' } as Record<string, string>,
     status: 'enabled',
@@ -1057,11 +1312,23 @@ const initForm = async () => {
     activateField.value = -1
     designChange.value = []
     Object.assign(form, {
-        id: 0, name: '', title: { 'zh-cn': '', en: '' }, db_table: '', db_connection: '',
-        pk: 'id', default_sort_field: '', default_sort_order: 'desc',
-        quick_search_fields: [], header_buttons: ['refresh', 'add', 'edit', 'delete', 'comSearch', 'quickSearch', 'columnDisplay'],
-        row_buttons: ['edit', 'delete'], default_items: null, remark: { 'zh-cn': '', en: '' }, status: 'enabled',
+        id: 0,
+        name: '',
+        title: { 'zh-cn': '', en: '' },
+        db_table: '',
+        db_connection: '',
+        pk: 'id',
+        default_sort_field: '',
+        default_sort_order: 'desc',
+        quick_search_fields: [],
+        header_buttons: ['refresh', 'add', 'edit', 'delete', 'comSearch', 'quickSearch', 'columnDisplay'],
+        row_buttons: ['edit', 'delete'],
+        default_items: null,
+        remark: { 'zh-cn': '', en: '' },
+        status: 'enabled',
         menu_pid: 0,
+        detail_table_id: 0,
+        detail_foreign_key: '',
         fields: [],
     })
     designerLang.value = 'zh-cn'
@@ -1069,6 +1336,7 @@ const initForm = async () => {
     loadMenuTree()
     loadConnectionOptions()
     loadTableOptions()
+    loadDetailTableOptions()
 
     if (props.editId) {
         loading.value = true
@@ -1088,10 +1356,23 @@ const initForm = async () => {
             form.menu_pid = row.menu_pid || 0
             form.header_buttons = row.header_buttons || form.header_buttons
             form.row_buttons = row.row_buttons || form.row_buttons
+            form.detail_table_id = row.detail_table_id || 0
+            form.detail_foreign_key = row.detail_foreign_key || ''
+            // 若已配置详情表，预加载其字段列表（不清空已保存的外键值）
+            if (form.detail_table_id) {
+                loadDetailFields(form.detail_table_id)
+            }
             form.default_items = row.default_items
 
             const qsf = row.quick_search_fields
-            form.quick_search_fields = Array.isArray(qsf) ? qsf : (qsf ? String(qsf).split(',').map((s: string) => s.trim()).filter(Boolean) : [])
+            form.quick_search_fields = Array.isArray(qsf)
+                ? qsf
+                : qsf
+                  ? String(qsf)
+                        .split(',')
+                        .map((s: string) => s.trim())
+                        .filter(Boolean)
+                  : []
 
             if (row.fields && Array.isArray(row.fields)) {
                 form.fields = row.fields.map((f: any) => {
@@ -1102,7 +1383,13 @@ const initForm = async () => {
                         const rv = f.render.column_replace_value
                         const rvStr = rv ? (typeof rv === 'string' ? rv : JSON.stringify(rv)) : ''
                         let ia = f.render.form_input_attr
-                        if (typeof ia === 'string') { try { ia = JSON.parse(ia || '{}') } catch { ia = {} } }
+                        if (typeof ia === 'string') {
+                            try {
+                                ia = JSON.parse(ia || '{}')
+                            } catch {
+                                ia = {}
+                            }
+                        }
                         if (!ia) ia = {}
 
                         const fieldRow: FieldRow = {
@@ -1137,6 +1424,9 @@ const initForm = async () => {
                                 form_type: f.render.form_type || dt,
                                 form_validators: f.render.form_validators || [],
                                 form_input_attr: ia,
+                                template: f.render.template ?? null,
+                                parent_field: f.render.parent_field ?? null,
+                                remote_field: f.render.remote_field ?? null,
                             },
                             remote: {
                                 table: f.remote?.table || ia.remote_table || '',
@@ -1203,6 +1493,9 @@ const initForm = async () => {
                                 form_type: f.form_type || dt,
                                 form_validators: f.form_validators || [],
                                 form_input_attr: ia,
+                                template: f.template ?? null,
+                                parent_field: f.parent_field ?? null,
+                                remote_field: f.remote_field ?? null,
                             },
                             remote: {
                                 table: ia.remote_table || '',
@@ -1241,7 +1534,7 @@ const initForm = async () => {
 
 /* ═══ Field Operations ═══ */
 
-const onAddFieldFromTemplate = (template: FieldTemplate) => {
+const onAddFieldFromTemplate = (template: FieldTemplate, insertIndex?: number) => {
     const base = createFieldFromTemplate(template)
     const newField: FieldRow = {
         schema: base.schema,
@@ -1265,32 +1558,127 @@ const onAddFieldFromTemplate = (template: FieldTemplate) => {
         }),
         _originalProp: base.schema.prop,
     }
-    form.fields.push(newField)
-    activateField.value = form.fields.length - 1
 
-    logTableDesignChange({
-        type: 'add-field',
-        oldName: '',
-        newName: base.schema.prop,
-        sync: true,
-    })
+    if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= form.fields.length) {
+        form.fields.splice(insertIndex, 0, newField)
+        activateField.value = insertIndex
+    } else {
+        form.fields.push(newField)
+        activateField.value = form.fields.length - 1
+    }
+
+    // Skip designChange for virtual fields (no DB column)
+    if (!VIRTUAL_DESIGN_TYPES.has(template.designType)) {
+        logTableDesignChange({
+            type: 'add-field',
+            oldName: '',
+            newName: base.schema.prop,
+            sync: true,
+        })
+    }
 }
 
 const onDelField = (index: number) => {
     const field = form.fields[index]
     if (field) {
         const name = field.schema.prop
-        logTableDesignChange({
-            type: 'del-field',
-            oldName: name,
-            newName: '',
-            sync: true,
-        })
+        // Skip designChange for virtual fields (no DB column)
+        if (!VIRTUAL_DESIGN_TYPES.has(field.render.design_type)) {
+            logTableDesignChange({
+                type: 'del-field',
+                oldName: name,
+                newName: '',
+                sync: true,
+            })
+        }
     }
     form.fields.splice(index, 1)
     if (activateField.value >= form.fields.length) {
         activateField.value = form.fields.length - 1
     }
+}
+
+/**
+ * Set up SortableJS drag-and-drop for the field designer.
+ * - Palette groups: clone-mode drag source (drag field type to design window)
+ * - Design window: receiving end (onAdd = new field, onEnd = reorder)
+ *
+ * Pattern follows CRUD designer: group 'design-field' shared between source and target.
+ */
+interface SortableEvt extends SortableEvent {
+    originalEvent?: Event & { dataTransfer?: DataTransfer }
+}
+
+const setupSortable = () => {
+    // Destroy previous instance if re-initializing
+    if (sortableInstance) {
+        sortableInstance.destroy()
+        sortableInstance = null
+    }
+
+    const dw = designWindowRef.value
+    if (!dw) return
+
+    // Design window — receives palette drops + allows reordering
+    sortableInstance = Sortable.create(dw, {
+        group: 'design-field',
+        animation: 200,
+        filter: '.design-field-empty',
+        onAdd: (evt: SortableEvt) => {
+            const groupName = evt.originalEvent?.dataTransfer?.getData('name') as keyof typeof fieldTemplates | ''
+            if (!groupName) {
+                evt.item.remove()
+                return
+            }
+
+            const group = fieldTemplates[groupName]
+            const template = group?.[evt.oldIndex!]
+            if (template) {
+                onAddFieldFromTemplate(template, evt.newIndex!)
+            }
+            // Remove the cloned DOM element (we manage state via Vue array)
+            evt.item.remove()
+            // Reset DOM order to match Vue array
+            nextTick(() => {
+                sortableInstance?.sort(range(form.fields.length).map((v) => v.toString()))
+            })
+        },
+        onEnd: (evt) => {
+            if (evt.oldIndex === evt.newIndex) return
+            const temp = form.fields[evt.oldIndex!]
+            form.fields.splice(evt.oldIndex!, 1)
+            form.fields.splice(evt.newIndex!, 0, temp)
+            // Reset DOM order to match Vue array
+            nextTick(() => {
+                sortableInstance?.sort(range(form.fields.length).map((v) => v.toString()))
+            })
+        },
+    })
+
+    // Palette groups — clone-mode drag sources
+    const groupKeys = Object.keys(fieldTemplates)
+    paletteTabsRefs.value.forEach((el, index) => {
+        const groupName = groupKeys[index]
+        if (!groupName) return
+        Sortable.create(el, {
+            sort: false,
+            group: {
+                name: 'design-field',
+                pull: 'clone',
+                put: false,
+            },
+            animation: 200,
+            setData: (dataTransfer) => {
+                dataTransfer.setData('name', groupName)
+            },
+            onStart: () => {
+                draggingField.value = true
+            },
+            onEnd: () => {
+                draggingField.value = false
+            },
+        })
+    })
 }
 
 const onDesignTypeChange = (newType: string, index: number) => {
@@ -1308,9 +1696,9 @@ const onDesignTypeChange = (newType: string, index: number) => {
         oldFormValues[key] = item.value
     }
 
-    // Rebuild bags
+    // Rebuild bags (render type resets to new type's default, other props preserved)
     field.table = buildTableBag(newType, {
-        column_render: oldTableValues.render,
+        column_render: null,
         column_operator: oldTableValues.operator,
         column_sortable: oldTableValues.sortable,
         column_com_search_render: oldTableValues.comSearchRender,
@@ -1346,13 +1734,15 @@ const onDesignTypeChange = (newType: string, index: number) => {
     field.render.form_type = newType
     field.render.design_type = newType
 
-    // Track as attr change (schema changed)
-    logTableDesignChange({
-        type: 'change-field-attr',
-        oldName: field.schema.prop,
-        newName: '',
-        sync: true,
-    })
+    // Track as attr change (schema changed) — skip virtual fields (no DB column)
+    if (!VIRTUAL_DESIGN_TYPES.has(newType)) {
+        logTableDesignChange({
+            type: 'change-field-attr',
+            oldName: field.schema.prop,
+            newName: '',
+            sync: true,
+        })
+    }
 }
 
 const onDictInput = (row: FieldRow, val: string) => {
@@ -1556,18 +1946,22 @@ const doSave = async () => {
         display: flex;
         align-items: center;
         padding: 6px 8px;
-        cursor: pointer;
+        cursor: grab;
         border-radius: 4px;
         font-size: 13px;
         transition: background 0.2s;
         &:hover {
             background: var(--el-color-primary-light-9);
         }
+        &:active {
+            cursor: grabbing;
+        }
     }
 }
 .design-window {
     min-height: 300px;
     padding: 8px;
+    border: v-bind('draggingField ? "1px dashed var(--el-color-primary)" : "1px solid transparent"');
     .design-field-box {
         display: flex;
         align-items: center;
@@ -1585,6 +1979,24 @@ const doSave = async () => {
             border-color: var(--el-color-primary);
             background: var(--el-color-primary-light-9);
         }
+    }
+    // Sortable drag ghost (clone from palette)
+    > .palette-item {
+        opacity: 0.8;
+        border: 1px dashed var(--el-color-primary);
+        border-radius: 4px;
+        padding: 6px 8px;
+        margin-bottom: 6px;
+        background: var(--el-color-primary-light-9);
+    }
+    // Sortable placeholder
+    .sortable-ghost {
+        opacity: 0.4;
+        background: var(--el-color-primary-light-8);
+    }
+    .sortable-chosen {
+        cursor: grabbing;
+        opacity: 0.7;
     }
     .design-field-name,
     .design-field-comment {
