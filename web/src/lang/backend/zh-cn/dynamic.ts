@@ -120,5 +120,27 @@ export default {
         schema_change_add_tip: ' => 新增',
         schema_change_rename_tip: ' => 重命名为',
         schema_change_del_tip: ' => 删除',
+        // 详情表配置
+        detail_table: '详情表',
+        detail_table_ph: '选择详情数据表',
+        detail_fk: '过滤外键',
+        detail_fk_ph: '如：order_id（详情表中引用本表主键的字段）',
+        // 虚拟字段属性
+        type_computed: '计算字段',
+        type_remote_expand: '远程扩展字段',
+        render_currency: '货币',
+        f_virtual_props: '虚拟字段属性',
+        f_computed_template: '计算模板',
+        f_computed_template_help: '使用 {字段名} 引用同行数据，支持算术运算和字符串拼接。点击下方变量名快速插入：',
+        f_remote_expand_parent: '父级字段',
+        f_remote_expand_parent_ph: '选择 remoteSelect 父级字段',
+        f_remote_expand_field: '远程字段名',
+        f_remote_expand_field_ph: '如：email、phone',
+        f_remote_expand_help: '从父级 remoteSelect 关联的数据表中额外获取指定字段，列名格式：父字段__远程字段',
+    },
+    detail: {
+        title: '详情',
+        btn_title: '详情',
+        loading: '加载中...',
     },
 }

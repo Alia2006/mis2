@@ -120,5 +120,27 @@ export default {
         schema_change_add_tip: ' => new',
         schema_change_rename_tip: ' => renamed to',
         schema_change_del_tip: ' => deleted',
+        // Detail table config
+        detail_table: 'Detail Table',
+        detail_table_ph: 'Select detail data table',
+        detail_fk: 'Filter FK',
+        detail_fk_ph: 'e.g. order_id (field in detail table referencing this PK)',
+        // Virtual field properties
+        type_computed: 'Computed Field',
+        type_remote_expand: 'Remote Expand',
+        render_currency: 'Currency',
+        f_virtual_props: 'Virtual Field Properties',
+        f_computed_template: 'Template',
+        f_computed_template_help: 'Use {field_name} to reference same-row values. Supports arithmetic and string concatenation. Click a variable to insert:',
+        f_remote_expand_parent: 'Parent Field',
+        f_remote_expand_parent_ph: 'Select a remoteSelect parent field',
+        f_remote_expand_field: 'Remote Field',
+        f_remote_expand_field_ph: 'e.g. email, phone',
+        f_remote_expand_help: 'Fetches an additional field from the parent remoteSelect table. Column prop: parent__remote_field',
+    },
+    detail: {
+        title: 'Detail',
+        btn_title: 'Detail',
+        loading: 'Loading...',
     },
 }
