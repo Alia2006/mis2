@@ -23,7 +23,7 @@ use Throwable;
 class Config extends Backend
 {
     protected object $model;
-    protected array $noNeedPermission = ['getConfig', 'getTableFields', 'getMenuTree'];
+    protected array $noNeedPermission = ['getConfig', 'getConfigById', 'getTableList', 'getTableFields', 'getMenuTree'];
 
     /**
      * 表级多语言字段（存储 JSON: {"zh-cn":"...","en":"..."}）
@@ -326,6 +326,47 @@ class Config extends Backend
     }
 
     /**
+     * 按配置 ID 获取前端表格配置（详情抽屉用）
+     * GET /admin/dynamic.Config/getConfigById?id=5
+     */
+    public function getConfigById(): void
+    {
+        $id = $this->request->param('id');
+        if (!$id) {
+            $this->error('参数 id 不能为空');
+        }
+
+        $config = TableConfig::find($id);
+        if (!$config || $config->status !== 'enabled') {
+            $this->error('动态表格配置不存在或已禁用');
+        }
+
+        $this->success('', [
+            'data' => $this->buildFrontendConfig($config),
+        ]);
+    }
+
+    /**
+     * 获取已启用的动态表列表（设计器选择详情表用）
+     * GET /admin/dynamic.Config/getTableList
+     */
+    public function getTableList(): void
+    {
+        $list = TableConfig::where('status', 'enabled')
+            ->field(['id', 'name', 'title', 'pk'])
+            ->order('id', 'desc')
+            ->select()
+            ->toArray();
+
+        // 解析多语言标题
+        foreach ($list as &$item) {
+            $item['title'] = $this->resolveLangValue($item['title'] ?? '');
+        }
+
+        $this->success('', ['list' => $list]);
+    }
+
+    /**
      * 将数据库配置记录转换为前端 DynamicTableConfig 结构
      * 兼容新格式 {schema, render, remote} 和旧扁平格式
      */
@@ -403,12 +444,37 @@ class Config extends Backend
                 $col['operatorPlaceholder'] = $this->resolveLangValue($colOpPH);
             }
 
+            // Virtual field properties (computed / remoteExpand)
+            if (isset($field['schema'])) {
+                $schemaType = $field['schema']['type'] ?? '';
+                if ($schemaType === 'virtual') {
+                    $designType = $render['design_type'] ?? '';
+                    if ($designType === 'computed') {
+                        // Computed column: include template for frontend evaluation
+                        $col['template'] = $render['template'] ?? '';
+                        $col['render'] = 'computed';
+                    } elseif ($designType === 'remoteExpand') {
+                        // RemoteExpand: prop becomes {parent}__{remote_field}
+                        $parentField = $render['parent_field'] ?? '';
+                        $remoteField = $render['remote_field'] ?? '';
+                        if ($parentField && $remoteField) {
+                            $col['prop'] = $parentField . '__' . $remoteField;
+                        }
+                        $col['render'] = 'none';
+                    }
+                }
+            }
+
             $columns[] = $col;
         }
 
         // ─── 构建表单字段 ───
         $formFields = [];
         foreach ($fields as $field) {
+            // Skip virtual fields (computed/remoteExpand) — display only, no form input
+            if (isset($field['schema']) && ($field['schema']['type'] ?? '') === 'virtual') {
+                continue;
+            }
             // 格式检测 + 数据提取
             if (isset($field['schema'])) {
                 $schema  = $field['schema'];
@@ -493,6 +559,39 @@ class Config extends Backend
             $quickSearchPlaceholder = implode(', ', $quickSearchFields);
         }
 
+        // 构建 dblClickNotEditColumn：switch 类型字段双击直接切换，不打开编辑弹窗
+        $dblClickNotEditColumn = [null];
+        foreach ($fields as $field) {
+            // 格式检测
+            if (isset($field['schema'])) {
+                $render = $field['render'] ?? [];
+                if (($render['column_render'] ?? '') === 'switch') {
+                    $dblClickNotEditColumn[] = $field['schema']['prop'] ?? '';
+                }
+            } else {
+                if (($field['column_render'] ?? '') === 'switch') {
+                    $dblClickNotEditColumn[] = $field['prop'] ?? '';
+                }
+            }
+        }
+
+        // ─── 构建详情表配置 ───
+        $detail = null;
+        if (!empty($config->detail_table_id)) {
+            $detailConfig = TableConfig::where('id', $config->detail_table_id)
+                ->where('status', 'enabled')
+                ->find();
+            if ($detailConfig) {
+                $detail = [
+                    'tableId'    => (int)$config->detail_table_id,
+                    'tableName'  => $detailConfig->name,
+                    'title'      => $this->resolveLangValue($detailConfig->getData('title')),
+                    'foreignKey' => $config->detail_foreign_key ?: $config->pk,
+                    'pk'         => $detailConfig->pk ?: 'id',
+                ];
+            }
+        }
+
         return [
             'name'                   => $config->name,
             'title'                  => $this->resolveLangValue($config->getData('title')),
@@ -505,8 +604,10 @@ class Config extends Backend
             'headerButtons'          => $headerButtons,
             'rowButtonNames'         => $rowButtons,
             'defaultItems'           => $config->default_items ?: [],
+            'dblClickNotEditColumn'  => $dblClickNotEditColumn,
             'columns'                => $columns,
             'formFields'             => $formFields,
+            'detail'                 => $detail,
         ];
     }
 
@@ -793,6 +894,10 @@ class Config extends Backend
             if (isset($field['schema'])) {
                 // 新结构格式
                 $schema = $field['schema'];
+                // Virtual fields (computed/remoteExpand) are display-only, skip DDL
+                if (($schema['type'] ?? '') === 'virtual') {
+                    continue;
+                }
                 $result[] = [
                     'name'          => $schema['prop'] ?? '',
                     'type'          => $schema['type'] ?? 'varchar',
@@ -810,6 +915,10 @@ class Config extends Backend
             } else {
                 // 旧扁平格式 — 从 form_input_attr 等推断 schema 属性
                 $designType = $field['design_type'] ?? 'string';
+                // Virtual fields are display-only, skip DDL
+                if (in_array($designType, ['computed', 'remoteExpand'])) {
+                    continue;
+                }
                 $typeMap = [
                     'pk' => 'int', 'spk' => 'bigint', 'weigh' => 'int',
                     'string' => 'varchar', 'password' => 'varchar', 'textarea' => 'varchar',
@@ -860,8 +969,18 @@ class Config extends Backend
         $comment    = $this->resolveLangValue($configData['title'] ?? '');
         if (!$comment) $comment = $tableName;
 
-        // 构建 CRUD Helper 格式的字段数组
+        // 构建 CRUD Helper 格式的字段数组（buildCrudFields 已自动跳过 virtual 字段）
         $crudFields = $this->buildCrudFields($configData['fields'] ?? []);
+
+        // 过滤掉 virtual 字段相关的 designChange，防止触发虚假 DDL 操作
+        $virtualProps = $this->getVirtualFieldProps($configData['fields'] ?? []);
+        if ($virtualProps) {
+            $designChange = array_values(array_filter($designChange, function ($change) use ($virtualProps) {
+                $newName = $change['newName'] ?? '';
+                $oldName = $change['oldName'] ?? '';
+                return !in_array($newName, $virtualProps) && !in_array($oldName, $virtualProps);
+            }));
+        }
 
         // 委托给 CRUD Helper::handleTableDesign()
         $tableData = [
@@ -872,6 +991,29 @@ class Config extends Backend
         ];
 
         Helper::handleTableDesign($tableData, $crudFields);
+    }
+
+    /**
+     * 获取所有 virtual 字段的 prop 名称列表
+     * Virtual 字段（computed / remoteExpand）仅为前端展示，不参与 DDL
+     *
+     * @return string[]
+     */
+    protected function getVirtualFieldProps(array $fields): array
+    {
+        $props = [];
+        foreach ($fields as $field) {
+            if (isset($field['schema'])) {
+                if (($field['schema']['type'] ?? '') === 'virtual') {
+                    $props[] = $field['schema']['prop'] ?? '';
+                }
+            } else {
+                if (in_array($field['design_type'] ?? '', ['computed', 'remoteExpand'])) {
+                    $props[] = $field['prop'] ?? '';
+                }
+            }
+        }
+        return array_filter($props, fn($p) => $p !== '');
     }
 
     /**
