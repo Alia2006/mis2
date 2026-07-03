@@ -2,9 +2,12 @@
 type TableRenderer =
     | 'buttons'
     | 'color'
+    | 'computed'
+    | 'currency'
     | 'customRender'
     | 'customTemplate'
     | 'datetime'
+    | 'file'
     | 'icon'
     | 'image'
     | 'images'
