@@ -11,14 +11,18 @@
         <Table ref="tableRef"></Table>
 
         <PopupForm :fields="config?.formFields ?? []" />
+
+        <!-- 详情抽屉（从下往上滑出，显示关联详情表） -->
+        <DetailDrawer v-if="hasDetail" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, provide, onMounted, onActivated, useTemplateRef, nextTick, watch } from 'vue'
+import { ref, provide, onMounted, onActivated, useTemplateRef, nextTick, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PopupForm from './popupForm.vue'
+import DetailDrawer from './detailDrawer.vue'
 import { baTableApi } from '/@/api/common'
 import createAxios from '/@/utils/axios'
 import { defaultOptButtons } from '/@/components/table'
@@ -38,6 +42,7 @@ const tableRef = useTemplateRef('tableRef')
 
 const configReady = ref(false)
 const config = ref<DynamicTableConfig>()
+const hasDetail = computed(() => !!config.value?.detail)
 
 /**
  * 自定义 API 类：在标准 baTableApi 基础上自动附加 table 参数
@@ -135,13 +140,38 @@ const loadConfig = async () => {
 
         // 构造列
         const selectionColumn = { type: 'selection', align: 'center', operator: false }
+
+        // 行操作按钮（排除 detail，detail 由配置驱动单独注入）
+        const rowBtnNames = (cfg.rowButtonNames || []).filter((n) => n !== 'detail')
+        const optBtns = defaultOptButtons(rowBtnNames)
+
+        // 详情按钮：配置了详情表时自动添加
+        if (cfg.detail) {
+            optBtns.unshift({
+                render: 'tipButton',
+                name: 'detail',
+                title: t('dynamic.detail.btn_title'),
+                text: '',
+                type: 'info',
+                icon: 'fa fa-list',
+                class: 'table-row-detail',
+                disabledTip: false,
+                click: (row: TableRow) => {
+                    baTable.table.extend = baTable.table.extend || {}
+                    baTable.table.extend.showDetail = true
+                    baTable.table.extend.detailRowId = row[cfg.pk!]
+                    baTable.table.extend.detailConfig = cfg.detail!
+                },
+            })
+        }
+
         const operateColumn = {
             label: t('Operate'),
             align: 'center',
-            width: 130,
+            width: optBtns.length > 2 ? 170 : 130,
             fixed: 'right',
             render: 'buttons',
-            buttons: defaultOptButtons(cfg.rowButtonNames),
+            buttons: optBtns,
             operator: false,
         }
 
@@ -150,6 +180,7 @@ const loadConfig = async () => {
         baTable.table.pk = cfg.pk
         baTable.table.column = [selectionColumn, ...cfg.columns, operateColumn] as any
         baTable.table.defaultOrder = cfg.defaultOrder
+        baTable.table.dblClickNotEditColumn = cfg.dblClickNotEditColumn || [undefined]
         baTable.form.defaultItems = cfg.defaultItems || {}
 
         configReady.value = true

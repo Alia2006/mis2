@@ -14,6 +14,28 @@ export const getDynamicConfig = (name: string) => {
 }
 
 /**
+ * 按配置 ID 获取表格配置（详情抽屉用）
+ * GET /admin/dynamic.Config/getConfigById?id=5
+ */
+export const getDynamicConfigById = (id: number) => {
+    return createAxios<DynamicTableConfig>({
+        url: '/admin/dynamic.Config/getConfigById',
+        method: 'get',
+        params: { id },
+    })
+}
+
+/**
+ * 获取已启用的动态表列表（设计器选择详情表用）
+ */
+export const getDynamicTableList = () => {
+    return createAxios({
+        url: '/admin/dynamic.Config/getTableList',
+        method: 'get',
+    })
+}
+
+/**
  * 获取单条配置详情（含字段）
  */
 export const getDynamicConfigDetail = (id: number) => {
