@@ -95,4 +95,11 @@ export default {
     ArrayKey: 'Key',
     ArrayValue: 'Value',
     'No data': 'No data',
+    'Zoom in': 'Zoom in',
+    'Zoom out': 'Zoom out',
+    'Reset zoom': 'Reset zoom',
+    'Open in new tab': 'Open in new tab',
+    'PDF loading': 'PDF loading',
+    'PDF load failed': 'PDF load failed',
+    'Click to preview PDF': 'Click to preview PDF',
 }

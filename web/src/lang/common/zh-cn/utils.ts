@@ -93,4 +93,11 @@ export default {
     ArrayKey: '键名',
     ArrayValue: '键值',
     'No data': '无数据',
+    'Zoom in': '放大',
+    'Zoom out': '缩小',
+    'Reset zoom': '恢复大小',
+    'Open in new tab': '新窗口打开',
+    'PDF loading': 'PDF 加载中',
+    'PDF load failed': 'PDF 加载失败',
+    'Click to preview PDF': '点击预览 PDF',
 }
