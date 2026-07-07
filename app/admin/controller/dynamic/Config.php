@@ -460,7 +460,11 @@ class Config extends Backend
                         if ($parentField && $remoteField) {
                             $col['prop'] = $parentField . '__' . $remoteField;
                         }
-                        $col['render'] = 'none';
+                        // Respect user-selected render (e.g. currency, tag, datetime);
+                        // only default to 'none' if no render was explicitly set
+                        if (empty($col['render'])) {
+                            $col['render'] = 'none';
+                        }
                     }
                 }
             }
