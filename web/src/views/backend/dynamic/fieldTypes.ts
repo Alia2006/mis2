@@ -31,6 +31,8 @@ const tableBaseAttr = {
             tags: 'Tags',
             url: 'URL',
             datetime: t('utils.time date'),
+            date: t('utils.date'),
+            time: t('utils.time'),
             color: t('utils.color'),
             computed: t('dynamic.designer.type_computed'),
             currency: t('dynamic.designer.render_currency'),
@@ -335,6 +337,8 @@ export const designTypes: Record<string, {
         name: t('utils.year') + t('utils.choice'),
         table: {
             width: widthAttr(),
+            render: getTableAttr('render', 'datetime'),
+            timeFormat: { type: 'string', value: 'yyyy' },
             operator: getTableAttr('operator', 'RANGE'),
             sortable: getTableAttr('sortable', 'custom'),
         },
@@ -347,6 +351,8 @@ export const designTypes: Record<string, {
         name: t('utils.date') + t('utils.choice'),
         table: {
             width: widthAttr(),
+            render: getTableAttr('render', 'date'),
+            timeFormat: { type: 'string', value: 'yyyy-mm-dd' },
             operator: getTableAttr('operator', 'RANGE'),
             comSearchRender: getTableAttr('comSearchRender', 'date'),
             comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
@@ -361,6 +367,8 @@ export const designTypes: Record<string, {
         name: t('utils.time') + t('utils.choice'),
         table: {
             width: widthAttr(),
+            render: getTableAttr('render', 'time'),
+            timeFormat: { type: 'string', value: 'hh:MM:ss' },
             operator: getTableAttr('operator', 'RANGE'),
             comSearchRender: getTableAttr('comSearchRender', 'time'),
             comSearchInputAttr: getTableAttr('comSearchInputAttr', ''),
