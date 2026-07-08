@@ -84,6 +84,7 @@
                 <img :src="state.preview.url" class="ba-upload-preview-img" alt="" />
             </div>
         </el-dialog>
+        <PdfPreview v-model="state.pdfPreview.show" :url="state.pdfPreview.url" :title="state.pdfPreview.title" :filename="state.pdfPreview.filename" />
         <SelectFile v-model="state.selectFile.show" v-bind="state.selectFile" @choice="onChoice" />
     </div>
 </template>
@@ -97,6 +98,7 @@ import { stringToArray } from '/@/components/baInput/helper'
 import { fullUrl, arrayFullUrl, getFileNameFromPath, getArrayKey } from '/@/utils/common'
 import { fileUpload } from '/@/api/common'
 import SelectFile from '/@/components/baInput/components/selectFile.vue'
+import PdfPreview from '/@/components/pdfPreview/index.vue'
 import { uuid } from '/@/utils/random'
 import { cloneDeep, isEmpty } from 'lodash-es'
 import type { AxiosProgressEvent } from 'axios'
@@ -291,6 +293,13 @@ const state: {
         show: boolean
         url: string
     }
+    // PDF 预览弹窗
+    pdfPreview: {
+        show: boolean
+        url: string
+        title: string
+        filename: string
+    }
     // 文件列表
     fileList: UploadFileExt[]
     // 绑定到 el-upload 的属性对象
@@ -313,6 +322,12 @@ const state: {
     preview: {
         show: false,
         url: '',
+    },
+    pdfPreview: {
+        show: false,
+        url: '',
+        title: '',
+        filename: '',
     },
     fileList: [],
     attrs: {},
@@ -405,12 +420,22 @@ const onElPreview = (file: UploadFileExt) => {
     if (!file || !file.serverUrl) {
         return
     }
+    const fileUrl = fullUrl(file.serverUrl)
     if (props.type == 'file' || props.type == 'files') {
-        window.open(fullUrl(file.serverUrl))
+        // PDF 文件在系统内预览
+        const cleanUrl = file.serverUrl!.split('?')[0].split('#')[0]
+        if (cleanUrl.toLowerCase().endsWith('.pdf')) {
+            state.pdfPreview.show = true
+            state.pdfPreview.url = fileUrl
+            state.pdfPreview.title = file.name || t('utils.preview')
+            state.pdfPreview.filename = file.name || ''
+            return
+        }
+        window.open(fileUrl)
         return
     }
     state.preview.show = true
-    state.preview.url = fullUrl(file.serverUrl)
+    state.preview.url = fileUrl
 }
 
 const onElExceed = (files: UploadUserFile[]) => {
