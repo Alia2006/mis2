@@ -23,7 +23,7 @@ return [
     'gateway'        => [
         'protocol'             => 'websocket', // 协议，支持 websocket text frame tcp
         'ip'                   => '0.0.0.0', // 监听地址
-        'port'                 => '2828', // 监听端口
+        'port'                 => '8031', // 监听端口（与 Nginx /ws/ 反代对齐）
         'name'                 => 'baWebSocketGateway', // 进程名称
         'count'                => 2, // 进程数
         'lanIp'                => '127.0.0.1',

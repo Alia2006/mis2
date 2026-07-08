@@ -15,7 +15,7 @@ return [
     'option'       => [
         'protocol' => 'http', // 协议，支持 tcp udp unix http websocket text
         'ip'       => '0.0.0.0', // 监听地址
-        'port'     => '8000', // 监听端口
+        'port'     => '8030', // 监听端口（与 Nginx /api/ 反代对齐）
         'name'     => 'baHttpWorker', // Worker实例名称
         'count'    => 2, // 进程数
         'pidFile'  => Filesystem::fsFit(runtime_path() . 'worker/http.pid'), // 进程ID存储位置
