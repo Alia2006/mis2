@@ -90,6 +90,226 @@
 ### 安装使用
 💫 我们提供了完善的文档，对于熟悉 `ThinkPHP` 和 `Vue` 的用户，请使用大佬版：[快速上手](https://doc.buildadmin.com/guide/install/start.html) ，对于新人朋友，我们额外准备了各个操作系统的从零开始套餐：[Windows从零到一](https://doc.buildadmin.com/guide/install/windows.html) | [Linux从零到一](https://doc.buildadmin.com/guide/install/linux-bt.html) | [MacBook安装引导](https://doc.buildadmin.com/guide/install/macBook.html)
 
+---
+
+### 工作流审批引擎
+
+本系统内置了完整的审批工作流引擎，支持流程设计、发起、审批、驳回、退回、转办、撤回等全生命周期管理，并与动态表格深度集成，实现零代码审批流。
+
+#### 数据库表结构
+
+| 表名 | 说明 |
+|------|------|
+| `workflow_definition` | 流程定义（名称、编码、设计器JSON、状态、版本） |
+| `workflow_node` | 流程节点（类型：start/task/condition/end，审批人规则、会签/或签） |
+| `workflow_instance` | 流程实例（业务关联、状态、表单数据快照） |
+| `workflow_task` | 审批任务（待办，assignee、状态、批次号） |
+| `workflow_sign` | 会签/或签记录 |
+| `workflow_log` | 操作日志（完整审批时间线） |
+| `workflow_bind` | 业务模块绑定（module_code → definition_id） |
+
+#### 后端核心
+
+**WorkflowEngine**（`app/admin/library/WorkflowEngine.php`）— 单例引擎，提供以下方法：
+
+```php
+// 发起流程
+$instanceId = WorkflowEngine::instance()->start(
+    string $moduleCode,    // 业务模块编码（对应 workflow_bind.module_code）
+    int    $businessId,    // 业务数据主键
+    array  $formData,      // 表单数据快照
+    int    $initiatorId,   // 发起人 admin_id
+    string $title = ''     // 实例标题（可选）
+);
+
+// 审批通过
+WorkflowEngine::instance()->approve(int $taskId, int $approverId, string $comment = '');
+
+// 驳回（直接结束流程）
+WorkflowEngine::instance()->reject(int $taskId, int $approverId, string $comment = '');
+
+// 退回上一步
+WorkflowEngine::instance()->back(int $taskId, int $approverId, string $comment = '');
+
+// 转办
+WorkflowEngine::instance()->transfer(int $taskId, int $fromAdminId, int $toAdminId, string $comment = '');
+
+// 撤回（发起人操作）
+WorkflowEngine::instance()->cancel(int $instanceId, int $initiatorId, string $comment = '');
+```
+
+**事件系统**（通过 ThinkPHP Event 解耦副作用）：
+
+| 事件名 | 触发时机 |
+|--------|----------|
+| `workflow.instance.started` | 流程发起后 |
+| `workflow.instance.completed` | 流程审批通过到达终点 |
+| `workflow.instance.rejected` | 流程被驳回 |
+| `workflow.instance.cancelled` | 流程被发起人撤回 |
+| `workflow.task.approved` | 单个审批任务通过 |
+| `workflow.task.assigned` | 新任务分配给审批人 |
+| `workflow.task.backed` | 任务被退回 |
+
+在 `app/event.php` 中注册监听器即可实现通知推送（WebSocket、邮件、钉钉等）。
+
+#### 使用方式
+
+**1. 流程定义管理**
+
+在后台菜单「工作流 > 流程定义」中：
+- **新增**：填写流程名称和编码（如 `leave_approve`），状态默认 `draft`
+- **设计流程**：点击「设计」进入列表式流程设计器
+  - 添加 **开始节点** → **审批节点** → **条件分支**（可选）→ **结束节点**
+  - 审批节点配置：
+    - 审批人类型：`指定人员` / `指定角色` / `指定部门` / `发起人` / `部门主管`
+    - 审批方式：`或签`（任一同意即通过）/ `会签`（全员同意才通过）
+    - 允许退回：开启后审批人可将任务退回上一节点
+    - 允许转办：开启后审批人可将任务转给其他人
+  - 条件分支：设置表单字段条件表达式（如 `amount > 10000`），引擎根据条件自动路由
+- **发布**：设计完成后点击「发布」，校验完整性后状态变为 `published`
+
+**2. 模块绑定**
+
+在「工作流 > 模块绑定」中将业务模块编码与已发布的流程定义关联：
+- 模块编码：业务系统的唯一标识（如 `leave_request`、`purchase_order`）
+- 选择已发布的流程定义
+- 状态设为 `enabled`
+
+**3. 审批操作**
+
+在「工作流 > 我的待办」中处理审批任务：
+- **通过**：同意当前节点，流程自动流转到下一节点
+- **驳回**：直接结束流程，状态变为 `rejected`
+- **退回**：退回上一个审批节点，由原审批人重新处理
+- **转办**：将任务转给其他管理员处理
+
+在「工作流 > 我发起的」中查看已发起的流程，可执行撤回操作。
+
+#### 与动态表格集成
+
+动态表格设计器支持直接绑定工作流，实现零代码审批：
+
+**配置方式：**
+1. 打开「动态表格管理」，编辑或新增一个动态表
+2. 在配置区找到「**工作流绑定**」下拉框，选择已发布的审批流程
+3. 保存配置后，系统自动创建 `workflow_bind` 记录
+
+**表格中的工作流操作：**
+- **审批状态列**：绑定工作流后，表格自动显示审批状态（审批中/已通过/已驳回/已撤回）
+- **提交审批按钮**（📄）：点击后自动读取当前行数据发起审批流程
+- **审批进度按钮**（📊）：弹出审批详情弹窗，包含：
+  - 实例概要（标题、状态、发起人、当前节点）
+  - 审批任务列表（节点、审批人、任务状态、审批意见、时间）
+  - 操作时间线（发起、审批、驳回、退回、转办、撤回的完整记录）
+  - 撤回按钮（发起人可撤回进行中的流程）
+
+#### API 接口
+
+**流程定义：**
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/workflow.Definition/index` | GET | 流程定义列表 |
+| `/admin/workflow.Definition/add` | POST | 新增流程定义 |
+| `/admin/workflow.Definition/saveGraph` | POST | 保存设计器JSON（`{id, graph:{nodes,edges}}`） |
+| `/admin/workflow.Definition/publish` | POST | 发布流程（`{id}`） |
+| `/admin/workflow.Definition/copy` | POST | 复制流程（`{id}`） |
+| `/admin/workflow.Definition/getAdmins` | GET | 获取管理员列表（设计器选审批人） |
+| `/admin/workflow.Definition/getGroups` | GET | 获取角色组列表（设计器选角色/部门） |
+
+**流程实例：**
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/workflow.Instance/index` | GET | 实例列表 |
+| `/admin/workflow.Instance/detail` | GET | 实例详情（`{id}`）含任务+日志 |
+| `/admin/workflow.Instance/cancel` | POST | 撤回流程（`{id, comment}`） |
+
+**审批任务：**
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/workflow.Task/myTodo` | GET | 我的待办 |
+| `/admin/workflow.Task/myDone` | GET | 我的已办 |
+| `/admin/workflow.Task/myInitiated` | GET | 我发起的 |
+| `/admin/workflow.Task/approve` | POST | 审批通过（`{id, comment}`） |
+| `/admin/workflow.Task/reject` | POST | 驳回（`{id, comment}`） |
+| `/admin/workflow.Task/back` | POST | 退回（`{id, comment}`） |
+| `/admin/workflow.Task/transfer` | POST | 转办（`{id, to_admin_id, comment}`） |
+
+**模块绑定：**
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/workflow.Bind/index` | GET | 绑定列表（关联流程定义名称） |
+| `/admin/workflow.Bind/add` | POST | 新增绑定 |
+| `/admin/workflow.Bind/edit` | POST | 编辑绑定 |
+
+**动态表格工作流接口：**
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/dynamic.Config/getWorkflowDefinitions` | GET | 获取已发布的流程定义列表（设计器绑定用） |
+| `/admin/dynamic.Table/startWorkflow?table=xxx` | POST | 发起审批（`{id, title?}`） |
+| `/admin/dynamic.Table/workflowDetail?table=xxx` | GET | 审批详情（`{id}` → 实例+任务+日志） |
+| `/admin/dynamic.Table/cancelWorkflow?table=xxx` | POST | 撤回审批（`{id, comment?}`） |
+
+#### 业务模块集成示例
+
+在自定义业务代码中集成工作流：
+
+```php
+use app\admin\library\WorkflowEngine;
+
+// 1. 发起审批
+$instanceId = WorkflowEngine::instance()->start(
+    'purchase_order',     // 模块编码（需在 workflow_bind 中绑定）
+    $order->id,           // 业务数据主键
+    $order->toArray(),    // 表单数据快照
+    $this->auth->id,      // 发起人
+    "采购订单-{$order->order_no}"
+);
+
+// 2. 监听审批完成事件（app/event.php）
+return [
+    'listen' => [
+        'workflow.instance.completed' => [
+            \app\listener\PurchaseOrderApproved::class,
+        ],
+        'workflow.instance.rejected' => [
+            \app\listener\PurchaseOrderRejected::class,
+        ],
+    ],
+];
+
+// 3. 事件监听器示例
+class PurchaseOrderApproved
+{
+    public function handle($instance)
+    {
+        // 仅处理本模块的实例
+        if ($instance->business_type !== 'purchase_order') return;
+
+        // 更新业务数据状态
+        Db::name('purchase_order')
+            ->where('id', $instance->business_id)
+            ->update(['status' => 'approved']);
+
+        // 发送通知...
+    }
+}
+```
+
+#### 首次部署
+
+```bash
+# 执行数据库迁移（创建工作流7张表 + 动态表工作流字段 + 菜单种子）
+php think migrate:run
+```
+
+迁移完成后，重新登录后台，左侧导航栏将出现「工作流」菜单。
+
+
 ### 联系我们
 - [演示站](https://demo.buildadmin.com) 账户：`admin`，密码：`123456`（演示站数据无法修改，请下载源码安装体验全部功能）
 - [问答社区：ask.buildadmin.com](https://ask.buildadmin.com)
