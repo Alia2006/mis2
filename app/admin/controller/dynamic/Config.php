@@ -23,7 +23,7 @@ use Throwable;
 class Config extends Backend
 {
     protected object $model;
-    protected array $noNeedPermission = ['getConfig', 'getConfigById', 'getTableList', 'getTableFields', 'getMenuTree'];
+    protected array $noNeedPermission = ['getConfig', 'getConfigById', 'getTableList', 'getTableFields', 'getMenuTree', 'getWorkflowDefinitions'];
 
     /**
      * 表级多语言字段（存储 JSON: {"zh-cn":"...","en":"..."}）
@@ -612,6 +612,10 @@ class Config extends Backend
             'columns'                => $columns,
             'formFields'             => $formFields,
             'detail'                 => $detail,
+            // 工作流配置：workflow_module_code 不为空时启用
+            'workflow'               => $config->workflow_module_code ? [
+                'moduleCode' => $config->workflow_module_code,
+            ] : null,
         ];
     }
 
@@ -645,6 +649,7 @@ class Config extends Backend
             try {
                 $config = $this->model->create($data);
                 $this->syncAdminRuleCreate($config);
+                $this->syncWorkflowBind($config);
                 $this->model->commit();
 
                 // 同步数据库表结构（DDL 在 commit 后执行，不可回滚）
@@ -706,6 +711,7 @@ class Config extends Backend
             try {
                 $row->save($data);
                 $this->syncAdminRuleUpdate($row);
+                $this->syncWorkflowBind($row);
                 $this->model->commit();
 
                 // 同步数据库表结构（DDL 在 commit 后执行，不可回滚）
@@ -1101,5 +1107,82 @@ class Config extends Backend
             }
         }
         return $tree;
+    }
+
+    // ─── 工作流集成 ──────────────────────────────────────────
+
+    /**
+     * 获取已发布的流程定义列表（设计器绑定工作流用）
+     * GET /admin/dynamic.Config/getWorkflowDefinitions
+     */
+    public function getWorkflowDefinitions(): void
+    {
+        $list = Db::name('workflow_definition')
+            ->where('status', 'published')
+            ->field(['id', 'name', 'code'])
+            ->order('id', 'desc')
+            ->select()
+            ->toArray();
+
+        $this->success('', ['list' => $list]);
+    }
+
+    /**
+     * 同步工作流绑定（保存配置时调用）
+     * 当 workflow_module_code 不为空时，自动创建/更新 workflow_bind 记录
+     */
+    protected function syncWorkflowBind(TableConfig $config): void
+    {
+        $moduleCode = $config->workflow_module_code ?: '';
+        $configName = $config->name;
+        $configTitle = $this->resolveLangValue($config->getData('title'));
+        if (!$configTitle) $configTitle = $configName;
+
+        if (empty($moduleCode)) {
+            // 清除旧绑定
+            Db::name('workflow_bind')
+                ->where('module_code', 'dynamic_' . $configName)
+                ->delete();
+            return;
+        }
+
+        // 查找流程定义
+        $definition = Db::name('workflow_definition')
+            ->where('code', $moduleCode)
+            ->where('status', 'published')
+            ->find();
+
+        if (!$definition) {
+            return; // 流程未发布，跳过
+        }
+
+        // 查找已有绑定（按 module_code）
+        $existing = Db::name('workflow_bind')
+            ->where('module_code', $moduleCode)
+            ->find();
+
+        $now = time();
+
+        if ($existing) {
+            // 更新已有绑定
+            Db::name('workflow_bind')
+                ->where('module_code', $moduleCode)
+                ->update([
+                    'definition_id' => $definition['id'],
+                    'module_name'   => $configTitle,
+                    'status'        => 'enabled',
+                    'update_time'   => $now,
+                ]);
+        } else {
+            // 创建新绑定
+            Db::name('workflow_bind')->insert([
+                'module_code'   => $moduleCode,
+                'module_name'   => $configTitle,
+                'definition_id' => $definition['id'],
+                'status'        => 'enabled',
+                'create_time'   => $now,
+                'update_time'   => $now,
+            ]);
+        }
     }
 }

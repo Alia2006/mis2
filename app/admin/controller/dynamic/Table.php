@@ -5,7 +5,9 @@ namespace app\admin\controller\dynamic;
 use app\common\controller\Backend;
 use app\admin\model\dynamic\TableConfig;
 use app\admin\model\dynamic\DynamicModel;
+use app\admin\library\WorkflowEngine;
 use think\exception\HttpResponseException;
+use think\facade\Db;
 use Throwable;
 
 /**
@@ -22,7 +24,7 @@ class Table extends Backend
     /**
      * 动态表共用同一控制器，权限由菜单可见性控制
      */
-    protected array $noNeedPermission = ['index', 'add', 'edit', 'del'];
+    protected array $noNeedPermission = ['index', 'add', 'edit', 'del', 'startWorkflow', 'workflowDetail', 'cancelWorkflow'];
 
     public function initialize(): void
     {
@@ -248,6 +250,37 @@ class Table extends Backend
             }
         }
 
+        // ─── 工作流状态批量补充 ───
+        $workflowModuleCode = $this->config->workflow_module_code ?: '';
+        if ($workflowModuleCode && $list) {
+            $pk = $this->config->pk ?: 'id';
+            $businessIds = array_map(fn($row) => is_array($row) ? ($row[$pk] ?? null) : ($row->$pk ?? null), $list);
+            $businessIds = array_filter($businessIds, fn($v) => $v !== null && $v !== '');
+
+            if ($businessIds) {
+                $instances = Db::name('workflow_instance')
+                    ->where('business_type', $workflowModuleCode)
+                    ->whereIn('business_id', $businessIds)
+                    ->field(['id', 'business_id', 'status', 'title', 'initiator_id', 'current_node_key'])
+                    ->select()
+                    ->toArray();
+
+                $instanceMap = [];
+                foreach ($instances as $inst) {
+                    $instanceMap[$inst['business_id']] = $inst;
+                }
+
+                foreach ($list as &$row) {
+                    $rowArr = is_array($row) ? $row : (method_exists($row, 'toArray') ? $row->toArray() : (array)$row);
+                    $bid = $rowArr[$pk] ?? null;
+                    $row['__workflow'] = $bid && isset($instanceMap[$bid])
+                        ? $instanceMap[$bid]
+                        : null;
+                }
+                unset($row);
+            }
+        }
+
         $this->success('', [
             'list'   => $list,
             'total'  => $res->total(),
@@ -348,5 +381,162 @@ class Table extends Backend
             'list'  => $list,
             'total' => $total,
         ]);
+    }
+
+    // ─── 工作流操作 ──────────────────────────────────────────
+
+    /**
+     * 发起审批
+     * POST /admin/dynamic.Table/startWorkflow?table=xxx
+     * body: { id: 业务数据主键, title?: '自定义标题' }
+     */
+    public function startWorkflow(): void
+    {
+        if (!$this->request->isPost()) {
+            $this->error('Method not allowed');
+        }
+
+        $moduleCode = $this->config->workflow_module_code ?: '';
+        if (!$moduleCode) {
+            $this->error('该动态表未绑定工作流');
+        }
+
+        $businessId = (int)$this->request->post('id', 0);
+        if (!$businessId) {
+            $this->error('参数 id 不能为空');
+        }
+
+        // 读取业务数据作为表单数据
+        $pk = $this->config->pk ?: 'id';
+        $rowData = $this->model->db()->where($pk, $businessId)->find();
+        if (!$rowData) {
+            $this->error('业务数据不存在');
+        }
+        $formData = is_array($rowData) ? $rowData : (method_exists($rowData, 'toArray') ? $rowData->toArray() : (array)$rowData);
+
+        // 检查是否已有进行中的流程
+        $existing = Db::name('workflow_instance')
+            ->where('business_type', $moduleCode)
+            ->where('business_id', $businessId)
+            ->whereIn('status', ['running', 'approved'])
+            ->find();
+        if ($existing) {
+            $this->error('该数据已有进行中或已完成的审批流程');
+        }
+
+        $title = $this->request->post('title', '');
+        $initiatorId = $this->auth->id;
+
+        try {
+            $instanceId = WorkflowEngine::instance()->start(
+                $moduleCode,
+                $businessId,
+                $formData,
+                $initiatorId,
+                $title
+            );
+            $this->success('审批已提交', ['instance_id' => $instanceId]);
+        } catch (Throwable $e) {
+            $this->error($e->getMessage());
+        }
+    }
+
+    /**
+     * 获取审批详情（实例 + 任务列表 + 操作日志）
+     * GET /admin/dynamic.Table/workflowDetail?table=xxx&id=业务数据主键
+     */
+    public function workflowDetail(): void
+    {
+        $moduleCode = $this->config->workflow_module_code ?: '';
+        if (!$moduleCode) {
+            $this->error('该动态表未绑定工作流');
+        }
+
+        $businessId = (int)$this->request->param('id', 0);
+        if (!$businessId) {
+            $this->error('参数 id 不能为空');
+        }
+
+        // 查找实例
+        $instance = Db::name('workflow_instance')
+            ->where('business_type', $moduleCode)
+            ->where('business_id', $businessId)
+            ->order('id', 'desc')
+            ->find();
+
+        if (!$instance) {
+            $this->success('', ['instance' => null, 'tasks' => [], 'logs' => []]);
+            return;
+        }
+
+        // 查找任务
+        $tasks = Db::name('workflow_task')
+            ->where('instance_id', $instance['id'])
+            ->order('id', 'asc')
+            ->select()
+            ->toArray();
+
+        // 查找操作日志
+        $logs = Db::name('workflow_log')
+            ->where('instance_id', $instance['id'])
+            ->order('id', 'asc')
+            ->select()
+            ->toArray();
+
+        // 发起人名称
+        $initiatorName = Db::name('admin')->where('id', $instance['initiator_id'])->value('nickname', '');
+
+        $instance['initiator_name'] = $initiatorName;
+
+        $this->success('', [
+            'instance' => $instance,
+            'tasks'    => $tasks,
+            'logs'     => $logs,
+        ]);
+    }
+
+    /**
+     * 撤回审批（发起人操作）
+     * POST /admin/dynamic.Table/cancelWorkflow?table=xxx
+     * body: { id: 业务数据主键, comment?: '撤回原因' }
+     */
+    public function cancelWorkflow(): void
+    {
+        if (!$this->request->isPost()) {
+            $this->error('Method not allowed');
+        }
+
+        $moduleCode = $this->config->workflow_module_code ?: '';
+        if (!$moduleCode) {
+            $this->error('该动态表未绑定工作流');
+        }
+
+        $businessId = (int)$this->request->post('id', 0);
+        if (!$businessId) {
+            $this->error('参数 id 不能为空');
+        }
+
+        $instance = Db::name('workflow_instance')
+            ->where('business_type', $moduleCode)
+            ->where('business_id', $businessId)
+            ->where('status', 'running')
+            ->find();
+
+        if (!$instance) {
+            $this->error('未找到进行中的审批流程');
+        }
+
+        $comment = $this->request->post('comment', '');
+
+        try {
+            WorkflowEngine::instance()->cancel(
+                (int)$instance['id'],
+                $this->auth->id,
+                $comment
+            );
+            $this->success('已撤回');
+        } catch (Throwable $e) {
+            $this->error($e->getMessage());
+        }
     }
 }
