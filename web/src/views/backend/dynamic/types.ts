@@ -37,6 +37,29 @@ export interface DynamicTableConfig {
 
     /** 详情表配置（配置了详情表时非 null） */
     detail?: DetailTableConfig | null
+
+    /** 工作流配置（绑定了工作流时非 null） */
+    workflow?: WorkflowTableConfig | null
+}
+
+/**
+ * 工作流表格配置
+ */
+export interface WorkflowTableConfig {
+    /** 绑定的工作流模块编码 */
+    moduleCode: string
+}
+
+/**
+ * 行数据中的工作流状态（后端 index 附加）
+ */
+export interface RowWorkflowStatus {
+    id: number
+    business_id: number
+    status: 'running' | 'approved' | 'rejected' | 'cancelled'
+    title: string
+    initiator_id: number
+    current_node_key: string
 }
 
 /**
@@ -147,5 +170,7 @@ export interface TableConfigRecord {
     default_items: string | null
     remark: string | null
     status: string
+    /** 工作流模块编码（绑定 workflow_bind.module_code），为空表示不启用工作流 */
+    workflow_module_code?: string
     fields?: TableFieldRecord[]
 }

@@ -14,6 +14,9 @@
 
         <!-- 详情抽屉（从下往上滑出，显示关联详情表） -->
         <DetailDrawer v-if="hasDetail" />
+
+        <!-- 工作流审批进度弹窗 -->
+        <WorkflowDialog v-if="hasWorkflow" ref="workflowDialogRef" />
     </div>
 </template>
 
@@ -23,14 +26,16 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PopupForm from './popupForm.vue'
 import DetailDrawer from './detailDrawer.vue'
+import WorkflowDialog from './workflowDialog.vue'
 import { baTableApi } from '/@/api/common'
 import createAxios from '/@/utils/axios'
 import { defaultOptButtons } from '/@/components/table'
 import TableHeader from '/@/components/table/header/index.vue'
 import Table from '/@/components/table/index.vue'
 import baTableClass from '/@/utils/baTable'
-import { getDynamicConfig } from '/@/api/backend/dynamic'
+import { getDynamicConfig, startWorkflow } from '/@/api/backend/dynamic'
 import type { DynamicTableConfig } from './types'
+import { ElMessageBox } from 'element-plus'
 
 defineOptions({
     name: 'dynamic/index',
@@ -43,6 +48,8 @@ const tableRef = useTemplateRef('tableRef')
 const configReady = ref(false)
 const config = ref<DynamicTableConfig>()
 const hasDetail = computed(() => !!config.value?.detail)
+const hasWorkflow = computed(() => !!config.value?.workflow)
+const workflowDialogRef = ref()
 
 /**
  * 自定义 API 类：在标准 baTableApi 基础上自动附加 table 参数
@@ -165,6 +172,49 @@ const loadConfig = async () => {
             })
         }
 
+        // 工作流按钮：配置了工作流绑定时自动添加
+        if (cfg.workflow) {
+            const moduleCode = cfg.workflow.moduleCode
+            const tableName = cfg.name
+
+            // 审批进度按钮
+            optBtns.unshift({
+                render: 'tipButton',
+                name: 'workflowProgress',
+                title: t('dynamic.workflow.btn_progress'),
+                text: '',
+                type: 'primary',
+                icon: 'fa fa-sitemap',
+                class: 'table-row-workflow',
+                disabledTip: false,
+                click: (row: TableRow) => {
+                    const wf = (row as any).__workflow
+                    if (!wf) {
+                        // 无审批记录 → 直接发起
+                        onStartWorkflow(row, tableName, moduleCode)
+                    } else {
+                        // 有审批记录 → 打开详情
+                        workflowDialogRef.value?.open(tableName, row[cfg.pk!], moduleCode)
+                    }
+                },
+            })
+
+            // 提交审批按钮
+            optBtns.unshift({
+                render: 'tipButton',
+                name: 'workflowStart',
+                title: t('dynamic.workflow.btn_start'),
+                text: '',
+                type: 'success',
+                icon: 'fa fa-paper-plane',
+                class: 'table-row-workflow-start',
+                disabledTip: false,
+                click: (row: TableRow) => {
+                    onStartWorkflow(row, tableName, moduleCode)
+                },
+            })
+        }
+
         const operateColumn = {
             label: t('Operate'),
             align: 'center',
@@ -179,6 +229,23 @@ const loadConfig = async () => {
         baTable.api = new DynamicTableApi(cfg.controllerUrl, cfg.controllerParams || {})
         baTable.table.pk = cfg.pk
         baTable.table.column = [selectionColumn, ...cfg.columns, operateColumn] as any
+
+        // 工作流状态列：配置了工作流时在操作列前插入
+        if (cfg.workflow) {
+            const wfColumn = {
+                label: t('dynamic.workflow.col_status'),
+                prop: '__workflow.status',
+                align: 'center',
+                width: 100,
+                render: 'workflowStatus' as any,
+                operator: false,
+                sortable: false,
+            }
+            // 插入到操作列之前
+            const cols = baTable.table.column as any[]
+            cols.splice(cols.length - 1, 0, wfColumn)
+        }
+
         baTable.table.defaultOrder = cfg.defaultOrder
         baTable.table.dblClickNotEditColumn = cfg.dblClickNotEditColumn || [undefined]
         baTable.form.defaultItems = cfg.defaultItems || {}
@@ -201,6 +268,33 @@ const loadConfig = async () => {
         baTable.getData()
     } catch (err) {
         console.error('Failed to load dynamic table config:', err)
+    }
+}
+
+/**
+ * 发起审批
+ */
+const onStartWorkflow = async (row: TableRow, tableName: string, moduleCode: string) => {
+    const existing = (row as any).__workflow
+    if (existing && existing.status === 'running') {
+        // 已有进行中流程 → 打开详情
+        workflowDialogRef.value?.open(tableName, row[config.value!.pk!], moduleCode)
+        return
+    }
+    if (existing && existing.status === 'approved') {
+        return
+    }
+
+    try {
+        await ElMessageBox.confirm(
+            t('dynamic.workflow.confirm_start'),
+            t('dynamic.workflow.btn_start'),
+            { type: 'info' }
+        )
+        await startWorkflow(tableName, row[config.value!.pk!])
+        baTable.getData()
+    } catch {
+        // 用户取消
     }
 }
 

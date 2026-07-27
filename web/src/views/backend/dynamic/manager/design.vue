@@ -197,7 +197,28 @@
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <div class="designer-toolbar">
+
+                <!-- ═══ 工作流绑定配置 ═══ -->
+                <el-row :gutter="16">
+                    <el-col :span="6">
+                        <el-form-item :label="t('dynamic.designer.workflow_bind')">
+                            <el-select
+                                v-model="form.workflow_module_code"
+                                filterable
+                                clearable
+                                :placeholder="t('dynamic.designer.workflow_bind_ph')"
+                                style="width: 100%"
+                            >
+                                <el-option
+                                    v-for="wf in workflowDefinitions"
+                                    :key="wf.code"
+                                    :label="`${wf.name} (${wf.code})`"
+                                    :value="wf.code"
+                                />
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
                     <el-radio-group v-model="designerLang" size="small">
                         <el-radio-button value="zh-cn">中文</el-radio-button>
                         <el-radio-button value="en">English</el-radio-button>
@@ -630,6 +651,7 @@ import {
     getMenuTree,
     getDynamicTableList,
     getDynamicConfigById,
+    getWorkflowDefinitions,
 } from '/@/api/backend/dynamic'
 import { index as adminIndex } from '/@/api/backend'
 import { handleAdminRoute } from '/@/utils/router'
@@ -759,6 +781,7 @@ const tableOptions = ref<any[]>([])
 const remoteFieldOptions = ref<Record<number, any[]>>({})
 const detailTableOptions = ref<any[]>([])
 const detailFieldOptions = ref<{ prop: string; label: string }[]>([])
+const workflowDefinitions = ref<{ id: number; name: string; code: string }[]>([])
 
 /* ═══ Design Change Tracking (Phase 3) ═══ */
 
@@ -1040,6 +1063,18 @@ const loadDetailTableOptions = async () => {
 }
 
 /**
+ * 拉取已发布的流程定义列表
+ */
+const loadWorkflowDefinitions = async () => {
+    try {
+        const res = await getWorkflowDefinitions()
+        workflowDefinitions.value = res.data?.list ?? res.data?.data?.list ?? []
+    } catch {
+        workflowDefinitions.value = []
+    }
+}
+
+/**
  * 拉取详情表字段列表，填充外键选择器（不清空已选值）
  */
 const loadDetailFields = async (id: number) => {
@@ -1299,6 +1334,7 @@ const form = reactive({
     row_buttons: ['edit', 'delete'] as string[],
     detail_table_id: 0 as number,
     detail_foreign_key: '' as string,
+    workflow_module_code: '' as string,
     default_items: null as any,
     remark: { 'zh-cn': '', en: '' } as Record<string, string>,
     status: 'enabled',
@@ -1329,6 +1365,7 @@ const initForm = async () => {
         menu_pid: 0,
         detail_table_id: 0,
         detail_foreign_key: '',
+        workflow_module_code: '',
         fields: [],
     })
     designerLang.value = 'zh-cn'
@@ -1337,6 +1374,7 @@ const initForm = async () => {
     loadConnectionOptions()
     loadTableOptions()
     loadDetailTableOptions()
+    loadWorkflowDefinitions()
 
     if (props.editId) {
         loading.value = true
@@ -1358,6 +1396,7 @@ const initForm = async () => {
             form.row_buttons = row.row_buttons || form.row_buttons
             form.detail_table_id = row.detail_table_id || 0
             form.detail_foreign_key = row.detail_foreign_key || ''
+            form.workflow_module_code = row.workflow_module_code || ''
             // 若已配置详情表，预加载其字段列表（不清空已保存的外键值）
             if (form.detail_table_id) {
                 loadDetailFields(form.detail_table_id)

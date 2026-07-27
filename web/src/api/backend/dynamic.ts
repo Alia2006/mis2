@@ -99,3 +99,57 @@ export const getMenuTree = () => {
         method: 'get',
     })
 }
+
+/**
+ * 获取已发布的流程定义列表（设计器绑定工作流用）
+ */
+export const getWorkflowDefinitions = () => {
+    return createAxios({
+        url: '/admin/dynamic.Config/getWorkflowDefinitions',
+        method: 'get',
+    })
+}
+
+/**
+ * 发起审批（动态表行 → 工作流）
+ * POST /admin/dynamic.Table/startWorkflow?table=xxx  body: { id, title? }
+ */
+export const startWorkflow = (table: string, id: number | string, title: string = '') => {
+    return createAxios(
+        {
+            url: '/admin/dynamic.Table/startWorkflow',
+            method: 'post',
+            params: { table },
+            data: { id, title },
+        },
+        { showSuccessMessage: true }
+    )
+}
+
+/**
+ * 获取审批详情（实例 + 任务 + 日志）
+ * GET /admin/dynamic.Table/workflowDetail?table=xxx&id=业务数据主键
+ */
+export const getWorkflowDetail = (table: string, id: number | string) => {
+    return createAxios({
+        url: '/admin/dynamic.Table/workflowDetail',
+        method: 'get',
+        params: { table, id },
+    })
+}
+
+/**
+ * 撤回审批
+ * POST /admin/dynamic.Table/cancelWorkflow?table=xxx  body: { id, comment? }
+ */
+export const cancelWorkflow = (table: string, id: number | string, comment: string = '') => {
+    return createAxios(
+        {
+            url: '/admin/dynamic.Table/cancelWorkflow',
+            method: 'post',
+            params: { table },
+            data: { id, comment },
+        },
+        { showSuccessMessage: true }
+    )
+}
