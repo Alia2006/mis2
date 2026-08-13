@@ -151,7 +151,21 @@ function treeToGraph(root: any): { nodes: any[]; edges: any[] } {
             processChain(node.childNode)
 
         } else if (node.type === 2) {
-            // 抄送节点 → 跳过（后续版本支持），直接处理下一个
+            // 抄送节点 → 生成 cc 节点
+            const id = genId()
+            const ccIds = (node.nodeUserList || []).map((u: any) => u.targetId).join(',')
+            const ccNames = (node.nodeUserList || []).map((u: any) => u.name).join(',')
+
+            nodes.push({
+                id, type: 'workflow-cc', text: { value: node.nodeName || '抄送人' },
+                properties: {
+                    name: node.nodeName || '抄送人',
+                    cc_ids: ccIds,
+                    cc_names: ccNames,
+                },
+            })
+            edges.push({ sourceNodeId: prevId, targetNodeId: id, properties: {} })
+            prevId = id
             processChain(node.childNode)
 
         } else if (node.type === 4) {
@@ -252,6 +266,18 @@ function graphToTree(graph: any): any {
         const type = raw.type || ''
 
         if (type.includes('end')) return null
+        if (type.includes('cc')) {
+            const p = raw.properties || {}
+            return {
+                nodeName: p.name || raw.text?.value || '抄送人',
+                type: 2,
+                ccSelfSelectFlag: 0,
+                nodeUserList: (p.cc_ids || p.approver_ids || '').split(',').filter(Boolean).map((id: string, idx: number) => ({
+                    type: 1, targetId: parseInt(id), name: (p.cc_names || p.approver_names || '').split(',')[idx] || '',
+                })),
+                childNode: nextMap[nodeId]?.[0] ? buildChain(nextMap[nodeId][0]) : null,
+            }
+        }
         if (type.includes('task')) {
             const p = raw.properties || {}
             return {
