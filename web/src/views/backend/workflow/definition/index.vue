@@ -45,22 +45,28 @@ const optButtons = defaultOptButtons(['edit', 'delete'])
 
 // 扩展按钮：设计、发布、复制
 const designerBtn = {
+    render: 'tipButton',
     name: 'designer',
     title: t('workflow.definition.designer'),
-    text: t('workflow.definition.designer'),
+    text: '',
     type: 'primary',
     icon: 'fa fa-project-diagram',
+    class: 'table-row-designer',
+    disabledTip: false,
     click: ({ row }: { row: any }) => {
         designerId.value = row.id
         designerVisible.value = true
     },
 }
 const publishBtn = {
+    render: 'tipButton',
     name: 'publish',
     title: t('workflow.definition.publish'),
-    text: t('workflow.definition.publish'),
+    text: '',
     type: 'success',
     icon: 'fa fa-upload',
+    class: 'table-row-publish',
+    disabledTip: false,
     click: ({ row }: { row: any }) => {
         ElMessageBox.confirm(t('workflow.definition.publish confirm'), t('Warning'), { type: 'warning' })
             .then(async () => {
@@ -71,11 +77,14 @@ const publishBtn = {
     },
 }
 const copyBtn = {
+    render: 'tipButton',
     name: 'copy',
     title: t('workflow.definition.copy'),
-    text: t('workflow.definition.copy'),
+    text: '',
     type: 'info',
     icon: 'fa fa-copy',
+    class: 'table-row-copy',
+    disabledTip: false,
     click: ({ row }: { row: any }) => {
         ElMessageBox.confirm(t('workflow.definition.copy confirm'), t('Warning'), { type: 'warning' })
             .then(async () => {
@@ -113,7 +122,7 @@ const baTable = new baTableClass(
             {
                 label: t('Operate'),
                 align: 'center',
-                width: '320',
+                width: '180',
                 render: 'buttons',
                 buttons: [designerBtn, publishBtn, copyBtn, ...optButtons],
                 operator: false,
