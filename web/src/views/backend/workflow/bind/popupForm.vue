@@ -40,17 +40,21 @@
                         prop="module_name"
                         :placeholder="t('Please input field', { field: t('workflow.bind.module_name') })"
                     />
-                    <FormItem
-                        :label="t('workflow.bind.definition_id')"
-                        v-model="baTable.form.items!.definition_id"
-                        type="remoteSelect"
-                        prop="definition_id"
-                        :input-attr="{
-                            field: 'name',
-                            remoteUrl: '/admin/workflow.Definition/index?select=true&search[0][field]=status&search[0][val]=published&search[0][operator]==',
-                            placeholder: t('Please select field', { field: t('workflow.bind.definition_id') }),
-                        }"
-                    />
+                    <el-form-item :label="t('workflow.bind.definition_id')">
+                        <el-select
+                            v-model="baTable.form.items!.definition_id"
+                            filterable
+                            :placeholder="t('Please select field', { field: t('workflow.bind.definition_id') })"
+                            style="width: 100%"
+                        >
+                            <el-option
+                                v-for="d in definitions"
+                                :key="d.id"
+                                :label="d.name + ' (' + d.code + ')'"
+                                :value="d.id"
+                            />
+                        </el-select>
+                    </el-form-item>
                     <el-form-item :label="t('workflow.bind.status')">
                         <el-radio-group v-model="baTable.form.items!.status">
                             <el-radio value="enabled" border>{{ t('workflow.bind.status enabled') }}</el-radio>
@@ -72,19 +76,31 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, inject, useTemplateRef } from 'vue'
+import { reactive, ref, inject, useTemplateRef, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type baTableClass from '/@/utils/baTable'
 import { buildValidatorData } from '/@/utils/validate'
 import type { FormItemRule } from 'element-plus'
 import FormItem from '/@/components/formItem/index.vue'
 import { useConfig } from '/@/stores/config'
+import { getWorkflowDefinitions } from '/@/api/backend/dynamic'
 
 const config = useConfig()
 const formRef = useTemplateRef('formRef')
 const baTable = inject('baTable') as baTableClass
 
 const { t } = useI18n()
+
+const definitions = ref<{ id: number; name: string; code: string }[]>([])
+
+onMounted(async () => {
+    try {
+        const res = await getWorkflowDefinitions()
+        definitions.value = res.data?.data?.list || res.data?.list || []
+    } catch (e) {
+        // ignore
+    }
+})
 
 const rules: Partial<Record<string, FormItemRule[]>> = reactive({
     module_code: [buildValidatorData({ name: 'required', title: t('workflow.bind.module_code') })],
