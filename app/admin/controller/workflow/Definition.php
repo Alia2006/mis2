@@ -143,13 +143,25 @@ class Definition extends Backend
     }
 
     /**
-     * 获取管理员列表（设计器选择审批人）
+     * 获取管理员列表（设计器选择审批人/抄送人）
+     * 可选 group_id 参数：按部门/角色组过滤
      */
     public function getAdmins(): void
     {
-        $list = Db::name('admin')
-            ->where('status', 'enable')
-            ->field('id, nickname, username')
+        $groupId = $this->request->param('group_id', 0);
+
+        $query = Db::name('admin')->where('status', 'enable');
+
+        if ($groupId) {
+            $adminIds = Db::name('admin_group_access')->where('group_id', $groupId)->column('uid');
+            if (empty($adminIds)) {
+                $this->success('', ['list' => []]);
+                return;
+            }
+            $query->whereIn('id', $adminIds);
+        }
+
+        $list = $query->field('id, nickname, username')
             ->order('id', 'asc')
             ->select()
             ->toArray();
@@ -175,6 +187,7 @@ class Definition extends Backend
 
     /**
      * 从设计器JSON同步节点到 workflow_node 表
+     * 兼容新版树状设计器（treeToGraph）输出的 graph 格式
      */
     private function syncNodes(int $definitionId, array $graph): void
     {
@@ -191,7 +204,7 @@ class Definition extends Backend
             }
         }
 
-        // 条件边的表达式
+        // 条件边的表达式（source → [{node_key, expr}]）
         $conditionMap = [];
         foreach ($edges as $edge) {
             $source = $edge['sourceNodeId'] ?? '';
@@ -208,11 +221,12 @@ class Definition extends Backend
             $type = $node['type'] ?? 'task';
             $properties = $node['properties'] ?? [];
 
-            // 映射 LogicFlow 节点类型到内部类型
+            // 映射节点类型
             $nodeType = match (true) {
                 str_contains($type, 'start') => 'start',
                 str_contains($type, 'end') => 'end',
                 str_contains($type, 'condition') || str_contains($type, 'decision') || str_contains($type, 'gateway') => 'condition',
+                str_contains($type, 'cc') || str_contains($type, 'copy') => 'cc',
                 str_contains($type, 'fork') => 'fork',
                 str_contains($type, 'join') => 'join',
                 default => 'task',
@@ -220,20 +234,28 @@ class Definition extends Backend
 
             $nextKeys = implode(',', $nextMap[$key] ?? []);
 
+            // CC 节点存储抄送人信息
+            $ccUserIds = '';
+            $ccUserNames = '';
+            if ($nodeType === 'cc') {
+                $ccUserIds = $properties['cc_ids'] ?? ($properties['approver_ids'] ?? '');
+                $ccUserNames = $properties['cc_names'] ?? ($properties['approver_names'] ?? '');
+            }
+
             NodeModel::create([
                 'definition_id'   => $definitionId,
                 'node_key'        => $key,
                 'name'            => $node['text']['value'] ?? ($properties['name'] ?? $key),
                 'node_type'       => $nodeType,
-                'approver_type'   => $properties['approver_type'] ?? 'assignee',
-                'approver_ids'    => $properties['approver_ids'] ?? '',
-                'approver_names'  => $properties['approver_names'] ?? '',
+                'approver_type'   => $nodeType === 'cc' ? 'assignee' : ($properties['approver_type'] ?? 'assignee'),
+                'approver_ids'    => $nodeType === 'cc' ? $ccUserIds : ($properties['approver_ids'] ?? ''),
+                'approver_names'  => $nodeType === 'cc' ? $ccUserNames : ($properties['approver_names'] ?? ''),
                 'perform_type'    => $properties['perform_type'] ?? 'ANY',
                 'next_node_keys'  => $nextKeys,
                 'condition_expr'  => $conditionMap[$key] ?? null,
                 'form_fields'     => $properties['form_fields'] ?? null,
                 'allow_back'      => $properties['allow_back'] ?? 0,
-                'allow_transfer'  => $properties['allow_transfer'] ?? 0,
+                'allow_transfer'  => $properties['allow_transfer'] ?? 1,
                 'sort'            => $sort++,
             ]);
         }
