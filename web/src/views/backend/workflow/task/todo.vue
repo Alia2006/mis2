@@ -92,7 +92,7 @@ const optButtons: any[] = [
         icon: 'fa fa-check',
         class: 'table-row-approve',
         disabledTip: false,
-        click: ({ row }: { row: any }) => {
+        click: (row: any) => {
             currentTask.value = row
             approvalComment.value = ''
             approvalVisible.value = true
@@ -107,7 +107,7 @@ const optButtons: any[] = [
         icon: 'fa fa-share',
         class: 'table-row-transfer',
         disabledTip: false,
-        click: async ({ row }: { row: any }) => {
+        click: async (row: any) => {
             currentTask.value = row
             transferToId.value = 0
             transferComment.value = ''

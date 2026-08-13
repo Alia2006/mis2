@@ -53,7 +53,7 @@ const designerBtn = {
     icon: 'fa fa-project-diagram',
     class: 'table-row-designer',
     disabledTip: false,
-    click: ({ row }: { row: any }) => {
+    click: (row: any) => {
         designerId.value = row.id
         designerVisible.value = true
     },
@@ -67,7 +67,7 @@ const publishBtn = {
     icon: 'fa fa-upload',
     class: 'table-row-publish',
     disabledTip: false,
-    click: ({ row }: { row: any }) => {
+    click: (row: any) => {
         ElMessageBox.confirm(t('workflow.definition.publish confirm'), t('Warning'), { type: 'warning' })
             .then(async () => {
                 await publishApi(row.id)
@@ -85,7 +85,7 @@ const copyBtn = {
     icon: 'fa fa-copy',
     class: 'table-row-copy',
     disabledTip: false,
-    click: ({ row }: { row: any }) => {
+    click: (row: any) => {
         ElMessageBox.confirm(t('workflow.definition.copy confirm'), t('Warning'), { type: 'warning' })
             .then(async () => {
                 await copyDefinition(row.id)

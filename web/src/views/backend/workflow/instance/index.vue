@@ -95,7 +95,7 @@ const optButtons: any[] = [
         icon: 'fa fa-eye',
         class: 'table-row-detail',
         disabledTip: false,
-        click: async ({ row }: { row: any }) => {
+        click: async (row: any) => {
             detailLoading.value = true
             detailVisible.value = true
             try {
@@ -118,7 +118,7 @@ const optButtons: any[] = [
         class: 'table-row-cancel',
         disabledTip: false,
         display: (row: any) => row.status === 'running',
-        click: ({ row }: { row: any }) => {
+        click: (row: any) => {
             ElMessageBox.prompt('请输入撤回原因', '撤回流程', { type: 'warning' })
                 .then(async ({ value }) => {
                     await cancelInstance(row.id, value || '')
