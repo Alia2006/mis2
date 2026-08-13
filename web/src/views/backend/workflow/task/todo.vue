@@ -84,11 +84,14 @@ const transferAdmins = ref<any[]>([])
 
 const optButtons: any[] = [
     {
+        render: 'tipButton',
         name: 'approve',
         title: '审批',
-        text: '审批',
+        text: '',
         type: 'primary',
         icon: 'fa fa-check',
+        class: 'table-row-approve',
+        disabledTip: false,
         click: ({ row }: { row: any }) => {
             currentTask.value = row
             approvalComment.value = ''
@@ -96,11 +99,14 @@ const optButtons: any[] = [
         },
     },
     {
+        render: 'tipButton',
         name: 'transfer',
         title: '转办',
-        text: '转办',
+        text: '',
         type: 'info',
         icon: 'fa fa-share',
+        class: 'table-row-transfer',
+        disabledTip: false,
         click: async ({ row }: { row: any }) => {
             currentTask.value = row
             transferToId.value = 0
@@ -110,39 +116,31 @@ const optButtons: any[] = [
     },
 ]
 
+const taskApi = new baTableApi('/admin/workflow.Task/')
+taskApi.actionUrl.set('index', '/admin/workflow.Task/myTodo')
+
 const baTable = new baTableClass(
-    new baTableApi('/admin/workflow.Task/'),
+    taskApi,
     {
         column: [
             { type: 'selection', align: 'center', operator: false },
             { label: t('Id'), prop: 'id', align: 'center', operator: '=', width: 70 },
-            { label: '实例标题', prop: 'node_name', align: 'center', operator: 'LIKE', width: 150 },
+            { label: '实例标题', prop: 'instance_title', align: 'center', operator: 'LIKE', width: 150 },
             { label: t('workflow.task.node_name'), prop: 'node_name', align: 'center', operator: 'LIKE' },
             { label: t('workflow.task.assignee'), prop: 'assignee_name', align: 'center', operator: false },
             { label: t('Create time'), prop: 'create_time', align: 'center', render: 'datetime', sortable: 'custom', operator: 'RANGE', width: 160 },
             {
                 label: t('Operate'),
                 align: 'center',
-                width: '180',
+                width: '130',
                 render: 'buttons',
                 buttons: optButtons,
                 operator: false,
             },
         ],
     },
-    {
-        // myTodo 查询用 url 参数标记
-    }
+    {}
 )
-
-// 重写 getData 使用 myTodo 接口
-const originalGetData = baTable.getData.bind(baTable)
-baTable.getData = (orderForward?: boolean) => {
-    baTable.filter.setFilter({
-        url: '/admin/workflow.Task/myTodo',
-    })
-    return originalGetData(orderForward)
-}
 
 provide('baTable', baTable)
 
