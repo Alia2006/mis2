@@ -439,6 +439,24 @@ class WorkflowEngine
             $nextNode = $taskNode;
         }
 
+        // 抄送节点 → 发通知后继续流转（不创建审批任务）
+        if ($nextNode->node_type === 'cc') {
+            $ccIds = array_filter(explode(',', $nextNode->approver_ids));
+            if (!empty($ccIds)) {
+                Event::trigger('workflow.task.cc', [
+                    'instance_id' => $instance->id,
+                    'node_name'   => $nextNode->name,
+                    'cc_ids'      => $ccIds,
+                    'cc_names'    => $nextNode->approver_names,
+                ]);
+            }
+            $this->writeLog($instance->id, $nextNode->node_key, $approverId, $approverName, 'cc', '抄送给：' . $nextNode->approver_names);
+
+            // 跳过 CC 节点，继续流转
+            $this->advance($instance, $nextNode, $approverId, $approverName);
+            return;
+        }
+
         // 创建下一节点的任务
         $this->createTasks($instance->id, $instance->definition_id, $nextNode, $instance->initiator_id, $instance->form_data ?? []);
         $instance->save(['current_node_key' => $nextNode->node_key]);
@@ -490,7 +508,8 @@ class WorkflowEngine
     }
 
     /**
-     * 获取下一个 task 节点（跳过 start/condition/fork/join 等中间节点）
+     * 获取下一个 task 节点（跳过 start/condition/cc/fork/join 等中间节点）
+     * 遇到 cc 节点自动处理抄送并继续流转
      */
     private function getNextTaskNode(int $definitionId, string $fromNodeKey, array $formData = []): ?Node
     {
@@ -501,7 +520,7 @@ class WorkflowEngine
             return $node;
         }
 
-        // start/condition/fork/join → 递归找下一节点
+        // start/condition/cc/fork/join → 递归找下一节点
         $next = $this->resolveNextNode($definitionId, $node, $formData);
         if (!$next) return null;
 
