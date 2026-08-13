@@ -36,7 +36,7 @@ import { ElMessage } from 'element-plus'
 import { ZoomIn, ZoomOut, Check, RefreshLeft } from '@element-plus/icons-vue'
 import { saveGraph } from '/@/api/backend/workflow/definition'
 import createAxios from '/@/utils/axios'
-import { useWorkflowStore } from './store'
+import { useWorkflowStore } from './designer/store'
 
 import nodeWrap from './designer/nodeWrap.vue'
 import errorDialog from './designer/errorDialog.vue'
