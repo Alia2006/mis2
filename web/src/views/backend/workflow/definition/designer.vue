@@ -1,241 +1,81 @@
 <template>
-    <div class="workflow-designer">
-        <!-- 顶部工具栏 -->
-        <div class="designer-toolbar">
-            <el-button-group>
-                <el-button type="primary" :icon="Plus" @click="addNode('task')">添加审批节点</el-button>
-                <el-button :icon="Plus" @click="addNode('condition')">添加条件分支</el-button>
-            </el-button-group>
-            <el-button-group>
-                <el-button type="success" :icon="Check" @click="onSave" :loading="saving">保存</el-button>
-                <el-button type="warning" :icon="RefreshLeft" @click="loadGraph">重新加载</el-button>
-            </el-button-group>
-        </div>
-
-        <!-- 主体：左侧节点列表 + 右侧属性面板 -->
-        <div class="designer-body">
-            <!-- 节点列表 -->
-            <div class="node-list">
-                <div class="node-list-header">流程节点（拖拽排序）</div>
-                <div class="node-items">
-                    <!-- 开始节点（固定） -->
-                    <div class="node-item node-start">
-                        <el-icon><Promotion /></el-icon>
-                        <span>开始</span>
-                    </div>
-                    <el-icon class="flow-arrow"><ArrowDown /></el-icon>
-
-                    <!-- 可编辑节点 -->
-                    <div
-                        v-for="(node, idx) in nodes"
-                        :key="node.id"
-                        class="node-wrapper"
-                    >
-                        <div
-                            class="node-item"
-                            :class="{
-                                'node-task': node.type === 'task',
-                                'node-condition': node.type === 'condition',
-                                active: selectedNodeId === node.id,
-                            }"
-                            @click="selectNode(node)"
-                        >
-                            <div class="node-info">
-                                <el-icon v-if="node.type === 'task'"><User /></el-icon>
-                                <el-icon v-else><Switch /></el-icon>
-                                <span class="node-label">{{ node.text || node.name || ('节点' + (idx + 1)) }}</span>
-                            </div>
-                            <el-icon class="node-delete" @click.stop="removeNode(idx)"><Close /></el-icon>
-                        </div>
-                        <el-icon class="flow-arrow"><ArrowDown /></el-icon>
-                    </div>
-
-                    <!-- 结束节点（固定） -->
-                    <div class="node-item node-end">
-                        <el-icon><CircleCheck /></el-icon>
-                        <span>结束</span>
-                    </div>
-
-                    <div v-if="nodes.length === 0" class="empty-tip">
-                        <el-text type="info">请添加审批节点</el-text>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 属性面板 -->
-            <div class="node-properties">
-                <div class="properties-header">节点属性</div>
-                <div class="properties-body" v-if="selectedNode">
-                    <el-form label-width="100px" label-position="right">
-                        <el-form-item label="节点名称">
-                            <el-input v-model="selectedNode.name" placeholder="请输入节点名称" />
-                        </el-form-item>
-
-                        <template v-if="selectedNode.type === 'task'">
-                            <el-form-item label="审批方式">
-                                <el-radio-group v-model="selectedNode.perform_type">
-                                    <el-radio value="ANY">或签（任一同意）</el-radio>
-                                    <el-radio value="ALL">会签（全员同意）</el-radio>
-                                </el-radio-group>
-                            </el-form-item>
-
-                            <el-form-item label="审批人规则">
-                                <el-select v-model="selectedNode.approver_type" placeholder="请选择">
-                                    <el-option label="指定人员" value="assignee" />
-                                    <el-option label="指定角色" value="role" />
-                                    <el-option label="指定部门" value="dept" />
-                                    <el-option label="发起人" value="initiator" />
-                                    <el-option label="部门主管" value="dept_leader" />
-                                </el-select>
-                            </el-form-item>
-
-                            <el-form-item
-                                label="选择人员"
-                                v-if="selectedNode.approver_type === 'assignee'"
-                            >
-                                <el-select
-                                    v-model="selectedNode.approver_ids_arr"
-                                    multiple
-                                    filterable
-                                    placeholder="请选择审批人"
-                                >
-                                    <el-option
-                                        v-for="a in admins"
-                                        :key="a.id"
-                                        :label="a.nickname"
-                                        :value="a.id"
-                                    />
-                                </el-select>
-                            </el-form-item>
-
-                            <el-form-item
-                                label="选择角色"
-                                v-if="selectedNode.approver_type === 'role' || selectedNode.approver_type === 'dept'"
-                            >
-                                <el-select
-                                    v-model="selectedNode.approver_ids_arr"
-                                    multiple
-                                    filterable
-                                    placeholder="请选择"
-                                >
-                                    <el-option
-                                        v-for="g in groups"
-                                        :key="g.id"
-                                        :label="g.name"
-                                        :value="g.id"
-                                    />
-                                </el-select>
-                            </el-form-item>
-
-                            <el-form-item label="允许退回">
-                                <el-switch v-model="selectedNode.allow_back" />
-                            </el-form-item>
-                            <el-form-item label="允许转办">
-                                <el-switch v-model="selectedNode.allow_transfer" />
-                            </el-form-item>
-                        </template>
-
-                        <template v-if="selectedNode.type === 'condition'">
-                            <el-form-item label="节点名称">
-                                <el-input v-model="selectedNode.name" placeholder="如：金额判断" />
-                            </el-form-item>
-                            <el-alert type="info" :closable="false">
-                                条件分支节点根据表单字段值自动路由。请在连线中配置条件表达式。
-                                暂时按顺序流转，后续版本支持可视化条件配置。
-                            </el-alert>
-                        </template>
-                    </el-form>
-                </div>
-                <div class="properties-body" v-else>
-                    <el-empty description="请选择左侧节点编辑属性" />
-                </div>
-            </div>
-        </div>
+  <div class="dingflow-design" style="position: relative; border-radius: 0 0 8px 8px; overflow: auto">
+    <!-- 缩放控制 -->
+    <div class="wf-zoom">
+      <el-button :icon="ZoomOut" size="small" circle :disabled="nowVal == 50" @click="zoomSize(1)" />
+      <span>{{ nowVal }}%</span>
+      <el-button :icon="ZoomIn" size="small" circle :disabled="nowVal == 300" @click="zoomSize(2)" />
     </div>
+
+    <!-- 工具栏 -->
+    <div style="position: absolute; top: 10px; left: 20px; z-index: 10; display: flex; gap: 10px">
+      <el-button type="success" :icon="Check" @click="onSave" :loading="saving">保存</el-button>
+      <el-button :icon="RefreshLeft" @click="loadGraph">重新加载</el-button>
+    </div>
+
+    <div class="box-scale" :style="`transform: scale(${nowVal / 100})`">
+      <nodeWrap v-model:nodeConfig="nodeConfig" v-model:flowPermission="flowPermission" />
+      <div class="end-node">
+        <div class="end-node-circle"></div>
+        <div class="end-node-text">流程结束</div>
+      </div>
+    </div>
+
+    <!-- 抽屉和弹窗 -->
+    <errorDialog v-model:visible="tipVisible" :list="tipList" />
+    <promoterDrawer />
+    <approverDrawer :directorMaxLevel="directorMaxLevel" />
+    <copyerDrawer />
+    <conditionDrawer />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Check, RefreshLeft, Close, ArrowDown, Promotion, CircleCheck, User, Switch } from '@element-plus/icons-vue'
-import { saveGraph, getAdmins, getGroups } from '/@/api/backend/workflow/definition'
+import { ZoomIn, ZoomOut, Check, RefreshLeft } from '@element-plus/icons-vue'
+import { saveGraph } from '/@/api/backend/workflow/definition'
 import createAxios from '/@/utils/axios'
+import { useWorkflowStore } from './store'
+
+import nodeWrap from './designer/nodeWrap.vue'
+import errorDialog from './designer/errorDialog.vue'
+import promoterDrawer from './designer/promoterDrawer.vue'
+import approverDrawer from './designer/approverDrawer.vue'
+import copyerDrawer from './designer/copyerDrawer.vue'
+import conditionDrawer from './designer/conditionDrawer.vue'
+import './designer/workflow.css'
+
+import $func from './designer/helpers'
 
 const props = defineProps<{ definitionId: number }>()
 const emit = defineEmits<{ (e: 'saved'): void }>()
 
-interface DesignerNode {
-    id: string
-    type: 'task' | 'condition'
-    name: string
-    text?: string
-    approver_type: string
-    approver_ids: string
-    approver_ids_arr: number[]
-    approver_names: string
-    perform_type: string
-    allow_back: boolean
-    allow_transfer: boolean
-}
+const store = useWorkflowStore()
+const { setIsTried } = store
 
-const nodes = ref<DesignerNode[]>([])
-const selectedNodeId = ref<string>('')
-const saving = ref(false)
-const admins = ref<any[]>([])
-const groups = ref<any[]>([])
+let tipList = ref<any[]>([])
+let tipVisible = ref(false)
+let nowVal = ref(100)
+let nodeConfig = ref<any>({})
+let flowPermission = ref<any[]>([])
+let directorMaxLevel = ref(4)
+let saving = ref(false)
 
-const selectedNode = computed(() => {
-    return nodes.value.find((n) => n.id === selectedNodeId.value) || null
+/* ─── 默认发起人节点 ─── */
+const defaultNodeConfig = () => ({
+    nodeName: '发起人',
+    type: 0,
+    nodeUserList: [],
+    childNode: null,
 })
 
-let nodeCounter = 0
-
-const genId = () => {
-    nodeCounter++
-    return 'node_' + Date.now() + '_' + nodeCounter
-}
-
-const addNode = (type: 'task' | 'condition') => {
-    const node: DesignerNode = reactive({
-        id: genId(),
-        type,
-        name: type === 'task' ? '审批节点' : '条件分支',
-        approver_type: 'assignee',
-        approver_ids: '',
-        approver_ids_arr: [],
-        approver_names: '',
-        perform_type: 'ANY',
-        allow_back: false,
-        allow_transfer: true,
-    })
-    nodes.value.push(node)
-    selectedNodeId.value = node.id
-}
-
-const removeNode = (idx: number) => {
-    const removed = nodes.value[idx]
-    nodes.value.splice(idx, 1)
-    if (selectedNodeId.value === removed.id) {
-        selectedNodeId.value = ''
-    }
-}
-
-const selectNode = (node: DesignerNode) => {
-    selectedNodeId.value = node.id
-}
-
+/* ─── 加载已保存的设计 ─── */
 const loadGraph = async () => {
-    // 加载管理员和角色
-    try {
-        const [adminRes, groupRes] = await Promise.all([getAdmins(), getGroups()])
-        admins.value = adminRes.data?.data?.list || adminRes.data?.list || []
-        groups.value = groupRes.data?.data?.list || groupRes.data?.list || []
-    } catch (e) {
-        // ignore
+    if (!props.definitionId) {
+        nodeConfig.value = defaultNodeConfig()
+        return
     }
-
-    // 加载已保存的图表数据
-    if (!props.definitionId) return
     try {
         const res = await createAxios({
             url: '/admin/workflow.Definition/edit',
@@ -244,80 +84,259 @@ const loadGraph = async () => {
         })
         const row = res.data?.data?.row || res.data?.row
         if (row?.graph && Array.isArray(row.graph.nodes) && row.graph.nodes.length > 0) {
-            // 解析已保存的节点（跳过 start/end 固定节点）
-            nodes.value = row.graph.nodes
-                .filter((n: any) => {
-                    const t = n.type || ''
-                    return !t.includes('start') && !t.includes('end')
-                })
-                .map((n: any) => {
-                    const p = n.properties || {}
-                    return reactive({
-                        id: n.id,
-                        type: (n.type || '').includes('condition') ? 'condition' : 'task',
-                        name: n.text?.value || p.name || n.id,
-                        approver_type: p.approver_type || 'assignee',
-                        approver_ids: p.approver_ids || '',
-                        approver_ids_arr: (p.approver_ids || '').split(',').filter(Boolean).map(Number),
-                        approver_names: p.approver_names || '',
-                        perform_type: p.perform_type || 'ANY',
-                        allow_back: !!p.allow_back,
-                        allow_transfer: p.allow_transfer !== undefined ? !!p.allow_transfer : true,
-                    }) as DesignerNode
-                })
+            // 有已保存的图 → 转回树结构
+            nodeConfig.value = graphToTree(row.graph)
+            flowPermission.value = row.flowPermission || []
+        } else {
+            nodeConfig.value = defaultNodeConfig()
         }
-    } catch (e) {
-        // 首次设计，无已保存数据
+    } catch {
+        nodeConfig.value = defaultNodeConfig()
     }
 }
 
-const onSave = async () => {
-    saving.value = true
-    try {
-        // 构建 graph JSON
-        const startId = 'node_start'
-        const endId = 'node_end'
-        const graphNodes: any[] = [
-            { id: startId, type: 'workflow-start', text: { value: '开始' }, properties: {} },
-        ]
-        const graphEdges: any[] = []
+/* ─── 树 → 图 JSON（后端 syncNodes 需要的格式） ─── */
+function treeToGraph(root: any): { nodes: any[]; edges: any[] } {
+    const nodes: any[] = []
+    const edges: any[] = []
+    let nodeCounter = 0
 
-        let prevId = startId
-        for (const node of nodes.value) {
-            const idsStr = (node.approver_ids_arr || []).join(',')
-            const namesStr = (node.approver_ids_arr || [])
-                .map((id) => {
-                    if (node.approver_type === 'assignee') {
-                        return admins.value.find((a) => a.id === id)?.nickname || ''
-                    }
-                    return groups.value.find((g) => g.id === id)?.name || ''
-                })
-                .join(',')
+    const genId = () => 'node_' + Date.now() + '_' + (++nodeCounter)
 
-            graphNodes.push({
-                id: node.id,
-                type: node.type === 'task' ? 'workflow-task' : 'workflow-condition',
-                text: { value: node.name },
+    // 起始节点
+    const startId = 'node_start'
+    nodes.push({ id: startId, type: 'workflow-start', text: { value: '开始' }, properties: {} })
+
+    // 如果根节点是发起人(type=0)，从其 childNode 开始处理
+    let chain = root.type === 0 ? root.childNode : root
+    let prevId = startId
+
+    const processChain = (node: any) => {
+        if (!node) {
+            // 连接到结束
+            const endId = 'node_end'
+            if (!nodes.find((n) => n.id === endId)) {
+                nodes.push({ id: endId, type: 'workflow-end', text: { value: '结束' }, properties: {} })
+            }
+            edges.push({ sourceNodeId: prevId, targetNodeId: endId, properties: {} })
+            return
+        }
+
+        if (node.type === 1) {
+            // 审批节点
+            const id = genId()
+            const idsStr = (node.nodeUserList || []).map((u: any) => u.targetId).join(',')
+            const namesStr = (node.nodeUserList || []).map((u: any) => u.name).join(',')
+            const approverType = node.settype === 1 ? 'assignee'
+                : node.settype === 2 ? 'dept_leader'
+                : node.settype === 5 ? 'initiator'
+                : node.settype === 4 ? (node.selectRange === 3 ? 'role' : 'assignee')
+                : 'assignee'
+            const performType = node.examineMode === 2 ? 'ALL' : 'ANY'
+
+            nodes.push({
+                id, type: 'workflow-task', text: { value: node.nodeName || '审批人' },
                 properties: {
-                    name: node.name,
-                    approver_type: node.approver_type,
+                    name: node.nodeName || '审批人',
+                    approver_type: approverType,
                     approver_ids: idsStr,
                     approver_names: namesStr,
-                    perform_type: node.perform_type,
-                    allow_back: node.allow_back ? 1 : 0,
-                    allow_transfer: node.allow_transfer ? 1 : 0,
+                    perform_type: performType,
+                    allow_back: 0,
+                    allow_transfer: 1,
                 },
             })
-            graphEdges.push({ sourceNodeId: prevId, targetNodeId: node.id, properties: {} })
-            prevId = node.id
-        }
-        graphNodes.push({ id: endId, type: 'workflow-end', text: { value: '结束' }, properties: {} })
-        graphEdges.push({ sourceNodeId: prevId, targetNodeId: endId, properties: {} })
+            edges.push({ sourceNodeId: prevId, targetNodeId: id, properties: {} })
+            prevId = id
+            processChain(node.childNode)
 
+        } else if (node.type === 2) {
+            // 抄送节点 → 跳过（后续版本支持），直接处理下一个
+            processChain(node.childNode)
+
+        } else if (node.type === 4) {
+            // 条件分支
+            const condId = genId()
+            const conditions: any[] = []
+            ;(node.conditionNodes || []).forEach((cond: any) => {
+                const exprStr = (cond.conditionList || []).map((c: any) => {
+                    if (c.columnType === 'Double') {
+                        const ops = ['', '<', '>', '<=', '=', '>=']
+                        return `${c.showName} ${ops[parseInt(c.optType)] || '>'} ${c.zdy1}`
+                    }
+                    return '1'
+                }).join(' && ')
+
+                conditions.push({ node_key: cond.nodeName, expr: exprStr || '1' })
+            })
+
+            nodes.push({
+                id: condId, type: 'workflow-condition', text: { value: node.nodeName || '条件分支' },
+                properties: {},
+            })
+            nodes[nodes.length - 1].properties = {}
+            // 存储条件到边的 properties
+            edges.push({ sourceNodeId: prevId, targetNodeId: condId, properties: {} })
+
+            // 每个分支
+            ;(node.conditionNodes || []).forEach((cond: any, idx: number) => {
+                const branchId = genId()
+                const exprStr = conditions[idx]?.expr || '1'
+                nodes.push({
+                    id: branchId, type: 'workflow-task', text: { value: cond.nodeName || '条件' + (idx + 1) },
+                    properties: {
+                        name: cond.nodeName || '条件' + (idx + 1),
+                        approver_type: 'assignee',
+                        approver_ids: '',
+                        approver_names: '',
+                        perform_type: 'ANY',
+                        allow_back: 0,
+                        allow_transfer: 1,
+                    },
+                })
+                edges.push({ sourceNodeId: condId, targetNodeId: branchId, properties: { expr: exprStr } })
+
+                // 递归处理分支内的链
+                const savedPrev = prevId
+                prevId = branchId
+                processChain(cond.childNode)
+                prevId = savedPrev
+            })
+
+            // 分支汇合后继续主链
+            prevId = condId
+            processChain(node.childNode)
+
+        } else {
+            processChain(node.childNode)
+        }
+    }
+
+    processChain(chain)
+
+    // 确保有结束节点
+    if (!nodes.find((n) => n.id === 'node_end')) {
+        nodes.push({ id: 'node_end', type: 'workflow-end', text: { value: '结束' }, properties: {} })
+        edges.push({ sourceNodeId: prevId, targetNodeId: 'node_end', properties: {} })
+    }
+
+    return { nodes, edges }
+}
+
+/* ─── 图 → 树（加载已保存的设计器数据时用） ─── */
+function graphToTree(graph: any): any {
+    const nodes: any[] = graph.nodes || []
+    const edges: any[] = graph.edges || []
+
+    // 构建邻接表
+    const nextMap: Record<string, string[]> = {}
+    const edgeProps: Record<string, Record<string, string>> = {}
+    edges.forEach((e: any) => {
+        const s = e.sourceNodeId, t = e.targetNodeId
+        if (!nextMap[s]) nextMap[s] = []
+        nextMap[s].push(t)
+        edgeProps[s + '->' + t] = e.properties || {}
+    })
+
+    const nodeMap: Record<string, any> = {}
+    nodes.forEach((n: any) => { nodeMap[n.id] = n })
+
+    // 找起始节点
+    const startNode = nodes.find((n: any) => (n.type || '').includes('start'))
+    if (!startNode) return defaultNodeConfig()
+
+    // 递归构建链
+    const buildChain = (nodeId: string): any => {
+        const raw = nodeMap[nodeId]
+        if (!raw) return null
+        const type = raw.type || ''
+
+        if (type.includes('end')) return null
+        if (type.includes('task')) {
+            const p = raw.properties || {}
+            return {
+                nodeName: p.name || raw.text?.value || '审批人',
+                error: false,
+                type: 1,
+                settype: p.approver_type === 'dept_leader' ? 2 : p.approver_type === 'initiator' ? 5 : 1,
+                selectMode: 0, selectRange: 0, directorLevel: 1,
+                examineMode: p.perform_type === 'ALL' ? 2 : 1,
+                noHanderAction: 1, examineEndDirectorLevel: 0,
+                nodeUserList: (p.approver_ids || '').split(',').filter(Boolean).map((id: string, idx: number) => ({
+                    type: 1, targetId: parseInt(id), name: (p.approver_names || '').split(',')[idx] || '',
+                })),
+                childNode: nextMap[nodeId]?.[0] ? buildChain(nextMap[nodeId][0]) : null,
+            }
+        }
+        if (type.includes('condition')) {
+            const branches = nextMap[nodeId] || []
+            return {
+                nodeName: raw.text?.value || '条件分支',
+                type: 4,
+                childNode: null,
+                conditionNodes: branches.map((bid: string, idx: number) => ({
+                    nodeName: nodeMap[bid]?.text?.value || '条件' + (idx + 1),
+                    error: false,
+                    type: 3,
+                    priorityLevel: idx + 1,
+                    conditionList: [],
+                    nodeUserList: [],
+                    childNode: nextMap[bid]?.[0] ? buildChain(nextMap[bid][0]) : null,
+                })),
+            }
+        }
+        // 其他中间节点 → 递归
+        return nextMap[nodeId]?.[0] ? buildChain(nextMap[nodeId][0]) : null
+    }
+
+    // 从 start 的下一个节点开始
+    const startNext = nextMap[startNode.id]?.[0]
+    const childChain = startNext ? buildChain(startNext) : null
+
+    return {
+        nodeName: '发起人',
+        type: 0,
+        nodeUserList: [],
+        childNode: childChain,
+    }
+}
+
+/* ─── 错误校验 ─── */
+const reErr = ({ childNode }: any) => {
+    if (childNode) {
+        let { type, error, nodeName, conditionNodes } = childNode
+        if (type == 1 || type == 2) {
+            if (error) tipList.value.push({ name: nodeName, type: ['', '审核人', '抄送人'][type] })
+            reErr(childNode)
+        } else if (type == 4) {
+            reErr(childNode)
+            for (let i = 0; i < (conditionNodes || []).length; i++) {
+                if (conditionNodes[i].error) tipList.value.push({ name: conditionNodes[i].nodeName, type: '条件' })
+                reErr(conditionNodes[i])
+            }
+        }
+    }
+}
+
+/* ─── 保存 ─── */
+const onSave = async () => {
+    setIsTried(true)
+    tipList.value = []
+    reErr(nodeConfig.value)
+    if (tipList.value.length != 0) {
+        tipVisible.value = true
+        return
+    }
+
+    saving.value = true
+    try {
+        const graph = treeToGraph(nodeConfig.value)
         await saveGraph({
             id: props.definitionId,
-            graph: { nodes: graphNodes, edges: graphEdges },
+            graph,
+            flowPermission: flowPermission.value,
         })
+        ElMessage.success('保存成功')
         emit('saved')
     } catch (e: any) {
         ElMessage.error(e.message || '保存失败')
@@ -326,153 +345,27 @@ const onSave = async () => {
     }
 }
 
+/* ─── 缩放 ─── */
+const zoomSize = (type: number) => {
+    if (type == 1) {
+        if (nowVal.value == 50) return
+        nowVal.value -= 10
+    } else {
+        if (nowVal.value == 300) return
+        nowVal.value += 10
+    }
+}
+
 onMounted(() => {
     loadGraph()
 })
 </script>
 
-<style scoped lang="scss">
-.workflow-designer {
-    height: calc(100vh - 120px);
-    display: flex;
-    flex-direction: column;
-}
-
-.designer-toolbar {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 0 12px;
-}
-
-.designer-body {
-    flex: 1;
-    display: flex;
-    gap: 16px;
-    overflow: hidden;
-}
-
-.node-list {
-    width: 300px;
-    border: 1px solid var(--el-border-color);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.node-list-header {
-    padding: 12px;
-    font-weight: 600;
-    background: var(--el-fill-color-light);
-    border-bottom: 1px solid var(--el-border-color);
-}
-
-.node-items {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.node-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-.node-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    min-height: 48px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.2s;
-
-    .node-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .node-label {
-        font-size: 14px;
-    }
-
-    .node-delete {
-        opacity: 0;
-        transition: opacity 0.2s;
-        color: var(--el-color-danger);
-    }
-
-    &:hover .node-delete {
-        opacity: 1;
-    }
-
-    &.active {
-        border-color: var(--el-color-primary);
-    }
-
-    &.node-start,
-    &.node-end {
-        cursor: default;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    &.node-start {
-        background: var(--el-color-success-light-9);
-        color: var(--el-color-success);
-    }
-
-    &.node-end {
-        background: var(--el-color-info-light-9);
-        color: var(--el-color-info);
-    }
-
-    &.node-task {
-        background: var(--el-color-primary-light-9);
-    }
-
-    &.node-condition {
-        background: var(--el-color-warning-light-9);
-    }
-}
-
-.flow-arrow {
-    margin: 8px 0;
-    color: var(--el-text-color-secondary);
-}
-
-.empty-tip {
-    margin-top: 20px;
-}
-
-.node-properties {
-    flex: 1;
-    border: 1px solid var(--el-border-color);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.properties-header {
-    padding: 12px;
-    font-weight: 600;
-    background: var(--el-fill-color-light);
-    border-bottom: 1px solid var(--el-border-color);
-}
-
-.properties-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
+<style scoped>
+.wf-zoom {
+    position: absolute;
+    right: 40px;
+    top: 15px;
+    z-index: 10;
 }
 </style>

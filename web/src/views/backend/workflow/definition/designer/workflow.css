@@ -1,0 +1,147 @@
+/* 工作流设计器样式（移植自 Workflow-Vue3 workflow.css，去除 CSS reset） */
+
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.l { float: left; }
+.ml_10 { margin-left: 10px; }
+.mr_10 { margin-right: 10px; }
+
+.clear:before, .clear:after { content: " "; display: table; }
+.clear:after { clear: both; }
+
+.radio_box a, .check_box a {
+    font-size: 12px; position: relative; padding-left: 20px; margin-right: 30px;
+    cursor: pointer; color: #333; white-space: pre;
+}
+.check_box.not a:hover { color: #333; }
+.check_box.not a::before, .check_box.not a:hover::before { border: none; }
+.check_box.not.active { background: #f3f3f3; }
+.radio_box a:hover::before, .check_box a:hover::before { border: 1px solid #46a6fe; }
+.radio_box a::before, .check_box a::before {
+    position: absolute; width: 14px; height: 14px; border: 1px solid #dcdfe6;
+    border-radius: 2px; left: 0; top: 1px; content: "";
+}
+.radio_box a::before { border-radius: 50%; }
+.check-dot.active::after, .radio_box a.active::after, .check_box a.active::after {
+    position: absolute; width: 10px; height: 10px; border-radius: 50%; top: 3px; left: 3px; content: "";
+}
+.radio_box a.active::after { background: #46a6fe; }
+.check_box a.active::after { background: #3296fa; }
+
+/* ─── 导航栏 ─── */
+.wf-designer-nav {
+    display: flex; align-items: center; height: 56px; padding: 0 20px;
+    background: #3296fa; color: #fff; border-radius: 8px 8px 0 0;
+}
+.wf-designer-nav .nav-left { display: flex; align-items: center; flex: 1; }
+.wf-designer-nav .nav-title { font-size: 16px; font-weight: 600; padding: 0 15px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wf-designer-nav .nav-right { display: flex; align-items: center; gap: 10px; }
+.wf-designer-nav .nav-back { cursor: pointer; font-size: 20px; padding: 0 10px; display: flex; align-items: center; }
+
+/* ─── 错误弹窗 ─── */
+.error-modal-desc { font-size: 13px; color: rgba(25,31,37,.56); line-height: 22px; margin-bottom: 14px; }
+.error-modal-list { height: 200px; overflow-y: auto; margin-right: -25px; padding-right: 25px; }
+.error-modal-item { padding: 10px 20px; line-height: 21px; background: #f6f6f6; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-radius: 4px; }
+.error-modal-item-label { flex: none; font-size: 15px; color: rgba(25,31,37,.56); padding-right: 10px; }
+.error-modal-item-content { text-align: right; flex: 1; font-size: 13px; color: #191f25; }
+
+/* ─── 缩放控制 ─── */
+.wf-zoom { display: flex; align-items: center; justify-content: space-between; height: 40px; width: 140px; position: absolute; right: 40px; margin-top: 10px; z-index: 10; }
+.wf-zoom .el-button { padding: 4px 8px; }
+
+/* ─── 设计器主区域 ─── */
+.dingflow-design { width: 100%; background-color: #f5f5f7; overflow: auto; position: absolute; bottom: 0; left: 0; right: 0; top: 0; border-radius: 0 0 8px 8px; }
+.dingflow-design .box-scale { transform: scale(1); display: inline-block; position: relative; width: 100%; padding: 54px 0; align-items: flex-start; justify-content: center; flex-wrap: wrap; min-width: min-content; background-color: #f5f5f7; transform-origin: 50% 0px 0px; }
+
+.dingflow-design .node-wrap { flex-direction: column; justify-content: flex-start; align-items: center; flex-wrap: wrap; padding: 0 50px; position: relative; display: inline-flex; width: 100%; }
+.dingflow-design .branch-wrap { display: inline-flex; width: 100%; }
+.dingflow-design .branch-box-wrap { display: flex; flex-direction: column; flex-wrap: wrap; align-items: center; min-height: 270px; width: 100%; flex-shrink: 0; }
+.dingflow-design .branch-box { display: flex; overflow: visible; min-height: 180px; height: auto; border-bottom: 2px solid #ccc; border-top: 2px solid #ccc; position: relative; margin-top: 15px; }
+.dingflow-design .branch-box .col-box { background: #f5f5f7; }
+.dingflow-design .branch-box .col-box:before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; margin: auto; width: 2px; height: 100%; background-color: #cacaca; }
+
+.dingflow-design .add-branch { border: none; outline: none; user-select: none; justify-content: center; font-size: 12px; padding: 0 10px; height: 30px; line-height: 30px; border-radius: 15px; color: #3296fa; background: #fff; box-shadow: 0 2px 4px 0 rgba(0,0,0,.1); position: absolute; top: -16px; left: 50%; transform: translateX(-50%); cursor: pointer; z-index: 1; display: inline-flex; align-items: center; transition: all .3s; }
+.dingflow-design .add-branch:hover { transform: translateX(-50%) scale(1.1); box-shadow: 0 8px 16px 0 rgba(0,0,0,.1); }
+.dingflow-design .add-branch:active { transform: translateX(-50%); box-shadow: none; }
+
+.dingflow-design .col-box { display: inline-flex; flex-direction: column; align-items: center; position: relative; }
+.dingflow-design .condition-node { min-height: 220px; }
+.dingflow-design .condition-node, .dingflow-design .condition-node-box { display: inline-flex; flex-direction: column; }
+.dingflow-design .condition-node-box { padding-top: 30px; padding-right: 50px; padding-left: 50px; justify-content: center; align-items: center; flex-grow: 1; position: relative; }
+.dingflow-design .condition-node-box:before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: auto; width: 2px; height: 100%; background-color: #cacaca; }
+
+/* ─── 节点卡片 ─── */
+.node-wrap-box { display: inline-flex; flex-direction: column; position: relative; width: 220px; min-height: 72px; flex-shrink: 0; background: #fff; border-radius: 4px; cursor: pointer; }
+.node-wrap-box:after { pointer-events: none; content: ""; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 2; border-radius: 4px; border: 1px solid transparent; transition: all .1s; box-shadow: 0 2px 5px 0 rgba(0,0,0,.1); }
+.node-wrap-box.active:after, .node-wrap-box:active:after, .node-wrap-box:hover:after { border: 1px solid #3296fa; box-shadow: 0 0 6px 0 rgba(50,150,250,.3); }
+.node-wrap-box.active .close, .node-wrap-box:active .close, .node-wrap-box:hover .close { display: flex; }
+.node-wrap-box.error:after { border: 1px solid #f25643; box-shadow: 0 2px 5px 0 rgba(0,0,0,.1); }
+.node-wrap-box .title { position: relative; display: flex; align-items: center; padding-left: 16px; padding-right: 30px; width: 100%; height: 24px; line-height: 24px; font-size: 12px; color: #fff; text-align: left; border-radius: 4px 4px 0 0; }
+.node-wrap-box .title .node-icon { font-size: 12px; margin-right: 5px; }
+.node-wrap-box .placeholder { color: #bfbfbf; }
+.node-wrap-box .close { display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; font-size: 14px; color: #fff; border-radius: 50%; text-align: center; align-items: center; justify-content: center; }
+.node-wrap-box .content { position: relative; font-size: 14px; padding: 16px; padding-right: 30px; }
+.node-wrap-box .content .text { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.node-wrap-box .content .arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 20px; height: 14px; font-size: 14px; color: #979797; }
+.start-node.node-wrap-box .content .text { display: block; white-space: nowrap; }
+.node-wrap-box:before { content: ""; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 4px; border-style: solid; border-width: 8px 6px 4px; border-color: #cacaca transparent transparent; background: #f5f5f7; }
+.node-wrap-box.start-node:before { content: none; }
+
+/* ─── 条件节点 ─── */
+.top-left-cover-line, .top-right-cover-line { position: absolute; height: 8px; width: 50%; background-color: #f5f5f7; top: -4px; }
+.top-left-cover-line { left: -1px; }
+.top-right-cover-line { right: -1px; }
+.bottom-left-cover-line, .bottom-right-cover-line { position: absolute; height: 8px; width: 50%; background-color: #f5f5f7; bottom: -4px; }
+.bottom-left-cover-line { left: -1px; }
+.bottom-right-cover-line { right: -1px; }
+
+.dingflow-design .auto-judge { position: relative; width: 220px; min-height: 72px; background: #fff; border-radius: 4px; padding: 14px 19px; cursor: pointer; }
+.dingflow-design .auto-judge:after { pointer-events: none; content: ""; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 2; border-radius: 4px; border: 1px solid transparent; transition: all .1s; box-shadow: 0 2px 5px 0 rgba(0,0,0,.1); }
+.dingflow-design .auto-judge.active:after, .dingflow-design .auto-judge:active:after, .dingflow-design .auto-judge:hover:after { border: 1px solid #3296fa; box-shadow: 0 0 6px 0 rgba(50,150,250,.3); }
+.dingflow-design .auto-judge.active .close, .dingflow-design .auto-judge:active .close, .dingflow-design .auto-judge:hover .close { display: flex; }
+.dingflow-design .auto-judge.error:after { border: 1px solid #f25643; }
+.dingflow-design .auto-judge .title-wrapper { position: relative; font-size: 12px; color: #15bc83; text-align: left; line-height: 16px; }
+.dingflow-design .auto-judge .title-wrapper .editable-title { display: inline-block; max-width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dingflow-design .auto-judge .title-wrapper .priority-title { display: inline-block; float: right; margin-right: 10px; color: rgba(25,31,37,.56); }
+.dingflow-design .auto-judge .placeholder { color: #bfbfbf; }
+.dingflow-design .auto-judge .close { display: none; position: absolute; right: -10px; top: -10px; width: 20px; height: 20px; font-size: 14px; color: rgba(0,0,0,.25); border-radius: 50%; text-align: center; align-items: center; justify-content: center; z-index: 2; background: #fff; }
+.dingflow-design .auto-judge .content { font-size: 14px; color: #191f25; text-align: left; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.dingflow-design .auto-judge .sort-left, .dingflow-design .auto-judge .sort-right { position: absolute; top: 0; bottom: 0; display: none; z-index: 1; }
+.dingflow-design .auto-judge .sort-left { left: 0; border-right: 1px solid #f6f6f6; }
+.dingflow-design .auto-judge .sort-right { right: 0; border-left: 1px solid #f6f6f6; }
+.dingflow-design .auto-judge:hover .sort-left, .dingflow-design .auto-judge:hover .sort-right { display: flex; align-items: center; }
+.dingflow-design .auto-judge .sort-left:hover, .dingflow-design .auto-judge .sort-right:hover { background: #efefef; }
+
+.auto-judge:hover .editable-title, .node-wrap-box:hover .editable-title { border-bottom: 1px dashed #fff; }
+.auto-judge:hover .editable-title.editing, .node-wrap-box:hover .editable-title.editing { text-decoration: none; border: 1px solid #d9d9d9; }
+.auto-judge:hover .editable-title { border-color: #15bc83; }
+.editable-title { line-height: 15px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-bottom: 1px dashed transparent; }
+.editable-title:before { content: ""; position: absolute; top: 0; left: 0; bottom: 0; right: 40px; }
+.editable-title:hover { border-bottom: 1px dashed #fff; }
+.editable-title-input { flex: none; height: 18px; padding-left: 4px; text-indent: 0; font-size: 12px; line-height: 18px; z-index: 1; }
+
+/* ─── 结束节点 ─── */
+.dingflow-design .end-node { border-radius: 50%; font-size: 14px; color: rgba(25,31,37,.4); text-align: left; }
+.dingflow-design .end-node .end-node-circle { width: 10px; height: 10px; margin: auto; border-radius: 50%; background: #dbdcdc; }
+.dingflow-design .end-node .end-node-text { margin-top: 5px; text-align: center; }
+
+/* ─── 添加节点按钮 ─── */
+.add-node-btn-box { width: 240px; display: inline-flex; flex-shrink: 0; position: relative; }
+.add-node-btn-box:before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; margin: auto; width: 2px; height: 100%; background-color: #cacaca; }
+.add-node-btn-box .add-node-btn { user-select: none; width: 240px; padding: 20px 0 32px; display: flex; justify-content: center; flex-shrink: 0; }
+.add-node-btn-box .add-node-btn .btn { outline: none; box-shadow: 0 2px 4px 0 rgba(0,0,0,.1); width: 30px; height: 30px; background: #3296fa; border-radius: 50%; position: relative; border: none; line-height: 30px; transition: all .3s; color: #fff; font-size: 16px; cursor: pointer; }
+.add-node-btn-box .add-node-btn .btn:hover { transform: scale(1.3); box-shadow: 0 13px 27px 0 rgba(0,0,0,.1); }
+.add-node-btn-box .add-node-btn .btn:active { transform: none; background: #1e83e9; }
+
+.add-node-popover-body { display: flex; }
+.add-node-popover-body .add-node-popover-item { margin-right: 10px; cursor: pointer; text-align: center; color: #191f25!important; }
+.add-node-popover-body .add-node-popover-item .item-wrapper { user-select: none; display: inline-flex; width: 60px; height: 60px; margin-bottom: 5px; background: #fff; border: 1px solid #e2e2e2; border-radius: 50%; transition: all .3s; align-items: center; justify-content: center; font-size: 24px; }
+.add-node-popover-body .add-node-popover-item.approver .item-wrapper { color: #ff943e; }
+.add-node-popover-body .add-node-popover-item.notifier .item-wrapper { color: #3296fa; }
+.add-node-popover-body .add-node-popover-item.condition .item-wrapper { color: #15bc83; }
+.add-node-popover-body .add-node-popover-item:hover .item-wrapper { background: #3296fa; box-shadow: 0 10px 20px 0 rgba(50,150,250,.4); }
+.add-node-popover-body .add-node-popover-item:hover .item-wrapper i { color: #fff; }
+
+/* ─── 错误提示 ─── */
+.error_tip { position: absolute; top: 0px; right: 0px; transform: translate(150%, 0px); font-size: 20px; color: rgb(242,86,67); }
+.selected_list { margin-bottom: 20px; line-height: 30px; }
+.selected_list span { margin-right: 10px; padding: 3px 6px 3px 9px; line-height: 12px; white-space: nowrap; border-radius: 2px; border: 1px solid rgba(220,220,220,1); }

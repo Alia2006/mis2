@@ -1,0 +1,24 @@
+/* 弹窗选择器样式 */
+
+.promoter_person .el-dialog__body { padding: 10px 20px 14px 20px; }
+.person_body { display: flex; border: 1px solid #f2f2f2; }
+.person_tree { width: 320px; height: 500px; border-right: 1px solid #f2f2f2; }
+.person_tree input { width: 100%; height: 32px; line-height: 32px; padding: 0 10px; border: none; border-bottom: 1px solid #f2f2f2; }
+.tree_nav { background: #f5f5f5; padding: 0 10px; line-height: 32px; }
+.tree_nav span { cursor: pointer; }
+
+.select-box { height: 420px; overflow-y: auto; }
+.select-box li { padding: 5px 0; position: relative; }
+.select-box li a { font-size: 12px; position: relative; padding-left: 24px; margin-right: 30px; cursor: pointer; color: #333; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+.select-box li a::before { position: absolute; width: 14px; height: 14px; border: 1px solid #dcdfe6; border-radius: 2px; left: 0; top: 1px; content: ""; }
+.select-box li a.active::after { position: absolute; width: 10px; height: 10px; border-radius: 2px; top: 3px; left: 3px; content: ""; background: #3296fa; }
+.select-box li i { float: right; padding-left: 24px; padding-right: 10px; color: #3195f8; font-size: 12px; cursor: pointer; border-left: 1px solid rgb(238,238,238); }
+.select-box li a.active + i { color: rgb(197,197,197); pointer-events: none; }
+.select-box li .dept-icon, .select-box li .role-icon, .select-box li .people-icon { width: 14px; vertical-align: middle; }
+
+.select-result { width: 276px; height: 100%; font-size: 12px; }
+.select-result ul { height: 460px; overflow-y: auto; }
+.select-result ul li { margin: 11px 26px 13px 19px; line-height: 17px; display: flex; align-items: center; gap: 5px; }
+.select-result p { padding-left: 19px; padding-right: 20px; line-height: 37px; border-bottom: 1px solid #f2f2f2; }
+.select-result p a { float: right; cursor: pointer; }
+.select-result .cancel-icon { margin-left: auto; cursor: pointer; color: #999; }
