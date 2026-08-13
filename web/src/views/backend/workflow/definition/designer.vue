@@ -158,8 +158,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Check, RefreshLeft, Close, ArrowDown, Promotion, CircleCheck, User, Switch } from '@element-plus/icons-vue'
-import { saveGraph } from '/@/api/backend/workflow/definition'
-import { getAdmins, getGroups } from '/@/api/backend/workflow/definition'
+import { saveGraph, getAdmins, getGroups } from '/@/api/backend/workflow/definition'
+import createAxios from '/@/utils/axios'
 
 const props = defineProps<{ definitionId: number }>()
 const emit = defineEmits<{ (e: 'saved'): void }>()
@@ -225,14 +225,49 @@ const selectNode = (node: DesignerNode) => {
 }
 
 const loadGraph = async () => {
-    // 从父组件传入的数据加载（暂时空实现，后续从API加载已有图）
     // 加载管理员和角色
     try {
         const [adminRes, groupRes] = await Promise.all([getAdmins(), getGroups()])
-        admins.value = adminRes.data.list || []
-        groups.value = groupRes.data.list || []
+        admins.value = adminRes.data?.data?.list || adminRes.data?.list || []
+        groups.value = groupRes.data?.data?.list || groupRes.data?.list || []
     } catch (e) {
         // ignore
+    }
+
+    // 加载已保存的图表数据
+    if (!props.definitionId) return
+    try {
+        const res = await createAxios({
+            url: '/admin/workflow.Definition/edit',
+            method: 'get',
+            params: { id: props.definitionId },
+        })
+        const row = res.data?.data?.row || res.data?.row
+        if (row?.graph && Array.isArray(row.graph.nodes) && row.graph.nodes.length > 0) {
+            // 解析已保存的节点（跳过 start/end 固定节点）
+            nodes.value = row.graph.nodes
+                .filter((n: any) => {
+                    const t = n.type || ''
+                    return !t.includes('start') && !t.includes('end')
+                })
+                .map((n: any) => {
+                    const p = n.properties || {}
+                    return reactive({
+                        id: n.id,
+                        type: (n.type || '').includes('condition') ? 'condition' : 'task',
+                        name: n.text?.value || p.name || n.id,
+                        approver_type: p.approver_type || 'assignee',
+                        approver_ids: p.approver_ids || '',
+                        approver_ids_arr: (p.approver_ids || '').split(',').filter(Boolean).map(Number),
+                        approver_names: p.approver_names || '',
+                        perform_type: p.perform_type || 'ANY',
+                        allow_back: !!p.allow_back,
+                        allow_transfer: p.allow_transfer !== undefined ? !!p.allow_transfer : true,
+                    }) as DesignerNode
+                })
+        }
+    } catch (e) {
+        // 首次设计，无已保存数据
     }
 }
 
