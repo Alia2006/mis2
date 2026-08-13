@@ -87,17 +87,20 @@ const detailData = ref<any>(null)
 
 const optButtons: any[] = [
     {
+        render: 'tipButton',
         name: 'detail',
         title: '详情',
-        text: '详情',
+        text: '',
         type: 'primary',
         icon: 'fa fa-eye',
+        class: 'table-row-detail',
+        disabledTip: false,
         click: async ({ row }: { row: any }) => {
             detailLoading.value = true
             detailVisible.value = true
             try {
                 const res = await getDetail(row.id)
-                detailData.value = res.data
+                detailData.value = res.data?.data || res.data
             } catch (e: any) {
                 ElMessage.error(e.message || '加载失败')
             } finally {
@@ -106,12 +109,15 @@ const optButtons: any[] = [
         },
     },
     {
+        render: 'tipButton',
         name: 'cancel',
         title: '撤回',
-        text: '撤回',
+        text: '',
         type: 'warning',
         icon: 'fa fa-undo',
-        display: (row: any) => row.status === 'running' && row.initiator_id,
+        class: 'table-row-cancel',
+        disabledTip: false,
+        display: (row: any) => row.status === 'running',
         click: ({ row }: { row: any }) => {
             ElMessageBox.prompt('请输入撤回原因', '撤回流程', { type: 'warning' })
                 .then(async ({ value }) => {
