@@ -177,7 +177,6 @@ class Definition extends Backend
         $list = Db::name('admin_group')
             ->where('status', 1)
             ->field('id, name, pid')
-            ->order('weigh', 'desc')
             ->order('id', 'asc')
             ->select()
             ->toArray();
