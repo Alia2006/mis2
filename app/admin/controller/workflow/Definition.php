@@ -144,27 +144,45 @@ class Definition extends Backend
 
     /**
      * 获取管理员列表（设计器选择审批人/抄送人）
-     * 可选 group_id 参数：按部门/角色组过滤
+     * 返回 id, nickname, username, group_ids（所属组ID数组）
      */
     public function getAdmins(): void
     {
         $groupId = $this->request->param('group_id', 0);
 
-        $query = Db::name('admin')->where('status', 'enable');
-
-        if ($groupId) {
-            $adminIds = Db::name('admin_group_access')->where('group_id', $groupId)->column('uid');
-            if (empty($adminIds)) {
-                $this->success('', ['list' => []]);
-                return;
-            }
-            $query->whereIn('id', $adminIds);
-        }
-
-        $list = $query->field('id, nickname, username')
+        // 查全部管理员
+        $list = Db::name('admin')
+            ->where('status', 'enable')
+            ->field('id, nickname, username')
             ->order('id', 'asc')
             ->select()
             ->toArray();
+
+        if (empty($list)) {
+            $this->success('', ['list' => []]);
+            return;
+        }
+
+        // 查管理员-组关联
+        $accessList = Db::name('admin_group_access')->select()->toArray();
+        $adminGroups = [];
+        foreach ($accessList as $access) {
+            $uid = $access['uid'];
+            if (!isset($adminGroups[$uid])) $adminGroups[$uid] = [];
+            $adminGroups[$uid][] = (int)$access['group_id'];
+        }
+
+        // 附加 group_ids
+        foreach ($list as &$item) {
+            $item['group_ids'] = $adminGroups[$item['id']] ?? [];
+        }
+        unset($item);
+
+        // 按组过滤
+        if ($groupId) {
+            $list = array_filter($list, fn($a) => in_array((int)$groupId, $a['group_ids']));
+            $list = array_values($list);
+        }
 
         $this->success('', ['list' => $list]);
     }
