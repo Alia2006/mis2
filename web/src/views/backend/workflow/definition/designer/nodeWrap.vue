@@ -87,6 +87,7 @@ import { Close, ArrowRight, WarningFilled } from '@element-plus/icons-vue'
 import $func from './helpers'
 import { useWorkflowStore } from './store'
 import { bgColors, placeholderList } from './const'
+import addNode from './addNode.vue'
 
 defineOptions({ name: 'nodeWrap' })
 
