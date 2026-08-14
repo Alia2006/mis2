@@ -541,8 +541,8 @@ class WorkflowEngine
             throw new \RuntimeException('节点 [' . $node->name . '] 无法解析审批人');
         }
 
-        // 批次号（用于会签/或签分组）
-        $batchNo = (int)(microtime(true) * 1000);
+        // 批次号（用于会签/或签分组）— 随机9位数，确保在 INT UNSIGNED 范围内
+        $batchNo = mt_rand(100000000, 999999999);
 
         // 查询审批人名称
         $admins = Db::name('admin')
