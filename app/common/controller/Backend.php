@@ -187,7 +187,11 @@ class Backend extends Api
         $initOperator = $this->request->get("initOperator/s", 'in');
 
         $where              = [];
-        $modelTable         = strtolower($this->model->getTable());
+        // 表别名 key 必须与 ThinkPHP options['table'] 的原样表名一致（parseTable 按原样匹配），
+        // strtolower 会把动态表名如 Project_table 变成 project_table，导致别名被丢弃、
+        // WHERE 中的 dynamic_model.xxx 限定符悬空，报 Unknown column 错误。
+        // 常规模型 getTable() = prefix + snake(name) 恒为小写，去掉 strtolower 对其无影响。
+        $modelTable         = $this->model->getTable();
         $alias[$modelTable] = parse_name(basename(str_replace('\\', '/', get_class($this->model))));
         $mainTableAlias     = $alias[$modelTable] . '.';
 
