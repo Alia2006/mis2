@@ -483,6 +483,13 @@ class Table extends Backend
             ->select()
             ->toArray();
 
+        // 查找逐人签批记录
+        $signs = Db::name('workflow_sign')
+            ->where('instance_id', $instance['id'])
+            ->order('create_time', 'asc')
+            ->select()
+            ->toArray();
+
         // 发起人名称
         $initiatorName = Db::name('admin')->where('id', $instance['initiator_id'])->value('nickname', '');
 
@@ -492,6 +499,7 @@ class Table extends Backend
             'instance' => $instance,
             'tasks'    => $tasks,
             'logs'     => $logs,
+            'signs'    => $signs,
         ]);
     }
 

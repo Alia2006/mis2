@@ -231,6 +231,12 @@ export const fullUrl = (relativeUrl: string, domain = '') => {
         return relativeUrl
     }
 
+    // 历史数据（Forguncy 迁移）存储的是不含路径的裸文件名（如 guid_xxx.jpg），
+    // 文件实际位于 /storage/ 目录下，此处自动补全前缀；新数据为 /storage/... 完整路径，不受影响
+    if (!relativeUrl.includes('/') && /\.[a-zA-Z0-9]+$/.test(relativeUrl.split('?')[0].split('#')[0])) {
+        relativeUrl = '/storage/' + relativeUrl
+    }
+
     let url = domain + relativeUrl
     if (domain === siteConfig.cdnUrl && siteConfig.cdnUrlParams) {
         const separator = url.includes('?') ? '&' : '?'

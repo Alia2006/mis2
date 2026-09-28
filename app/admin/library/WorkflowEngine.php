@@ -146,6 +146,16 @@ class WorkflowEngine
                 'comment'       => $comment,
             ]);
 
+            // 记录签批（会签/或签逐人记录）
+            Sign::create([
+                'task_id'      => $task->id,
+                'instance_id'  => $instance->id,
+                'signer_id'    => $approverId,
+                'signer_name'  => $approverName,
+                'result'       => 'agree',
+                'comment'      => $comment,
+            ]);
+
             // 写日志
             $this->writeLog($instance->id, $task->node_key, $approverId, $approverName, 'approve', $comment);
 
@@ -234,6 +244,16 @@ class WorkflowEngine
             // 更新实例状态
             $instance->save(['status' => 'rejected']);
 
+            // 记录签批
+            Sign::create([
+                'task_id'      => $task->id,
+                'instance_id'  => $instance->id,
+                'signer_id'    => $approverId,
+                'signer_name'  => $approverName,
+                'result'       => 'disagree',
+                'comment'      => $comment,
+            ]);
+
             // 写日志
             $this->writeLog($instance->id, $task->node_key, $approverId, $approverName, 'reject', $comment);
 
@@ -279,6 +299,16 @@ class WorkflowEngine
                 'approver_id'   => $approverId,
                 'approver_name' => $approverName,
                 'comment'       => '退回: ' . $comment,
+            ]);
+
+            // 记录签批（退回）
+            Sign::create([
+                'task_id'      => $task->id,
+                'instance_id'  => $instance->id,
+                'signer_id'    => $approverId,
+                'signer_name'  => $approverName,
+                'result'       => 'disagree',
+                'comment'      => '退回: ' . $comment,
             ]);
 
             // 写日志

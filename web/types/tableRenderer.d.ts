@@ -17,4 +17,5 @@ type TableRenderer =
     | 'tags'
     | 'time'
     | 'url'
+    | 'workflowStatus'
     | 'slot'

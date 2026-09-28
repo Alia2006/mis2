@@ -41,6 +41,20 @@
                     <el-table-column prop="update_time" :label="t('dynamic.workflow.time')" width="160" />
                 </el-table>
 
+                <!-- 逐人签批记录 -->
+                <el-table v-if="signs.length" :data="signs" size="small" border class="mb-4">
+                    <el-table-column prop="signer_name" :label="t('dynamic.workflow.signer')" width="120" />
+                    <el-table-column :label="t('dynamic.workflow.sign_result')" width="90">
+                        <template #default="{ row }">
+                            <el-tag :type="row.result === 'agree' ? 'success' : 'danger'" size="small">
+                                {{ row.result === 'agree' ? t('dynamic.workflow.sign_agree') : t('dynamic.workflow.sign_disagree') }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="comment" :label="t('dynamic.workflow.comment')" show-overflow-tooltip />
+                    <el-table-column prop="create_time" :label="t('dynamic.workflow.time')" width="160" />
+                </el-table>
+
                 <!-- 操作时间线 -->
                 <el-timeline>
                     <el-timeline-item
@@ -104,6 +118,7 @@ const moduleCode = ref('')
 const instance = ref<any>(null)
 const tasks = ref<any[]>([])
 const logs = ref<any[]>([])
+const signs = ref<any[]>([])
 
 /** 发起人可撤回 */
 const canCancel = computed(() => {
@@ -128,6 +143,7 @@ const loadData = async () => {
         instance.value = data.instance
         tasks.value = data.tasks || []
         logs.value = data.logs || []
+        signs.value = data.signs || []
     } catch (err) {
         console.error('Failed to load workflow detail:', err)
     } finally {

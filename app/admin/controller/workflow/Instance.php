@@ -7,6 +7,7 @@ use app\common\controller\Backend;
 use app\admin\model\workflow\Instance as InstanceModel;
 use app\admin\model\workflow\Task as TaskModel;
 use app\admin\model\workflow\Log as LogModel;
+use app\admin\model\workflow\Sign as SignModel;
 use app\admin\library\WorkflowEngine;
 
 class Instance extends Backend
@@ -44,10 +45,15 @@ class Instance extends Backend
             ->order('create_time', 'asc')
             ->select();
 
+        $signs = SignModel::where('instance_id', $id)
+            ->order('create_time', 'asc')
+            ->select();
+
         $this->success('', [
             'instance' => $instance,
             'tasks'    => $tasks,
             'logs'     => $logs,
+            'signs'    => $signs,
         ]);
     }
 

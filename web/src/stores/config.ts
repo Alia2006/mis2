@@ -58,8 +58,8 @@ export const useConfig = defineStore(
         })
 
         const lang: Lang = reactive({
-            defaultLang: 'zh-cn',
-            fallbackLang: 'zh-cn',
+            defaultLang: 'en',
+            fallbackLang: 'en',
             langArray: [
                 { name: 'zh-cn', value: '中文简体' },
                 { name: 'en', value: 'English' },

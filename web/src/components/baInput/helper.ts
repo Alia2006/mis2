@@ -199,7 +199,12 @@ export const fieldData: FieldData = {
 
 export const stringToArray = (val: string | string[]) => {
     if (typeof val === 'string') {
-        return val == '' ? [] : val.split(',')
+        if (val == '') return []
+        // 历史数据（Forguncy 迁移）多文件以 | 分隔，新数据以逗号分隔，此处兼容两者
+        return val
+            .split(/[|,]/)
+            .map((item) => item.trim())
+            .filter((item) => item !== '')
     } else {
         return val as string[]
     }

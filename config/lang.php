@@ -5,7 +5,7 @@
 
 return [
     // 默认语言
-    'default_lang'    => env('lang.default_lang', 'zh-cn'),
+    'default_lang'    => env('lang.default_lang', 'en'),
     // 允许的语言列表
     'allow_lang_list' => ['zh-cn', 'en'],
     // 多语言自动侦测变量名

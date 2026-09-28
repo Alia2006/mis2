@@ -179,5 +179,10 @@ export default {
         action_back: '退回',
         action_transfer: '转办',
         action_cancel: '撤回',
+        signs_title: '签批记录',
+        signer: '签批人',
+        sign_result: '签批结果',
+        sign_agree: '同意',
+        sign_disagree: '驳回',
     },
 }

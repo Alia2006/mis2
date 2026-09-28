@@ -230,7 +230,6 @@
                         </el-button>
                     </div>
                 </div>
-            </div>
 
             <!-- ═══ 三栏字段设计区 ═══ -->
             <el-row :gutter="12" class="fields-designer">
